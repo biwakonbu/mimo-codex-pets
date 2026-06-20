@@ -133,6 +133,21 @@ The accepted correction is frame-planned full-body regeneration:
 
 After cleanup, the running rows have no disconnected sprite debris. Any remaining body-size variation must come from the generated full-body pose itself, not from local body-part stitching.
 
+## Raw Source Preservation And Guard Outline
+
+A later contact-sheet review found that the visible outer edge differed by row. The first attempted correction added a white outline directly to already-transparent atlas cells, but that was rejected because future repairs need to preserve the generated source images before spritesheet processing.
+
+The accepted correction is source-based:
+
+- preserve the selected generated row strips under `sources/mimo/generated-raw/`
+- create `sources/mimo/chroma-guard/` from those raw strips before key removal
+- make the chroma-guard strips use exact `#00FF00` background and a 3px `#F8FCFF` guard outline
+- extract frames from the chroma-guard strips with `stable-slots`
+- remove chroma, clamp green dominance, normalize boundary color, and normalize transparent RGB
+- do not grow a new outline after transparency extraction
+
+The `waiting` row was regenerated to better match the desired waiting behavior: blinking while gently floating. The regenerated raw strip is preserved as `sources/mimo/generated-raw/waiting.png`, and its prompt is preserved as `sources/mimo/prompts/waiting-floating.md`.
+
 ## QA Performed
 
 Static QA:

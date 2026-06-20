@@ -1,0 +1,89 @@
+{
+  "ok": true,
+  "created_at": "2026-06-21T00:00:00+09:00",
+  "description": "Selected Mimo generated row strips preserved before spritesheet extraction. Chroma guard files are source-prep assets with exact #00FF00 background and 3px #F8FCFF guard outline before key removal.",
+  "states": [
+    {
+      "state": "idle",
+      "generated_raw_file": "sources/mimo/generated-raw/idle.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/idle.png",
+      "generated_raw_sha256": "dd1f8ae2b39cac4c183a62e088ee50d8162affaa58b5023b92fd288656af2676",
+      "chroma_guard_sha256": "54555f023a5ed4f0270e93e2c500e8e6150232c6011f064feb25bc2f4265c1da",
+      "generated_dir_id": "019ee442-bec5-7c20-a6df-a1b8bc006058",
+      "generated_filename": "ig_08aaed2a85dda5e2016a36588cd62081919c0d0be6fbea670d.png"
+    },
+    {
+      "state": "running-right",
+      "generated_raw_file": "sources/mimo/generated-raw/running-right.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/running-right.png",
+      "generated_raw_sha256": "c4028058f81c14fe40b0e45b1359cfec83363d326cdec16a5b406c2c9871e249",
+      "chroma_guard_sha256": "18acf9eb0e264a92739ef37ce6655a603242a1fea2ede73cd2ecb977e9acd4c1",
+      "generated_dir_id": "019ee442-bec5-7c20-a6df-a1b8bc006058",
+      "generated_filename": "ig_090aca62bb7b9eaa016a368c5a554c819183bfd2e9380c0a5e.png"
+    },
+    {
+      "state": "running-left",
+      "generated_raw_file": "sources/mimo/generated-raw/running-left.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/running-left.png",
+      "generated_raw_sha256": "10ac98c7593d02a21beca3e9a7b8b7f1f870e0a7a51da1ac9f0068f5c8d5bcea",
+      "chroma_guard_sha256": "29ab18dbb55747faba68603ea232b5f11c1c6138e7ca3f959c894e19c26b25b4",
+      "derivation": "framewise horizontal mirror preserving frame order",
+      "derived_from": "running-right"
+    },
+    {
+      "state": "waving",
+      "generated_raw_file": "sources/mimo/generated-raw/waving.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/waving.png",
+      "generated_raw_sha256": "e1599f2bda0e1978eea8b2686d0d5204e29de0b47c44d51487406837f1c85aee",
+      "chroma_guard_sha256": "340dda47b8d1fe93573c2e85e19b55ad82724b808619a160c3eaaaa58907e063",
+      "generated_dir_id": "019ee442-bec5-7c20-a6df-a1b8bc006058",
+      "generated_filename": "ig_01495345a4a1344c016a365a4a6eac819194e6beb951b08108.png"
+    },
+    {
+      "state": "jumping",
+      "generated_raw_file": "sources/mimo/generated-raw/jumping.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/jumping.png",
+      "generated_raw_sha256": "daeea1520268d38ca49121b353112c19170f25420f3e73a5da16a1e98d67b042",
+      "chroma_guard_sha256": "c02ec509f1d1856b2ae2209290c7de2bc415930f1dedc75ce85e122ecafca7d3",
+      "generated_dir_id": "019ee442-bec5-7c20-a6df-a1b8bc006058",
+      "generated_filename": "ig_074e196ae174d24e016a365ad2e2d88191833a33f10e452981.png"
+    },
+    {
+      "state": "failed",
+      "generated_raw_file": "sources/mimo/generated-raw/failed.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/failed.png",
+      "generated_raw_sha256": "63cd6854e97a3096161af5939822a558cf2d7a262f0abc8ce47a8bb0e8489b2f",
+      "chroma_guard_sha256": "b65622f1b814f74a613b2d211c195b53f72f30e3d91fc33533a751bb9101c36c",
+      "generated_dir_id": "019ee442-bec5-7c20-a6df-a1b8bc006058",
+      "generated_filename": "ig_0dbe0d0f2ca07045016a365b6188ec8191964113a68579645a.png"
+    },
+    {
+      "state": "waiting",
+      "generated_raw_file": "sources/mimo/generated-raw/waiting.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/waiting.png",
+      "generated_raw_sha256": "8abd3862f8e718c4537c3c3f7997b86b690058e6173c5bfb5a8937d330323669",
+      "chroma_guard_sha256": "77213af0184ff8f3a1ee629165ddbeefdac5db42d795355be38517dd524b54cb",
+      "generated_dir_id": "019ee577-8c33-7042-9961-539afb1daba4",
+      "generated_filename": "ig_0a2463cfd0829491016a36b48fa57481919f47e4db006e0fcf.png",
+      "regeneration_note": "floating waiting row with blink"
+    },
+    {
+      "state": "running",
+      "generated_raw_file": "sources/mimo/generated-raw/running.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/running.png",
+      "generated_raw_sha256": "2c9782a8d1443c7cc165596b01af18cb9006900e2ce011d622c76d020b7c4137",
+      "chroma_guard_sha256": "09a3799b13156ad8c817e7d6c8aede23bb54379658e6a94e61a4fcb49be59c79",
+      "generated_dir_id": "019ee442-bec5-7c20-a6df-a1b8bc006058",
+      "generated_filename": "ig_00e63a866121bb92016a365ca47b2481918b95bd68a34a4dfa.png"
+    },
+    {
+      "state": "review",
+      "generated_raw_file": "sources/mimo/generated-raw/review.png",
+      "chroma_guard_file": "sources/mimo/chroma-guard/review.png",
+      "generated_raw_sha256": "3f10df6db6393f80fb34c2e7cdb08155f7263f04594f9f52e64950e9eb6e39ef",
+      "chroma_guard_sha256": "567fb281d309aa2a20b285aa0321f40620239862abda17f21e628f30ce37cbae",
+      "generated_dir_id": "019ee442-bec5-7c20-a6df-a1b8bc006058",
+      "generated_filename": "ig_06e4714f3a5f4059016a365d42ed18819193d0b4c753b153df.png"
+    }
+  ]
+}

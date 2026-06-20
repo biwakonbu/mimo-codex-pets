@@ -4,8 +4,8 @@ Use these controls for any future Mimo row regeneration.
 
 ## Positive Edge Control
 
-- Use a clean sticker-sprite edge with a translucent 3px outer outline around the entire character silhouette.
-- The outer outline should be light white-blue, approximately `#F8FCFF` at about 65% opacity, continuous, and thick enough to separate the character from the chroma-key background without looking like a hard sticker border.
+- Use a clean sticker-sprite edge with a 3px outer outline around the entire character silhouette.
+- The outer outline should be light white-blue `#F8FCFF`, continuous, and thick enough to separate the character from the chroma-key background without looking like a heavy sticker border.
 - Keep all character pixels fully separated from the background by the outline; no hair, wing, halo, backpack, robot joint, pen, or tablet edge may touch or blend into the chroma key.
 
 ## Negative Prompt Control
@@ -30,6 +30,7 @@ Avoid thin fragile edges. Avoid semi-transparent edge pixels that mix object col
 
 - Extract frames with row-stable scale and position; do not resize every frame independently to the same full-cell height.
 - Preserve natural vertical amplitude for `jumping` and `failed` while keeping every frame inside `192x208`.
+- Preserve visible hover amplitude for `waiting`; the waiting loop should blink and float instead of standing almost still.
 - Clamp or remove any alpha-positive pixel where green is dominant over both red and blue channels.
 - Normalize fully transparent pixels to `(0,0,0,0)`.
 - Reject any cell-edge alpha after the 3px outline is applied.

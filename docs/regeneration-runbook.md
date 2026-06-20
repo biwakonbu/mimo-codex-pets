@@ -22,9 +22,10 @@ Prefer deterministic repair when the source imagery is semantically correct and 
 1. Inspect the current `assets/contact-sheet.png`.
 2. Inspect `assets/previews/*.gif`.
 3. Read `qa/review.json`, `qa/validation.json`, and `qa/edge-gates.json`.
-4. Identify the smallest failing scope.
-5. Fix deterministic processing before regenerating imagery.
-6. Regenerate only the broken row when source imagery is clipped, unstable, or semantically wrong.
+4. Check `sources/mimo/source-manifest.json` and the matching raw row under `sources/mimo/generated-raw/`.
+5. Identify the smallest failing scope.
+6. Fix deterministic processing before regenerating imagery.
+7. Regenerate only the broken row when source imagery is clipped, unstable, or semantically wrong.
 
 Priority rows for motion repair:
 
@@ -106,13 +107,17 @@ This preserves:
 
 For final-outline Mimo:
 
-1. Remove chroma background.
-2. Despill green-ish pixels.
-3. Compose row-stable cells.
-4. Add translucent 3px `#F8FCFF` outline.
-5. Clamp green dominance.
-6. Normalize transparent RGB.
-7. Validate.
+1. Preserve selected generated raw strips in `sources/mimo/generated-raw/`.
+2. Create exact chroma-guard strips in `sources/mimo/chroma-guard/` with:
+   - flat `#00FF00` background
+   - 3px `#F8FCFF` guard outline
+3. Extract row-stable cells from the chroma-guard strips.
+4. Remove chroma background.
+5. Despill green-ish pixels.
+6. Normalize the existing outer boundary color to `#F8FCFF` without expanding alpha.
+7. Clamp green dominance.
+8. Normalize transparent RGB.
+9. Validate.
 
 When exporting the final WebP with Pillow, use lossless output and `exact=True` so fully transparent pixels continue to decode as `(0,0,0,0)`:
 
@@ -157,6 +162,9 @@ assets/previews/*.gif
 assets/demo-videos/mimo-state-grid.mp4
 assets/demo-videos/mimo-background-sweep.mp4
 assets/demo-videos/mimo-state-spotlight.mp4
+sources/mimo/source-manifest.json
+sources/mimo/generated-raw/*.png
+sources/mimo/chroma-guard/*.png
 qa/validation.json
 qa/review.json
 qa/edge-gates.json

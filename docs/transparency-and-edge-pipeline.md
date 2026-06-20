@@ -20,23 +20,24 @@ Do not let the actual object edge touch the green key background.
 
 Insert a non-green 3px edge between the object and the chroma key before transparency extraction. That 3px edge can either become the final outline or be removed/replaced after the green has been removed.
 
-## Final-Outline Workflow Used For Mimo
+## Chroma-Guard Workflow Used For Mimo
 
-Mimo currently keeps a translucent 3px white-blue edge as part of the final style.
+Mimo currently keeps a 3px white-blue edge as part of the final style, but that edge is established before chroma-key removal. The generated raw strips are preserved, then a chroma-guard source copy is prepared for spritesheet extraction.
 
-1. Generate or load the row strip on a flat `#00FF00` chroma-key background.
-2. Remove obvious green background pixels.
-3. Despill remaining green-ish alpha-positive pixels.
-4. Compose row-stable frames into `192x208` cells.
-5. Add a 3px outer outline around the alpha mask:
-   - radius: `3px`
-   - color: `#F8FCFF`
-   - alpha: approximately `65%`
-6. Clamp green-dominant positive-alpha pixels:
+1. Preserve the selected generated row strips under `sources/mimo/generated-raw/`.
+2. Create chroma-guard row strips under `sources/mimo/chroma-guard/`:
+   - background: exact `#00FF00`
+   - guard outline: 3px `#F8FCFF`
+   - no alpha channel required at this stage
+3. Extract row-stable frames from the chroma-guard strips.
+4. Remove the green background.
+5. Despill remaining green-ish alpha-positive pixels.
+6. Normalize the existing outer boundary color to `#F8FCFF` without expanding alpha.
+7. Clamp green-dominant positive-alpha pixels:
    - if `G > max(R, B) + 5`, reduce `G` to `max(R, B) + 5`
-7. Normalize fully transparent pixels to `(0,0,0,0)`.
-8. Reject the frame if any cell-edge alpha remains.
-9. When exporting WebP with Pillow, use lossless output with `exact=True` so transparent RGB stays normalized after decode:
+8. Normalize fully transparent pixels to `(0,0,0,0)`.
+9. Reject the frame if any cell-edge alpha remains.
+10. When exporting WebP with Pillow, use lossless output with `exact=True` so transparent RGB stays normalized after decode:
    ```python
    image.save(output, format="WEBP", lossless=True, quality=100, method=6, exact=True)
    ```
@@ -66,7 +67,7 @@ Use this when the desired final asset should not visibly keep the 3px edge.
 The important sequence is:
 
 ```text
-temporary 3px non-green edge -> remove green key -> remove/replace temporary edge -> normalize alpha/RGB -> validate
+generated raw -> exact chroma-guard copy with 3px non-green edge -> remove green key -> normalize existing edge/RGB -> validate
 ```
 
 Do not do this sequence:

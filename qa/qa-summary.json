@@ -13,6 +13,11 @@
     "warnings": 0,
     "transparent_rgb_residue_pixels": 0
   },
+  "review": {
+    "errors": 0,
+    "warnings": 0,
+    "accepted_extraction_method": "stable-slots"
+  },
   "edge_gates": {
     "ok": true,
     "green_dominant_6_a_gt0": 0,
@@ -21,5 +26,99 @@
     "cell_edge_alpha": 0,
     "transparent_rgb_residue_pixels": 0
   },
-  "motion": "running-right/left regenerated from a frame-planned full-body row; cleanup uses whole-sprite extraction only, with no upper/lower body compositing."
+  "white_boundary": {
+    "idle": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "running-right": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "running-left": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "waving": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "jumping": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "failed": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "waiting": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "running": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "review": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    }
+  },
+  "motion": {
+    "idle": {
+      "bbox_width_range": 0,
+      "bbox_height_range": 0,
+      "center_x_range": 1.0,
+      "center_y_range": 0.7
+    },
+    "running-right": {
+      "bbox_width_range": 16,
+      "bbox_height_range": 22,
+      "center_x_range": 5.4,
+      "center_y_range": 13.6
+    },
+    "running-left": {
+      "bbox_width_range": 22,
+      "bbox_height_range": 22,
+      "center_x_range": 5.6,
+      "center_y_range": 13.9
+    },
+    "waving": {
+      "bbox_width_range": 12,
+      "bbox_height_range": 0,
+      "center_x_range": 5.9,
+      "center_y_range": 1.1
+    },
+    "jumping": {
+      "bbox_width_range": 2,
+      "bbox_height_range": 28,
+      "center_x_range": 1.4,
+      "center_y_range": 57.5
+    },
+    "failed": {
+      "bbox_width_range": 10,
+      "bbox_height_range": 58,
+      "center_x_range": 1.9,
+      "center_y_range": 31.5
+    },
+    "waiting": {
+      "bbox_width_range": 2,
+      "bbox_height_range": 3,
+      "center_x_range": 0.8,
+      "center_y_range": 16.8
+    },
+    "running": {
+      "bbox_width_range": 6,
+      "bbox_height_range": 2,
+      "center_x_range": 2.8,
+      "center_y_range": 1.2
+    },
+    "review": {
+      "bbox_width_range": 5,
+      "bbox_height_range": 4,
+      "center_x_range": 2.3,
+      "center_y_range": 2.9
+    }
+  },
+  "source_policy": "Generated raw strips are preserved under sources/mimo/generated-raw. Chroma-guard pre-key sources carry exact #00FF00 background and 3px #F8FCFF guard outline. No new outline is grown after transparency extraction."
 }

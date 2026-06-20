@@ -1,6 +1,7 @@
 {
   "ok": true,
-  "frames_root": "work/live-qa/running-storyboard-regeneration/frames-final-storyboard-fullbody",
+  "frames_root": "qa/generated-frames-from-sources/mimo/chroma-guard",
+  "accepted_extraction_method": "stable-slots",
   "errors": [],
   "warnings": [],
   "rows": [
@@ -8,100 +9,130 @@
       "state": "idle",
       "expected_frames": 6,
       "actual_frames": 6,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/idle/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/idle/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13530,
+          "nontransparent_pixels": 13438,
           "bbox": [
-            43,
-            9,
+            42,
+            5,
             149,
-            199
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.5,
+            97.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/idle/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/idle/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13449,
+          "nontransparent_pixels": 13365,
           "bbox": [
-            43,
-            9,
+            42,
+            5,
             149,
-            199
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.1,
+            98.1
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/idle/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/idle/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13477,
+          "nontransparent_pixels": 13398,
           "bbox": [
-            43,
-            9,
+            42,
+            5,
             149,
-            199
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.7,
+            98.0
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 3,
-          "file": "frames-final-storyboard-fullbody/idle/03.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/idle/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13432,
+          "nontransparent_pixels": 13373,
           "bbox": [
-            43,
-            9,
+            42,
+            5,
             149,
-            199
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.4,
+            97.7
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 4,
-          "file": "frames-final-storyboard-fullbody/idle/04.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/idle/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13358,
+          "nontransparent_pixels": 13248,
           "bbox": [
-            43,
-            9,
+            42,
+            5,
             149,
-            199
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.1,
+            97.9
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 5,
-          "file": "frames-final-storyboard-fullbody/idle/05.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/idle/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13361,
+          "nontransparent_pixels": 13294,
           "bbox": [
-            43,
-            10,
+            42,
+            5,
             149,
-            199
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.3,
+            98.3
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -109,130 +140,170 @@
       "state": "running-right",
       "expected_frames": 8,
       "actual_frames": 8,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/running-right/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13838,
+          "nontransparent_pixels": 14374,
           "bbox": [
-            43,
-            14,
+            38,
+            5,
+            154,
+            197
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.8,
+            100.3
+          ],
+          "boundary_white_ratio": 1.0
+        },
+        {
+          "index": 1,
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/01.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13257,
+          "bbox": [
+            42,
+            15,
             149,
             202
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
-        },
-        {
-          "index": 1,
-          "file": "frames-final-storyboard-fullbody/running-right/01.png",
-          "width": 192,
-          "height": 208,
-          "nontransparent_pixels": 13889,
-          "bbox": [
-            44,
-            14,
-            148,
-            202
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            99.2,
+            103.3
           ],
-          "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/running-right/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14224,
+          "bbox": [
+            38,
+            11,
+            154,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            99.0,
+            104.3
+          ],
+          "boundary_white_ratio": 1.0
+        },
+        {
+          "index": 3,
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13031,
+          "bbox": [
+            44,
+            5,
+            148,
+            181
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            96.3,
+            91.8
+          ],
+          "boundary_white_ratio": 1.0
+        },
+        {
+          "index": 4,
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14452,
           "bbox": [
-            35,
-            14,
-            157,
-            202
+            36,
+            10,
+            156,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
-        },
-        {
-          "index": 3,
-          "file": "frames-final-storyboard-fullbody/running-right/03.png",
-          "width": 192,
-          "height": 208,
-          "nontransparent_pixels": 14180,
-          "bbox": [
-            43,
-            14,
-            149,
-            202
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            98.3,
+            105.4
           ],
-          "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
-        },
-        {
-          "index": 4,
-          "file": "frames-final-storyboard-fullbody/running-right/04.png",
-          "width": 192,
-          "height": 208,
-          "nontransparent_pixels": 13863,
-          "bbox": [
-            44,
-            14,
-            148,
-            202
-          ],
-          "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 5,
-          "file": "frames-final-storyboard-fullbody/running-right/05.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13551,
+          "nontransparent_pixels": 13235,
           "bbox": [
-            45,
-            14,
-            146,
-            202
+            43,
+            16,
+            149,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            98.9,
+            104.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 6,
-          "file": "frames-final-storyboard-fullbody/running-right/06.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14312,
+          "nontransparent_pixels": 14120,
           "bbox": [
-            36,
-            14,
-            156,
+            37,
+            12,
+            155,
             202
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            96.9,
+            104.9
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 7,
-          "file": "frames-final-storyboard-fullbody/running-right/07.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-right/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14079,
+          "nontransparent_pixels": 12892,
           "bbox": [
             44,
-            14,
+            7,
             148,
-            202
+            178
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            97.1,
+            94.1
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -240,130 +311,170 @@
       "state": "running-left",
       "expected_frames": 8,
       "actual_frames": 8,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/running-left/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13838,
+          "nontransparent_pixels": 14428,
           "bbox": [
-            43,
-            14,
-            149,
-            202
+            36,
+            5,
+            152,
+            197
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            94.9,
+            100.2
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/running-left/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13889,
+          "nontransparent_pixels": 13296,
           "bbox": [
-            44,
-            14,
-            148,
-            202
-          ],
-          "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
-        },
-        {
-          "index": 2,
-          "file": "frames-final-storyboard-fullbody/running-left/02.png",
-          "width": 192,
-          "height": 208,
-          "nontransparent_pixels": 14452,
-          "bbox": [
-            35,
-            14,
-            157,
-            202
-          ],
-          "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
-        },
-        {
-          "index": 3,
-          "file": "frames-final-storyboard-fullbody/running-left/03.png",
-          "width": 192,
-          "height": 208,
-          "nontransparent_pixels": 14180,
-          "bbox": [
-            43,
-            14,
+            42,
+            15,
             149,
             202
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            90.8,
+            103.3
+          ],
+          "boundary_white_ratio": 1.0
+        },
+        {
+          "index": 2,
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/02.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 14300,
+          "bbox": [
+            37,
+            11,
+            154,
+            203
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.5,
+            104.3
+          ],
+          "boundary_white_ratio": 1.0
+        },
+        {
+          "index": 3,
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/03.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13100,
+          "bbox": [
+            43,
+            5,
+            148,
+            181
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.7,
+            91.8
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 4,
-          "file": "frames-final-storyboard-fullbody/running-left/04.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13863,
+          "nontransparent_pixels": 14578,
           "bbox": [
-            44,
-            14,
-            148,
-            202
+            32,
+            10,
+            159,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            89.3,
+            105.7
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 5,
-          "file": "frames-final-storyboard-fullbody/running-left/05.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13551,
+          "nontransparent_pixels": 13279,
           "bbox": [
-            46,
-            14,
-            147,
-            202
+            42,
+            16,
+            149,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.1,
+            104.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 6,
-          "file": "frames-final-storyboard-fullbody/running-left/06.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14312,
+          "nontransparent_pixels": 14173,
           "bbox": [
             36,
-            14,
-            156,
+            12,
+            155,
             202
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            94.0,
+            104.8
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 7,
-          "file": "frames-final-storyboard-fullbody/running-left/07.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running-left/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14079,
+          "nontransparent_pixels": 12941,
           "bbox": [
-            44,
-            14,
+            43,
+            7,
             148,
-            202
+            178
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.4,
+            94.1
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -371,70 +482,90 @@
       "state": "waving",
       "expected_frames": 4,
       "actual_frames": 4,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/waving/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waving/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13342,
+          "nontransparent_pixels": 13109,
           "bbox": [
-            42,
-            9,
-            150,
-            199
+            41,
+            5,
+            151,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.8,
+            97.0
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/waving/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waving/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13564,
+          "nontransparent_pixels": 13312,
           "bbox": [
-            38,
-            9,
-            154,
-            199
+            37,
+            5,
+            155,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            98.1,
+            96.4
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/waving/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waving/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13245,
+          "nontransparent_pixels": 13018,
           "bbox": [
-            45,
-            9,
-            147,
-            199
+            43,
+            5,
+            149,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.1,
+            97.2
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 3,
-          "file": "frames-final-storyboard-fullbody/waving/03.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waving/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13200,
+          "nontransparent_pixels": 12955,
           "bbox": [
-            43,
-            9,
-            149,
-            199
+            41,
+            5,
+            151,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.7,
+            97.5
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -442,85 +573,110 @@
       "state": "jumping",
       "expected_frames": 5,
       "actual_frames": 5,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/jumping/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/jumping/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 9208,
+          "nontransparent_pixels": 8945,
           "bbox": [
-            48,
+            47,
             64,
-            143,
-            198
+            144,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.1,
+            134.5
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/jumping/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/jumping/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 9961,
+          "nontransparent_pixels": 9690,
           "bbox": [
-            49,
-            30,
-            142,
-            181
+            48,
+            26,
+            143,
+            184
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.3,
+            102.5
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/jumping/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/jumping/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 9885,
+          "nontransparent_pixels": 9615,
           "bbox": [
-            48,
-            9,
-            143,
-            153
+            47,
+            5,
+            144,
+            155
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.8,
+            77.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 3,
-          "file": "frames-final-storyboard-fullbody/jumping/03.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/jumping/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 10515,
+          "nontransparent_pixels": 10078,
           "bbox": [
             47,
-            31,
+            28,
             144,
-            191
+            195
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.8,
+            105.9
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 4,
-          "file": "frames-final-storyboard-fullbody/jumping/04.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/jumping/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 9247,
+          "nontransparent_pixels": 8952,
           "bbox": [
-            48,
+            47,
             64,
-            143,
-            199
+            144,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.4,
+            135.0
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -528,130 +684,170 @@
       "state": "failed",
       "expected_frames": 8,
       "actual_frames": 8,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/failed/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13989,
+          "nontransparent_pixels": 14245,
           "bbox": [
             40,
-            9,
-            151,
-            196
+            5,
+            152,
+            201
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.3,
+            101.3
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/failed/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13331,
+          "nontransparent_pixels": 13556,
           "bbox": [
-            43,
-            18,
-            148,
-            197
+            42,
+            14,
+            150,
+            202
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            90.1,
+            104.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/failed/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12518,
+          "nontransparent_pixels": 12709,
           "bbox": [
-            43,
-            25,
-            148,
-            193
+            42,
+            21,
+            150,
+            198
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.7,
+            107.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 3,
-          "file": "frames-final-storyboard-fullbody/failed/03.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 10751,
+          "nontransparent_pixels": 10918,
           "bbox": [
-            42,
-            61,
-            149,
-            193
+            40,
+            60,
+            152,
+            198
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.7,
+            132.8
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 4,
-          "file": "frames-final-storyboard-fullbody/failed/04.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 11628,
+          "nontransparent_pixels": 11838,
           "bbox": [
-            46,
-            44,
-            145,
-            196
+            45,
+            41,
+            147,
+            201
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.0,
+            123.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 5,
-          "file": "frames-final-storyboard-fullbody/failed/05.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13323,
+          "nontransparent_pixels": 13573,
           "bbox": [
-            43,
-            16,
-            147,
-            198
+            42,
+            11,
+            150,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            89.9,
+            104.7
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 6,
-          "file": "frames-final-storyboard-fullbody/failed/06.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13136,
+          "nontransparent_pixels": 13352,
           "bbox": [
-            44,
-            18,
-            147,
-            198
+            42,
+            14,
+            149,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            90.1,
+            106.8
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 7,
-          "file": "frames-final-storyboard-fullbody/failed/07.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/failed/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13329,
+          "nontransparent_pixels": 13533,
           "bbox": [
-            44,
-            16,
-            147,
-            199
+            42,
+            12,
+            149,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.7,
+            105.8
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -659,100 +855,130 @@
       "state": "waiting",
       "expected_frames": 6,
       "actual_frames": 6,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/waiting/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waiting/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13729,
+          "nontransparent_pixels": 12017,
           "bbox": [
-            43,
-            9,
-            149,
-            198
+            46,
+            18,
+            145,
+            202
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.4,
+            107.5
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/waiting/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waiting/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13430,
+          "nontransparent_pixels": 11935,
           "bbox": [
-            44,
-            10,
-            148,
-            199
+            46,
+            5,
+            145,
+            188
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.3,
+            92.2
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/waiting/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waiting/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12951,
+          "nontransparent_pixels": 11674,
           "bbox": [
-            48,
-            10,
+            47,
+            11,
             144,
-            199
+            194
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.7,
+            99.2
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 3,
-          "file": "frames-final-storyboard-fullbody/waiting/03.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waiting/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13235,
+          "nontransparent_pixels": 11703,
           "bbox": [
-            44,
-            10,
-            148,
-            198
+            46,
+            14,
+            145,
+            197
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.7,
+            103.1
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 4,
-          "file": "frames-final-storyboard-fullbody/waiting/04.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waiting/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12877,
+          "nontransparent_pixels": 11692,
           "bbox": [
-            48,
-            11,
-            144,
-            199
+            46,
+            20,
+            145,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.4,
+            109.1
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 5,
-          "file": "frames-final-storyboard-fullbody/waiting/05.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/waiting/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13195,
+          "nontransparent_pixels": 11819,
           "bbox": [
-            44,
-            10,
-            147,
-            199
+            46,
+            17,
+            145,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            93.1,
+            107.4
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -760,100 +986,130 @@
       "state": "running",
       "expected_frames": 6,
       "actual_frames": 6,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/running/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14880,
+          "nontransparent_pixels": 14808,
           "bbox": [
-            40,
-            9,
+            39,
+            5,
             152,
-            198
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.0,
+            100.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/running/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14526,
+          "nontransparent_pixels": 14469,
           "bbox": [
-            42,
-            10,
-            150,
-            197
+            40,
+            5,
+            151,
+            202
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            89.7,
+            100.5
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/running/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14374,
+          "nontransparent_pixels": 14348,
           "bbox": [
-            44,
-            10,
-            148,
-            198
+            42,
+            5,
+            149,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            90.1,
+            100.7
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 3,
-          "file": "frames-final-storyboard-fullbody/running/03.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14110,
+          "nontransparent_pixels": 14046,
           "bbox": [
-            43,
-            12,
-            149,
-            199
+            41,
+            7,
+            150,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            90.1,
+            101.5
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 4,
-          "file": "frames-final-storyboard-fullbody/running/04.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13859,
+          "nontransparent_pixels": 13770,
           "bbox": [
-            44,
-            12,
-            148,
-            199
+            41,
+            7,
+            149,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            90.1,
+            101.4
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 5,
-          "file": "frames-final-storyboard-fullbody/running/05.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/running/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14282,
+          "nontransparent_pixels": 14186,
           "bbox": [
-            43,
-            12,
-            149,
-            198
+            41,
+            7,
+            150,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            89.2,
+            101.7
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     },
@@ -861,102 +1117,226 @@
       "state": "review",
       "expected_frames": 6,
       "actual_frames": 6,
-      "extraction_method": null,
+      "extraction_method": "stable-slots",
       "ok": true,
       "errors": [],
       "warnings": [],
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-storyboard-fullbody/review/00.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/review/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13463,
+          "nontransparent_pixels": 13388,
           "bbox": [
             44,
-            9,
-            147,
-            199
+            5,
+            148,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            92.2,
+            98.8
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 1,
-          "file": "frames-final-storyboard-fullbody/review/01.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/review/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12757,
+          "nontransparent_pixels": 12658,
           "bbox": [
-            47,
-            10,
-            144,
-            199
+            46,
+            5,
+            145,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            89.9,
+            99.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 2,
-          "file": "frames-final-storyboard-fullbody/review/02.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/review/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12625,
+          "nontransparent_pixels": 12544,
           "bbox": [
-            47,
-            13,
-            144,
-            199
+            46,
+            9,
+            145,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.4,
+            101.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 3,
-          "file": "frames-final-storyboard-fullbody/review/03.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/review/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13080,
+          "nontransparent_pixels": 13023,
           "bbox": [
-            45,
-            12,
-            146,
-            199
+            44,
+            7,
+            148,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.3,
+            100.6
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 4,
-          "file": "frames-final-storyboard-fullbody/review/04.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/review/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12742,
+          "nontransparent_pixels": 12588,
           "bbox": [
-            47,
-            13,
-            144,
-            199
+            46,
+            8,
+            146,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            90.9,
+            101.4
+          ],
+          "boundary_white_ratio": 1.0
         },
         {
           "index": 5,
-          "file": "frames-final-storyboard-fullbody/review/05.png",
+          "file": "qa/generated-frames-from-sources/mimo/chroma-guard/review/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12822,
+          "nontransparent_pixels": 12772,
           "bbox": [
-            47,
-            13,
-            144,
-            199
+            46,
+            8,
+            146,
+            203
           ],
           "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
+          "chroma_adjacent_pixels": 0,
+          "center": [
+            91.7,
+            100.9
+          ],
+          "boundary_white_ratio": 1.0
         }
       ]
     }
-  ]
+  ],
+  "motion_report": {
+    "idle": {
+      "bbox_width_range": 0,
+      "bbox_height_range": 0,
+      "center_x_range": 1.0,
+      "center_y_range": 0.7
+    },
+    "running-right": {
+      "bbox_width_range": 16,
+      "bbox_height_range": 22,
+      "center_x_range": 5.4,
+      "center_y_range": 13.6
+    },
+    "running-left": {
+      "bbox_width_range": 22,
+      "bbox_height_range": 22,
+      "center_x_range": 5.6,
+      "center_y_range": 13.9
+    },
+    "waving": {
+      "bbox_width_range": 12,
+      "bbox_height_range": 0,
+      "center_x_range": 5.9,
+      "center_y_range": 1.1
+    },
+    "jumping": {
+      "bbox_width_range": 2,
+      "bbox_height_range": 28,
+      "center_x_range": 1.4,
+      "center_y_range": 57.5
+    },
+    "failed": {
+      "bbox_width_range": 10,
+      "bbox_height_range": 58,
+      "center_x_range": 1.9,
+      "center_y_range": 31.5
+    },
+    "waiting": {
+      "bbox_width_range": 2,
+      "bbox_height_range": 3,
+      "center_x_range": 0.8,
+      "center_y_range": 16.8
+    },
+    "running": {
+      "bbox_width_range": 6,
+      "bbox_height_range": 2,
+      "center_x_range": 2.8,
+      "center_y_range": 1.2
+    },
+    "review": {
+      "bbox_width_range": 5,
+      "bbox_height_range": 4,
+      "center_x_range": 2.3,
+      "center_y_range": 2.9
+    }
+  },
+  "white_boundary_report": {
+    "idle": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "running-right": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "running-left": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "waving": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "jumping": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "failed": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "waiting": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "running": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    },
+    "review": {
+      "min_boundary_white_ratio": 1.0,
+      "max_nonwhite_boundary_pixels": 0
+    }
+  }
 }

@@ -1,0 +1,97 @@
+import Foundation
+
+public enum CodexThreadActiveFlag: String, Codable, Equatable, Sendable {
+    case waitingOnApproval
+    case waitingOnUserInput
+}
+
+public enum CodexThreadStatus: Equatable, Sendable {
+    case notLoaded
+    case idle
+    case systemError
+    case active(activeFlags: [CodexThreadActiveFlag])
+}
+
+extension CodexThreadStatus: Decodable {
+    private enum CodingKeys: String, CodingKey {
+        case type
+        case activeFlags
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let type = try container.decode(String.self, forKey: .type)
+        switch type {
+        case "notLoaded":
+            self = .notLoaded
+        case "idle":
+            self = .idle
+        case "systemError":
+            self = .systemError
+        case "active":
+            let flags = try container.decodeIfPresent([CodexThreadActiveFlag].self, forKey: .activeFlags) ?? []
+            self = .active(activeFlags: flags)
+        default:
+            self = .idle
+        }
+    }
+}
+
+public enum CodexTurnStatus: String, Codable, Equatable, Sendable {
+    case completed
+    case interrupted
+    case failed
+    case inProgress
+}
+
+public struct CodexTurnSnapshot: Decodable, Equatable, Sendable {
+    public let id: String
+    public let status: CodexTurnStatus
+}
+
+public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
+    public let id: String
+    public let status: CodexThreadStatus
+    public let turns: [CodexTurnSnapshot]
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case status
+        case turns
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        status = try container.decode(CodexThreadStatus.self, forKey: .status)
+        turns = try container.decodeIfPresent([CodexTurnSnapshot].self, forKey: .turns) ?? []
+    }
+}
+
+public enum CodexNotificationMethod: String, CaseIterable, Equatable, Sendable {
+    case threadStatusChanged = "thread/status/changed"
+    case turnStarted = "turn/started"
+    case turnCompleted = "turn/completed"
+    case itemStarted = "item/started"
+    case itemCompleted = "item/completed"
+}
+
+public struct CodexJSONRPCNotification<Params: Decodable>: Decodable {
+    public let method: String
+    public let params: Params
+}
+
+public struct ThreadStatusChangedNotification: Decodable, Equatable, Sendable {
+    public let threadId: String
+    public let status: CodexThreadStatus
+}
+
+public struct TurnNotification: Decodable, Equatable, Sendable {
+    public let threadId: String
+    public let turn: CodexTurnSnapshot
+}
+
+public struct ItemLifecycleNotification: Decodable, Equatable, Sendable {
+    public let threadId: String
+    public let turnId: String
+}

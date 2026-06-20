@@ -15,6 +15,23 @@ cp pets/mimo/pet.json pets/mimo/spritesheet.webp ~/.codex/pets/mimo/
 
 Then select or reload the custom pet in Codex.
 
+## Desktop Companion
+
+This repository also includes a SwiftPM-based macOS companion app at
+`desktop/MimoDesktopPet`. It reuses the same Mimo pet package, displays Mimo in a
+transparent floating desktop panel, and reads Codex state through the public
+`codex app-server` JSON-RPC interface.
+
+Run it with:
+
+```bash
+cd desktop/MimoDesktopPet
+./script/build_and_run.sh
+```
+
+The v1 companion is read-only: it does not send prompts to Codex, speak audio,
+inspect the screen, or read Codex session JSONL files.
+
 ## Package
 
 - `pets/mimo/pet.json`
@@ -34,6 +51,9 @@ Atlas contract:
 - `assets/demo-videos/mimo-state-grid.mp4`
 - `assets/demo-videos/mimo-background-sweep.mp4`
 - `assets/demo-videos/mimo-state-spotlight.mp4`
+- `sources/mimo/generated-raw/*.png`
+- `sources/mimo/chroma-guard/*.png`
+- `sources/mimo/source-manifest.json`
 - `qa/validation.json`
 - `qa/review.json`
 - `qa/edge-gates.json`

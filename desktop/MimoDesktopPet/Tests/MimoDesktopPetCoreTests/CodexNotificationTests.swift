@@ -1,0 +1,84 @@
+import XCTest
+@testable import MimoDesktopPetCore
+
+final class CodexNotificationTests: XCTestCase {
+    func testSupportedNotificationMethodNames() {
+        XCTAssertEqual(CodexNotificationMethod.allCases.map(\.rawValue), [
+            "thread/status/changed",
+            "turn/started",
+            "turn/completed",
+            "item/started",
+            "item/completed"
+        ])
+    }
+
+    func testThreadStatusNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "thread/status/changed",
+          "params": {
+            "threadId": "thread-1",
+            "status": {
+              "type": "active",
+              "activeFlags": ["waitingOnUserInput"]
+            }
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadStatusChangedNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "thread/status/changed")
+        XCTAssertEqual(notification.params.threadId, "thread-1")
+        XCTAssertEqual(notification.params.status, .active(activeFlags: [.waitingOnUserInput]))
+    }
+
+    func testTurnCompletedNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "turn/completed",
+          "params": {
+            "threadId": "thread-1",
+            "turn": {
+              "id": "turn-1",
+              "status": "completed"
+            }
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<TurnNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "turn/completed")
+        XCTAssertEqual(notification.params.turn.status, .completed)
+    }
+
+    func testItemLifecycleNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "item/completed",
+          "params": {
+            "threadId": "thread-1",
+            "turnId": "turn-1",
+            "item": { "type": "agentMessage" },
+            "completedAtMs": 100
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ItemLifecycleNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "item/completed")
+        XCTAssertEqual(notification.params.threadId, "thread-1")
+        XCTAssertEqual(notification.params.turnId, "turn-1")
+    }
+}

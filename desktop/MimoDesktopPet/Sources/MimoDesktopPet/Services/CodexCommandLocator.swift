@@ -1,0 +1,46 @@
+import Foundation
+
+struct CommandInvocation {
+    let executableURL: URL
+    let argumentsPrefix: [String]
+}
+
+enum CodexCommandLocator {
+    static func resolve(environment: [String: String] = ProcessInfo.processInfo.environment) -> CommandInvocation {
+        if let explicit = environment["CODEX_BIN"], !explicit.isEmpty {
+            return CommandInvocation(executableURL: URL(fileURLWithPath: explicit), argumentsPrefix: [])
+        }
+
+        let home = environment["HOME"] ?? NSHomeDirectory()
+        let standalonePath = "\(home)/.codex/packages/standalone/current/codex"
+        if FileManager.default.isExecutableFile(atPath: standalonePath) {
+            return CommandInvocation(executableURL: URL(fileURLWithPath: standalonePath), argumentsPrefix: [])
+        }
+
+        return CommandInvocation(
+            executableURL: URL(fileURLWithPath: "/usr/bin/env"),
+            argumentsPrefix: ["codex"]
+        )
+    }
+
+    static func launchEnvironment(base: [String: String] = ProcessInfo.processInfo.environment) -> [String: String] {
+        var environment = base
+        let home = environment["HOME"] ?? NSHomeDirectory()
+        let extraPath = [
+            "\(home)/.volta/bin",
+            "/opt/homebrew/bin",
+            "/usr/local/bin",
+            "/usr/bin",
+            "/bin",
+            "/usr/sbin",
+            "/sbin"
+        ].joined(separator: ":")
+
+        if let existing = environment["PATH"], !existing.isEmpty {
+            environment["PATH"] = "\(extraPath):\(existing)"
+        } else {
+            environment["PATH"] = extraPath
+        }
+        return environment
+    }
+}
