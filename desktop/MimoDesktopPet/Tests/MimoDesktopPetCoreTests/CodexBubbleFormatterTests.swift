@@ -99,6 +99,26 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     isAssistant: true
                 ),
                 "ご主人、「整理」は文脈を整理中です"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "ブラウザ確認",
+                    speaker: "tool",
+                    text: "ページ内を検索中",
+                    isAssistant: true
+                ),
+                "ご主人、「ブラウザ確認」はページを確認中です"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "スキル確認",
+                    speaker: "tool",
+                    text: "スキルを確認中",
+                    isAssistant: true
+                ),
+                "ご主人、「スキル確認」はスキルを確認中です"
             )
         ]
 

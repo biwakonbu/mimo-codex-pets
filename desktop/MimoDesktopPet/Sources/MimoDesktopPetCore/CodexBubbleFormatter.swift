@@ -43,6 +43,12 @@ public enum CodexBubbleFormatter {
         if text.contains("サブエージェント") {
             return "別作業を確認中です"
         }
+        if text.contains("スキル") {
+            return "スキルを確認中です"
+        }
+        if text.contains("ページ") {
+            return "ページを確認中です"
+        }
         if text.contains("web 検索") || text.contains("検索") || text.contains("調査") {
             return "調査中です"
         }
@@ -94,6 +100,12 @@ public enum CodexBubbleFormatter {
         }
         if text.contains("サブエージェント") {
             return "別作業を確認中です"
+        }
+        if text.contains("スキル") {
+            return "スキルを確認中です"
+        }
+        if text.contains("ページ") {
+            return "ページを確認中です"
         }
         if text.contains("待機") {
             return "少し待機しています"

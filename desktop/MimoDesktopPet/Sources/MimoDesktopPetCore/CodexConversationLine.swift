@@ -169,7 +169,55 @@ public enum CodexConversationExtractor {
                 isAssistant: true,
                 text: "Web 検索中"
             )
+        case "openPage":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "ページを確認中"
+            )
+        case "findInPage":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "ページ内を検索中"
+            )
+        case "listFiles":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "ファイル一覧を確認中"
+            )
+        case "read":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "ファイルを確認中"
+            )
+        case "search":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "検索中"
+            )
         case "imageView":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "画像を確認中"
+            )
+        case "image", "inputImage", "localImage":
             return makeLine(
                 threadId: threadId,
                 threadTitle: threadTitle,
@@ -216,6 +264,22 @@ public enum CodexConversationExtractor {
                 speaker: "codex",
                 isAssistant: true,
                 text: "文脈を整理中"
+            )
+        case "skill":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "スキルを確認中"
+            )
+        case "mention":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "thread",
+                isAssistant: true,
+                text: "参照を確認中"
             )
         case "hookPrompt":
             return nil

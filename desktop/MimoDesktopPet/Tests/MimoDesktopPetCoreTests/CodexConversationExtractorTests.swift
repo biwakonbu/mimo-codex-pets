@@ -134,6 +134,49 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("private query"))
     }
 
+    func testExtractsBrowserFileImageSkillItemsWithoutDumpingArguments() {
+        let thread: [String: Any] = [
+            "id": "thread-surface-items",
+            "name": "surface-items",
+            "turns": [
+                [
+                    "id": "turn-1",
+                    "status": "inProgress",
+                    "items": [
+                        ["id": "open", "type": "openPage", "url": "https://example.com/private-path"],
+                        ["id": "find", "type": "findInPage", "query": "secret search term"],
+                        ["id": "files", "type": "listFiles", "path": "/Users/example/private"],
+                        ["id": "read", "type": "read", "path": "/Users/example/private/file.swift"],
+                        ["id": "search", "type": "search", "query": "private symbol"],
+                        ["id": "image", "type": "localImage", "path": "/Users/example/Desktop/private.png"],
+                        ["id": "skill", "type": "skill", "name": "private-skill-name"],
+                        ["id": "mention", "type": "mention", "target": "private-thread"]
+                    ]
+                ]
+            ]
+        ]
+
+        let lines = CodexConversationExtractor.lines(from: thread, maxLines: 20)
+
+        XCTAssertEqual(lines.map(\.text), [
+            "ページを確認中",
+            "ページ内を検索中",
+            "ファイル一覧を確認中",
+            "ファイルを確認中",
+            "検索中",
+            "画像を確認中",
+            "スキルを確認中",
+            "参照を確認中"
+        ])
+
+        let joined = lines.map(\.text).joined(separator: " ")
+        XCTAssertFalse(joined.contains("example.com"))
+        XCTAssertFalse(joined.contains("/Users/example"))
+        XCTAssertFalse(joined.contains("secret search term"))
+        XCTAssertFalse(joined.contains("private-skill-name"))
+        XCTAssertFalse(joined.contains("private-thread"))
+    }
+
     func testBuildsGenericProgressLinesForDeltaNotifications() {
         let command = CodexConversationExtractor.progressLine(
             threadId: "thread-delta",

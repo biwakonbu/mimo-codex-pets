@@ -36,7 +36,16 @@ Verified public protocol surface:
   - `mcpToolCall`
   - `dynamicToolCall`
   - `webSearch`
+  - `openPage`
+  - `findInPage`
+  - `listFiles`
+  - `read`
+  - `search`
+  - `imageView`
+  - `localImage`
   - `imageGeneration`
+  - `skill`
+  - `mention`
   - `contextCompaction`
 - `item/started` and `item/completed` notifications include a schema-backed
   `item` payload. Production bubbles use this to report in-progress tool or
@@ -165,6 +174,10 @@ Conversation behavior:
   review, or tool progress. Do not display raw delta strings in production
   bubbles.
 - Tool activity should be summarized, not dumped.
+- Browser, file, image, skill, and mention activity should be reported as short
+  generic activity such as page review, file review, image review, or skill
+  review. Do not show raw URLs, file paths, search terms, skill names, thread
+  identifiers, or tool arguments in production bubbles.
 - Machine payload-looking text is suppressed and replaced with a generic short phrase.
 - Bubble text is transient; durable feed display belongs only in `Debug Overlay`.
 
