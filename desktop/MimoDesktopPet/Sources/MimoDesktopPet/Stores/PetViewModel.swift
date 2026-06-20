@@ -24,7 +24,7 @@ final class PetViewModel: ObservableObject {
     private var currentConversationThreadId: String?
     private var focusedThreadId: String?
 
-    init(debugOverlay: Bool = ProcessInfo.processInfo.environment["MIMO_DEBUG_OVERLAY"] == "1") {
+    init(debugOverlay: Bool = PetDebugOverlayPolicy.isEnabled()) {
         self.debugOverlay = debugOverlay
         conversationBubbleDuration = ProcessInfo.processInfo.environment["MIMO_BUBBLE_TEST_MODE"] == "1" ? 1.15 : 3.4
         if let path = ProcessInfo.processInfo.environment["MIMO_PRESENTATION_LOG"], !path.isEmpty {

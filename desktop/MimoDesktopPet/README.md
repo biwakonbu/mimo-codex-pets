@@ -94,6 +94,8 @@ accent markers, without dumping raw model output, commands, or payload text.
 Threads can be summarized from sanitized item activity or from thread/turn
 status alone. The stack favors thread coverage, so each visible thread appears
 at most once.
+The debug overlay is opt-in only: production startup keeps it disabled unless
+`MIMO_DEBUG_OVERLAY=1` is set or the menu item is toggled manually.
 
 The production panel is intentionally always on top. Use Hide or Quit from the
 menu bar item when Mimo should leave the screen.

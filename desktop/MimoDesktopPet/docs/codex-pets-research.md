@@ -105,7 +105,9 @@ Production mode:
 - Show only Mimo and a speech bubble.
 - Do not show a console, transcript feed, JSON payload, raw tool arguments, local paths, or long model output.
 - Keep status and conversation text short enough to fit a two-line bubble.
-- Use a debug-only overlay for feed-style inspection.
+- Use a debug-only overlay for feed-style inspection. Production startup must
+  keep it disabled unless `MIMO_DEBUG_OVERLAY=1` is set or the menu item is
+  toggled manually.
 
 State behavior:
 
