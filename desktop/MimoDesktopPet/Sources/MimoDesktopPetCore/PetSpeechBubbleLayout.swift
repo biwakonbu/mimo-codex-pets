@@ -30,9 +30,9 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
 
 public enum PetSpeechBubbleLayout {
     public static let productionWindowWidth = 392.0
-    public static let productionWindowHeight = 408.0
+    public static let productionWindowHeight = 424.0
     public static let productionStackWidth = 384.0
-    public static let productionStackHeight = 188.0
+    public static let productionStackHeight = 210.0
     public static let productionSpriteWidth = 192.0
     public static let productionSpriteHeight = 208.0
     public static let productionVisibleLimit = 4
@@ -71,9 +71,9 @@ public enum PetSpeechBubbleLayout {
         case 2:
             offsets = [(0, -52), (-30, 0)]
         case 3:
-            offsets = [(0, -100), (-54, -50), (48, 0)]
+            offsets = [(0, -78), (-54, -39), (48, 0)]
         default:
-            offsets = [(0, -136), (-58, -92), (58, -46), (-18, 0)]
+            offsets = [(0, -108), (-58, -72), (58, -36), (-18, 0)]
         }
         let offset = offsets[normalizedIndex]
 

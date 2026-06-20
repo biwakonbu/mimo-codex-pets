@@ -113,6 +113,10 @@ Conversation behavior:
 - The production bubble queue deduplicates by thread, speaker, and sanitized
   text, then rotates the latest short report from each visible thread instead of
   pinning only one focused thread forever.
+- The simultaneous production stack prioritizes thread coverage: secondary
+  bubbles show at most one summary per thread, and if the primary bubble is
+  already speaking for a conversation thread, that same thread is skipped in
+  the secondary bubbles.
 - Production can show up to four stacked speech bubbles at once: one primary
   status/current-thread bubble plus up to three compact summaries from other
   visible threads. This keeps Codex Pets-like multi-thread awareness in the

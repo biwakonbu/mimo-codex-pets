@@ -39,10 +39,12 @@ public enum CodexConversationBubblePlanner {
         primaryText: String,
         conversationLines: [CodexConversationLine],
         preferredThreadId: String?,
+        primaryThreadId: String? = nil,
         limit: Int = PetSpeechBubbleLayout.productionVisibleLimit
     ) -> [PetSpeechBubble] {
         let visibleLimit = max(1, min(limit, PetSpeechBubbleLayout.productionVisibleLimit))
         var texts: [String] = []
+        var usedThreadIds = Set<String>()
         let primary = CodexBubbleFormatter.compact(
             primaryText,
             limit: PetSpeechBubbleLayout.textLimit(for: .status)
@@ -50,19 +52,25 @@ public enum CodexConversationBubblePlanner {
         if !primary.isEmpty {
             texts.append(primary)
         }
+        if let primaryThreadId {
+            usedThreadIds.insert(primaryThreadId)
+        }
 
-        let conversationTexts = orderedThreadUpdates(
+        let conversationLines = orderedThreadUpdates(
             from: conversationLines,
             preferredThreadId: preferredThreadId
-        ).map { CodexBubbleFormatter.bubbleText(for: $0) }
+        )
 
-        for text in conversationTexts where texts.count < visibleLimit {
+        for line in conversationLines where texts.count < visibleLimit {
+            guard !usedThreadIds.contains(line.threadId) else { continue }
+            let text = CodexBubbleFormatter.bubbleText(for: line)
             let compacted = CodexBubbleFormatter.compact(
                 text,
                 limit: PetSpeechBubbleLayout.textLimit(for: .conversation)
             )
             guard !compacted.isEmpty, !texts.contains(compacted) else { continue }
             texts.append(compacted)
+            usedThreadIds.insert(line.threadId)
         }
 
         if texts.isEmpty {

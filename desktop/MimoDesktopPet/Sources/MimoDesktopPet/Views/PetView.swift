@@ -139,14 +139,14 @@ struct BubbleView: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(Color.black.opacity(0.1), lineWidth: 1)
             )
-            .shadow(color: Color.black.opacity(role == .status ? 0.14 : 0.1), radius: role == .status ? 8 : 6, x: 0, y: 3)
+            .shadow(color: Color.black.opacity(role == .status ? 0.12 : 0.08), radius: role == .status ? 5 : 3, x: 0, y: 2)
 
             if showsTail {
                 BubbleTail()
                     .fill(bubbleFill.opacity(resolvedFillOpacity))
                     .frame(width: 18, height: 9)
                     .offset(y: -1)
-                    .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 2)
+                    .shadow(color: Color.black.opacity(0.06), radius: 2, x: 0, y: 1)
             }
         }
     }

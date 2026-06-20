@@ -116,12 +116,62 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .conversation), 1)
     }
 
+    func testProductionBubblesUseOneSummaryPerThread() {
+        let lines = [
+            line(threadId: "current", speaker: "tool", text: "ツールで確認中", isAssistant: true),
+            line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true),
+            line(threadId: "current", speaker: "codex", text: "計画を更新中", isAssistant: true),
+            line(threadId: "other", speaker: "codex", text: "レビューできる状態になりました", isAssistant: true),
+            line(threadId: "third", speaker: "codex", text: "資料作業を進めています", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: "current",
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "Codex が作業中",
+            "ご主人、「current」はツールで確認中です",
+            "ご主人、「third」は作業を進めています",
+            "ご主人、「other」はレビューできます"
+        ])
+    }
+
+    func testProductionBubblesSkipPrimaryThreadWhenConversationBubbleIsCurrent() {
+        let current = line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true)
+        let lines = [
+            line(threadId: "other", speaker: "codex", text: "レビューできる状態になりました", isAssistant: true),
+            line(threadId: "third", speaker: "codex", text: "資料作業を進めています", isAssistant: true),
+            line(threadId: "fourth", speaker: "thread", text: "確認待ち", isAssistant: true),
+            current
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: CodexBubbleFormatter.bubbleText(for: current),
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: "current",
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "ご主人、「current」は応答をまとめています",
+            "ご主人、「fourth」は確認待ちです",
+            "ご主人、「third」は作業を進めています",
+            "ご主人、「other」はレビューできます"
+        ])
+    }
+
     func testProductionBubblesDeduplicatePrimaryConversationText() {
         let current = line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true)
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
             primaryText: CodexBubbleFormatter.bubbleText(for: current),
             conversationLines: [current],
             preferredThreadId: "current",
+            primaryThreadId: "current",
             limit: 3
         )
 

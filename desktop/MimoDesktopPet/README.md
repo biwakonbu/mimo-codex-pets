@@ -72,7 +72,8 @@ In production mode the panel stays transparent and shows only Mimo plus a short
 stack of white bubbles. The primary bubble carries the current Codex status, and
 up to three secondary bubbles summarize recent visible Codex threads without
 dumping raw model output, commands, or payload text. Threads can be summarized
-from sanitized item activity or from thread/turn status alone.
+from sanitized item activity or from thread/turn status alone. The stack favors
+thread coverage, so secondary bubbles show at most one summary per thread.
 
 The production panel is intentionally always on top. Use Hide or Quit from the
 menu bar item when Mimo should leave the screen.

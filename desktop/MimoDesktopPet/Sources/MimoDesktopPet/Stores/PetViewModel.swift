@@ -277,7 +277,8 @@ final class PetViewModel: ObservableObject {
         let nextBubbles = CodexConversationBubblePlanner.productionBubbles(
             primaryText: presentation.bubbleText,
             conversationLines: conversationLines,
-            preferredThreadId: focusedThreadId
+            preferredThreadId: focusedThreadId,
+            primaryThreadId: conversationBubbleActive ? currentConversationThreadId : nil
         )
         guard nextBubbles != visibleBubbles else { return false }
         visibleBubbles = nextBubbles

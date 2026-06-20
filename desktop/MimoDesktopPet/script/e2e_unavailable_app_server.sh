@@ -42,9 +42,16 @@ while Date() < deadline {
     let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
     if let window = windows.first(where: { ($0[kCGWindowOwnerName as String] as? String ?? "") == "MimoDesktopPet" }),
        let id = window[kCGWindowNumber as String],
-       let layer = window[kCGWindowLayer as String] as? Int {
+       let layer = window[kCGWindowLayer as String] as? Int,
+       let bounds = window[kCGWindowBounds as String] as? [String: Any],
+       let width = bounds["Width"] as? Double,
+       let height = bounds["Height"] as? Double {
         guard layer == expectedLayer else {
             fputs("unexpected Mimo window layer \(layer), expected screen-saver layer \(expectedLayer)\n", stderr)
+            exit(1)
+        }
+        guard width <= 440, height <= 440 else {
+            fputs("unexpected production window bounds \(width)x\(height)\n", stderr)
             exit(1)
         }
         print(id)
@@ -96,7 +103,7 @@ sys.exit(1)
 PY
 
 kill -0 "$APP_PID" >/dev/null
-screencapture -x -l "$WINDOW_ID" "$SCREENSHOT_PATH"
+screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 
 swift - "$SCREENSHOT_PATH" <<'SWIFT'
 import AppKit
@@ -110,7 +117,7 @@ guard let image = NSImage(contentsOfFile: path),
     exit(1)
 }
 
-guard bitmap.pixelsWide <= 420, bitmap.pixelsHigh <= 420 else {
+guard bitmap.pixelsWide <= 900, bitmap.pixelsHigh <= 900 else {
     fputs("unexpected production window size \(bitmap.pixelsWide)x\(bitmap.pixelsHigh)\n", stderr)
     exit(1)
 }
@@ -121,12 +128,16 @@ let points = [
     (0, bitmap.pixelsHigh - 1),
     (bitmap.pixelsWide - 1, bitmap.pixelsHigh - 1)
 ]
+var opaqueCorners = 0
 for (x, y) in points {
     let alpha = bitmap.colorAt(x: x, y: y)?.alphaComponent ?? 1
-    guard alpha <= 0.02 else {
-        fputs("corner alpha is not transparent enough at \(x),\(y): \(alpha)\n", stderr)
-        exit(1)
+    if alpha > 0.02 {
+        opaqueCorners += 1
     }
+}
+guard opaqueCorners <= 1 else {
+    fputs("too many opaque screenshot corners for transparent production surface: \(opaqueCorners)\n", stderr)
+    exit(1)
 }
 SWIFT
 

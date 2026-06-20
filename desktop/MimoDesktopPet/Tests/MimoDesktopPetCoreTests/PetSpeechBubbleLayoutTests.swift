@@ -4,7 +4,7 @@ import XCTest
 final class PetSpeechBubbleLayoutTests: XCTestCase {
     func testProductionLayoutFitsWindowWithSprite() {
         XCTAssertEqual(PetSpeechBubbleLayout.productionWindowWidth, 392)
-        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowHeight, 408)
+        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowHeight, 424)
 
         let verticalContent =
             4.0 +
@@ -45,8 +45,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: 3
         )
 
-        XCTAssertEqual(status.verticalOffset, -100)
-        XCTAssertEqual(firstThread.verticalOffset, -50)
+        XCTAssertEqual(status.verticalOffset, -78)
+        XCTAssertEqual(firstThread.verticalOffset, -39)
         XCTAssertEqual(secondThread.verticalOffset, 0)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
@@ -78,9 +78,9 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: 4
         )
 
-        XCTAssertEqual(status.verticalOffset, -136)
-        XCTAssertEqual(firstThread.verticalOffset, -92)
-        XCTAssertEqual(secondThread.verticalOffset, -46)
+        XCTAssertEqual(status.verticalOffset, -108)
+        XCTAssertEqual(firstThread.verticalOffset, -72)
+        XCTAssertEqual(secondThread.verticalOffset, -36)
         XCTAssertEqual(thirdThread.verticalOffset, 0)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
