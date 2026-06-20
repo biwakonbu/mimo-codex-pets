@@ -45,6 +45,10 @@ public enum CodexConversationBubblePlanner {
         "\(line.threadId)|\(line.speaker)|\(line.text)"
     }
 
+    public static func displaySignature(for line: CodexConversationLine) -> String {
+        "\(line.threadId)|\(CodexBubbleFormatter.bubbleText(for: line))"
+    }
+
     public static func primaryBubble(
         statusText: String,
         conversationLines: [CodexConversationLine],
@@ -147,9 +151,9 @@ public enum CodexConversationBubblePlanner {
     }
 
     private static func appendUnique(_ lines: [CodexConversationLine], to result: inout [CodexConversationLine]) {
-        var signatures = Set(result.map(signature(for:)))
+        var signatures = Set(result.map(displaySignature(for:)))
         for line in lines {
-            let signature = signature(for: line)
+            let signature = displaySignature(for: line)
             guard !signatures.contains(signature) else { continue }
             result.append(line)
             signatures.insert(signature)

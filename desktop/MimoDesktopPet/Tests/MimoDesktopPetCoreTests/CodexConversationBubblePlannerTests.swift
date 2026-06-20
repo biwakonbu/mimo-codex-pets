@@ -40,7 +40,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true),
             line(threadId: "current", speaker: "codex", text: "計画を更新中", isAssistant: true),
             line(threadId: "current", speaker: "tool", text: "コマンド出力を確認中", isAssistant: true),
-            line(threadId: "current", speaker: "codex", text: "最後の通常応答", isAssistant: true),
+            line(threadId: "current", speaker: "codex", text: "最後の通常報告", isAssistant: true),
             line(threadId: "other", speaker: "codex", text: "別スレッド", isAssistant: true)
         ]
 
@@ -54,8 +54,28 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             "応答を作成中",
             "計画を更新中",
             "コマンド出力を確認中",
-            "最後の通常応答",
+            "最後の通常報告",
             "別スレッド"
+        ])
+    }
+
+    func testOrderedThreadUpdatesDeduplicateEquivalentMimoReports() {
+        let lines = [
+            line(threadId: "current", speaker: "tool", text: "コマンド出力を確認中", isAssistant: true),
+            line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true),
+            line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true),
+            line(threadId: "other", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+        ]
+
+        let planned = CodexConversationBubblePlanner.orderedThreadUpdates(
+            from: lines,
+            preferredThreadId: "current"
+        )
+
+        XCTAssertEqual(planned.map(\.text), [
+            "コマンド出力を確認中",
+            "応答を作成中",
+            "コマンドを実行中"
         ])
     }
 
@@ -248,6 +268,20 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertNotEqual(
             CodexConversationBubblePlanner.signature(for: first),
             CodexConversationBubblePlanner.signature(for: second)
+        )
+    }
+
+    func testDisplaySignatureDeduplicatesDifferentRawLinesWithSameMimoReport() {
+        let first = line(threadId: "a", speaker: "tool", text: "コマンド出力を確認中", isAssistant: true)
+        let second = line(threadId: "a", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+
+        XCTAssertNotEqual(
+            CodexConversationBubblePlanner.signature(for: first),
+            CodexConversationBubblePlanner.signature(for: second)
+        )
+        XCTAssertEqual(
+            CodexConversationBubblePlanner.displaySignature(for: first),
+            CodexConversationBubblePlanner.displaySignature(for: second)
         )
     }
 

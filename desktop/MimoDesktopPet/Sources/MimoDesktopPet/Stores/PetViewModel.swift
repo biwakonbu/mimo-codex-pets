@@ -18,7 +18,7 @@ final class PetViewModel: ObservableObject {
     private let presentationLogURL: URL?
     private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
     private var momentToken = UUID()
-    private var shownConversationSignatures: Set<String> = []
+    private var shownConversationDisplaySignatures: Set<String> = []
     private var pendingConversationLines: [CodexConversationLine] = []
     private var conversationBubbleActive = false
     private var currentConversationThreadId: String?
@@ -87,14 +87,14 @@ final class PetViewModel: ObservableObject {
             from: lines,
             preferredThreadId: preferredThreadId
         )
-        let pendingSignatures = Set(pendingConversationLines.map(CodexConversationBubblePlanner.signature(for:)))
+        let pendingSignatures = Set(pendingConversationLines.map(CodexConversationBubblePlanner.displaySignature(for:)))
 
         for line in candidates {
-            let signature = CodexConversationBubblePlanner.signature(for: line)
-            guard !shownConversationSignatures.contains(signature), !pendingSignatures.contains(signature) else {
+            let signature = CodexConversationBubblePlanner.displaySignature(for: line)
+            guard !shownConversationDisplaySignatures.contains(signature), !pendingSignatures.contains(signature) else {
                 continue
             }
-            shownConversationSignatures.insert(signature)
+            shownConversationDisplaySignatures.insert(signature)
             pendingConversationLines.insert(
                 line,
                 at: CodexConversationBubblePlanner.insertionIndex(
@@ -156,13 +156,13 @@ final class PetViewModel: ObservableObject {
     private func pruneConversationQueue(keeping activeThreadIds: Set<String>) {
         guard !activeThreadIds.isEmpty else {
             clearConversationQueue()
-            shownConversationSignatures.removeAll()
+            shownConversationDisplaySignatures.removeAll()
             momentToken = UUID()
             return
         }
 
         pendingConversationLines.removeAll { !activeThreadIds.contains($0.threadId) }
-        shownConversationSignatures = Set(shownConversationSignatures.filter { signature in
+        shownConversationDisplaySignatures = Set(shownConversationDisplaySignatures.filter { signature in
             guard let threadId = signature.split(separator: "|", maxSplits: 1).first else { return false }
             return activeThreadIds.contains(String(threadId))
         })

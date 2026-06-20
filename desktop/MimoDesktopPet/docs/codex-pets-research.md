@@ -149,9 +149,10 @@ Conversation behavior:
   token-like strings, and credential/secret markers are skipped; if another
   safe title or preview exists it is used, otherwise the bubble falls back to
   `Codex`.
-- The production bubble queue deduplicates by thread, speaker, and sanitized
-  text, then rotates the latest short report from each visible thread instead of
-  pinning only one focused thread forever.
+- The production bubble queue deduplicates by thread and final Mimo report text,
+  so multiple raw Codex events that summarize to the same short bubble do not
+  make Mimo repeat itself. It then rotates the latest short report from each
+  visible thread instead of pinning only one focused thread forever.
 - The simultaneous production stack prioritizes thread coverage: secondary
   bubbles show at most one summary per thread, and if the primary bubble is
   already speaking for a conversation thread, that same thread is skipped in
