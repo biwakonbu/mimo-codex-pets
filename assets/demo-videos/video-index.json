@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "videos": [
+    {
+      "path": "assets/demo-videos/mimo-state-grid.mp4",
+      "purpose": "all state motion grid"
+    },
+    {
+      "path": "assets/demo-videos/mimo-background-sweep.mp4",
+      "purpose": "edge visibility across backgrounds"
+    },
+    {
+      "path": "assets/demo-videos/mimo-state-spotlight.mp4",
+      "purpose": "state-by-state enlarged motion review"
+    }
+  ],
+  "excluded_from_public_repo": [
+    "codex-live-full.mov",
+    "codex-live-pet-area.mp4",
+    "codex-live-mimo-closeup.mp4",
+    "codex-live-mimo-only.mp4",
+    "codex-live-mimo-isolated.mp4",
+    "video-review-contact-sheet.jpg"
+  ],
+  "exclusion_reason": "live Codex recordings include the local desktop and workspace context; they are kept out of this public repository"
+}

@@ -1,0 +1,25 @@
+{
+  "ok": true,
+  "atlas": {
+    "width": 1536,
+    "height": 1872,
+    "cell_width": 192,
+    "cell_height": 208,
+    "rows": 9,
+    "columns": 8
+  },
+  "validation": {
+    "errors": 0,
+    "warnings": 0,
+    "transparent_rgb_residue_pixels": 0
+  },
+  "edge_gates": {
+    "ok": true,
+    "green_dominant_6_a_gt0": 0,
+    "green_dominant_16_low_alpha": 0,
+    "close_key_alpha_gt0": 0,
+    "cell_edge_alpha": 0,
+    "transparent_rgb_residue_pixels": 0
+  },
+  "motion": "row-stable rebuild preserves jump/slump vertical amplitude while keeping all frames inside cells"
+}
