@@ -5,22 +5,22 @@ final class PetWindowPlacementTests: XCTestCase {
     func testDefaultOriginPlacesPetNearLowerRight() {
         let origin = PetWindowPlacement.defaultOrigin(
             visibleFrame: PetDragFrame(x: 100, y: 200, width: 900, height: 700),
-            petWidth: 392,
-            petHeight: 424
+            petWidth: PetSpeechBubbleLayout.productionWindowWidth,
+            petHeight: PetSpeechBubbleLayout.productionWindowHeight
         )
 
-        XCTAssertEqual(origin, PetWanderPoint(x: 576, y: 280))
+        XCTAssertEqual(origin, PetWanderPoint(x: 536, y: 280))
     }
 
     func testOriginOverrideParsesAndClampsToVisibleFrame() {
         let origin = PetWindowPlacement.origin(
             visibleFrame: PetDragFrame(x: 100, y: 200, width: 900, height: 700),
-            petWidth: 392,
-            petHeight: 424,
+            petWidth: PetSpeechBubbleLayout.productionWindowWidth,
+            petHeight: PetSpeechBubbleLayout.productionWindowHeight,
             override: "40,1200"
         )
 
-        XCTAssertEqual(origin, PetWanderPoint(x: 100, y: 476))
+        XCTAssertEqual(origin, PetWanderPoint(x: 100, y: 462))
     }
 
     func testInvalidOriginOverrideFallsBackToDefault() {
@@ -29,14 +29,14 @@ final class PetWindowPlacementTests: XCTestCase {
         XCTAssertEqual(
             PetWindowPlacement.origin(
                 visibleFrame: visible,
-                petWidth: 392,
-                petHeight: 424,
+                petWidth: PetSpeechBubbleLayout.productionWindowWidth,
+                petHeight: PetSpeechBubbleLayout.productionWindowHeight,
                 override: "left,top"
             ),
             PetWindowPlacement.defaultOrigin(
                 visibleFrame: visible,
-                petWidth: 392,
-                petHeight: 424
+                petWidth: PetSpeechBubbleLayout.productionWindowWidth,
+                petHeight: PetSpeechBubbleLayout.productionWindowHeight
             )
         )
     }

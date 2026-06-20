@@ -153,10 +153,13 @@ for row in rows:
     if row.get("debugOverlay") is not False:
         raise SystemExit("production presentation log unexpectedly enabled debug overlay")
     bubbles = row.get("bubbleTexts", [])
+    roles = row.get("bubbleRoles", [])
     if not isinstance(bubbles, list):
         continue
     if len(bubbles) > 4:
         raise SystemExit(f"production bubble stack showed too many bubbles: {len(bubbles)}")
+    if roles and len(roles) != len(bubbles):
+        raise SystemExit(f"production bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
     thread_titles = []
     for bubble in bubbles:
         match = re.search(r"「([^」]+)」", str(bubble))
@@ -176,6 +179,8 @@ for row in rows:
         and any("状態だけのスレッド" in str(text) for text in bubbles)
         and any("資料整理" in str(text) for text in bubbles)
     ):
+        if roles != ["status", "conversation", "conversation", "conversation"]:
+            raise SystemExit(f"three-thread bubble stack had unexpected roles: {roles}")
         break
 else:
     raise SystemExit("presentation log never showed three thread bubbles at once")

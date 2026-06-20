@@ -136,13 +136,16 @@ Conversation behavior:
   bubbles show at most one summary per thread, and if the primary bubble is
   already speaking for a conversation thread, that same thread is skipped in
   the secondary bubbles.
-- Production can show up to four stacked speech bubbles at once: one primary
+- Production can show up to four fanned speech bubbles at once: one primary
   current-thread/status bubble plus up to three compact summaries from other
-  visible threads. When a focused conversation line is available, the primary
-  bubble uses that Mimo-style thread report instead of a generic status such as
-  `Codex が作業中`; offline status keeps the generic connection bubble. This
-  keeps Codex Pets-like multi-thread awareness in the production surface without
-  rendering a console, transcript feed, or debug panel.
+  visible threads. Secondary thread bubbles stay white but use compact accent
+  markers and alternating left/right placement so concurrent thread status is
+  readable without becoming a feed panel. When a focused conversation line is
+  available, the primary bubble uses that Mimo-style thread report instead of a
+  generic status such as `Codex が作業中`; offline status keeps the generic
+  connection bubble. This keeps Codex Pets-like multi-thread awareness in the
+  production surface without rendering a console, transcript feed, or debug
+  panel.
 - The primary production bubble is capped at 44 characters and secondary
   thread bubbles at 34 characters. Secondary bubbles render as one-line compact
   summaries so a four-bubble stack does not crowd or clip Mimo.
@@ -171,6 +174,7 @@ swift test
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh
 ./script/e2e_unavailable_app_server.sh
+./script/e2e_disconnect_app_server.sh
 ./script/build_and_run.sh --verify
 ```
 
@@ -193,16 +197,21 @@ Manual or visual checks:
   streaming delta activity, plus simultaneous stacked bubbles for a second
   visible thread and a later secondary-thread update discovered immediately
   from notification-triggered thread reads.
-- `MIMO_PRESENTATION_LOG` includes both `bubbleText` and `bubbleTexts`; stacked
-  bubble-only updates should be logged for deterministic E2E evidence. Fake
-  production E2E also enforces the four-bubble visible limit, the
-  primary/secondary text-length caps, and a three-thread simultaneous bubble
-  case.
+- `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, and
+  `bubbleRoles`; stacked bubble-only updates should be logged for deterministic
+  E2E evidence. Fake production E2E also enforces the four-bubble visible
+  limit, the primary/secondary text-length caps, and a three-thread
+  simultaneous bubble case with one status bubble plus three conversation
+  bubbles.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.
+- Disconnect E2E launches against a fake app-server that reaches a connected
+  thread-summary state and then exits. Mimo must stay alive, keep the production
+  surface transparent, and show `Codex 接続切れ` instead of leaving stale
+  connected bubbles onscreen.
 - `Debug Overlay` can be toggled from the menu and is not enabled by default.
 - Temporary screenshots and logs stay under `/tmp` and are not committed.
 

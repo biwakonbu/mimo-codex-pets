@@ -32,6 +32,7 @@ swift test
 ./script/build_and_run.sh --verify
 ./script/e2e_fake_app_server.sh
 ./script/e2e_unavailable_app_server.sh
+./script/e2e_disconnect_app_server.sh
 ```
 
 The script stages a local app bundle under `dist/MimoDesktopPet.app`, launches it
@@ -53,7 +54,10 @@ state after connecting.
 `./script/e2e_unavailable_app_server.sh` launches the real app with an
 unavailable Codex command and verifies that Mimo stays alive in transparent
 production mode with an offline speech bubble.
-Both E2E scripts capture the exact Mimo window and run
+`./script/e2e_disconnect_app_server.sh` verifies that Mimo first reaches a
+connected thread summary state, then survives a stdio app-server exit and shows
+the disconnect offline bubble.
+Production E2E scripts capture the exact Mimo window and run
 `script/inspect_production_capture.swift` to reject blank, fully opaque, or
 debug-style surfaces.
 
@@ -79,12 +83,13 @@ origin inside the main visible screen. Set `MIMO_AUTONOMOUS_DISABLED=1` only for
 visual inspection runs where Mimo must stay still.
 
 In production mode the panel stays transparent and shows only Mimo plus a short
-stack of white bubbles. When Codex conversation context is available, the
-primary bubble promotes the focused thread into a short Mimo-style report. Up to
-three secondary bubbles summarize other recent visible Codex threads without
-dumping raw model output, commands, or payload text. Threads can be summarized
-from sanitized item activity or from thread/turn status alone. The stack favors
-thread coverage, so each visible thread appears at most once.
+fan of white bubbles. When Codex conversation context is available, the primary
+bubble promotes the focused thread into a short Mimo-style report. Up to three
+secondary bubbles summarize other recent visible Codex threads with compact
+accent markers, without dumping raw model output, commands, or payload text.
+Threads can be summarized from sanitized item activity or from thread/turn
+status alone. The stack favors thread coverage, so each visible thread appears
+at most once.
 
 The production panel is intentionally always on top. Use Hide or Quit from the
 menu bar item when Mimo should leave the screen.

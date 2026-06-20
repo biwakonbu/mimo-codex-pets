@@ -3,8 +3,10 @@ import XCTest
 
 final class PetSpeechBubbleLayoutTests: XCTestCase {
     func testProductionLayoutFitsWindowWithSprite() {
-        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowWidth, 392)
-        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowHeight, 424)
+        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowWidth, 432)
+        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowHeight, 438)
+        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.productionWindowWidth, 440)
+        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.productionWindowHeight, 440)
 
         let verticalContent =
             4.0 +
@@ -24,7 +26,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placement.index, 0)
         XCTAssertEqual(placement.horizontalOffset, 0)
         XCTAssertEqual(placement.verticalOffset, 0)
-        XCTAssertEqual(placement.maxTextWidth, 308)
+        XCTAssertEqual(placement.maxTextWidth, 318)
         XCTAssertEqual(placement.zIndex, 4)
     }
 
@@ -45,13 +47,13 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: 3
         )
 
-        XCTAssertEqual(status.verticalOffset, -78)
-        XCTAssertEqual(firstThread.verticalOffset, -39)
+        XCTAssertEqual(status.verticalOffset, -104)
+        XCTAssertEqual(firstThread.verticalOffset, -52)
         XCTAssertEqual(secondThread.verticalOffset, 0)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
-        XCTAssertEqual(firstThread.maxTextWidth, 246)
-        XCTAssertEqual(secondThread.maxTextWidth, 246)
+        XCTAssertEqual(firstThread.maxTextWidth, 232)
+        XCTAssertEqual(secondThread.maxTextWidth, 232)
         XCTAssertGreaterThan(status.zIndex, firstThread.zIndex)
         XCTAssertGreaterThan(firstThread.zIndex, secondThread.zIndex)
     }
@@ -78,16 +80,16 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: 4
         )
 
-        XCTAssertEqual(status.verticalOffset, -108)
-        XCTAssertEqual(firstThread.verticalOffset, -72)
-        XCTAssertEqual(secondThread.verticalOffset, -36)
+        XCTAssertEqual(status.verticalOffset, -132)
+        XCTAssertEqual(firstThread.verticalOffset, -86)
+        XCTAssertEqual(secondThread.verticalOffset, -43)
         XCTAssertEqual(thirdThread.verticalOffset, 0)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
         XCTAssertLessThan(thirdThread.horizontalOffset, secondThread.horizontalOffset)
-        XCTAssertEqual(firstThread.maxTextWidth, 246)
-        XCTAssertEqual(secondThread.maxTextWidth, 246)
-        XCTAssertEqual(thirdThread.maxTextWidth, 246)
+        XCTAssertEqual(firstThread.maxTextWidth, 232)
+        XCTAssertEqual(secondThread.maxTextWidth, 232)
+        XCTAssertEqual(thirdThread.maxTextWidth, 232)
     }
 
     func testPlacementClampsToVisibleLimit() {
@@ -99,6 +101,22 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
         XCTAssertEqual(placement.verticalOffset, 0)
-        XCTAssertEqual(placement.horizontalOffset, -18)
+        XCTAssertEqual(placement.horizontalOffset, -46)
+    }
+
+    func testFourBubbleFanFitsInsideProductionStackWidth() {
+        for index in 0..<PetSpeechBubbleLayout.productionVisibleLimit {
+            let role: PetSpeechBubbleRole = index == 0 ? .status : .conversation
+            let placement = PetSpeechBubbleLayout.placement(
+                for: index,
+                role: role,
+                visibleCount: PetSpeechBubbleLayout.productionVisibleLimit
+            )
+            let centerX = PetSpeechBubbleLayout.productionStackWidth / 2 + placement.horizontalOffset
+            let halfWidth = placement.maxTextWidth / 2
+
+            XCTAssertGreaterThanOrEqual(centerX - halfWidth, 0)
+            XCTAssertLessThanOrEqual(centerX + halfWidth, PetSpeechBubbleLayout.productionStackWidth)
+        }
     }
 }

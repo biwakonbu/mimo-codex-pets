@@ -62,7 +62,8 @@ private struct ProductionBubbleStackView: View {
                     role: bubble.role,
                     showsTail: index == visible.count - 1,
                     maxTextWidth: placement.maxTextWidth,
-                    fillOpacity: placement.fillOpacity
+                    fillOpacity: placement.fillOpacity,
+                    accentColor: BubbleAccentPalette.color(for: index, role: bubble.role)
                 )
                 .offset(
                     x: CGFloat(placement.horizontalOffset),
@@ -108,19 +109,22 @@ struct BubbleView: View {
     var showsTail = true
     var maxTextWidth: Double?
     var fillOpacity: Double?
+    var accentColor: Color?
 
     var body: some View {
         let resolvedFillOpacity = fillOpacity ?? (role == .status ? 0.94 : 0.88)
-        let bubbleFill = role == .status
-            ? Color.white
-            : Color(red: 0.965, green: 0.982, blue: 1.0)
+        let accent = accentColor ?? Color(red: 0.36, green: 0.58, blue: 0.86)
+        let bubbleFill = Color.white
+        let borderColor = role == .status
+            ? Color.black.opacity(0.1)
+            : accent.opacity(0.28)
 
         VStack(spacing: 0) {
             HStack(spacing: role == .status ? 0 : 7) {
                 if role == .conversation {
-                    Circle()
-                        .fill(Color(red: 0.36, green: 0.58, blue: 0.86).opacity(0.85))
-                        .frame(width: 5, height: 5)
+                    Capsule(style: .continuous)
+                        .fill(accent.opacity(0.92))
+                        .frame(width: 4, height: 18)
                 }
 
                 Text(text)
@@ -137,7 +141,7 @@ struct BubbleView: View {
             .background(bubbleFill.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color.black.opacity(0.1), lineWidth: 1)
+                    .strokeBorder(borderColor, lineWidth: role == .status ? 1 : 1.2)
             )
             .shadow(color: Color.black.opacity(role == .status ? 0.12 : 0.08), radius: role == .status ? 5 : 3, x: 0, y: 2)
 
@@ -149,6 +153,18 @@ struct BubbleView: View {
                     .shadow(color: Color.black.opacity(0.06), radius: 2, x: 0, y: 1)
             }
         }
+    }
+}
+
+private enum BubbleAccentPalette {
+    static func color(for index: Int, role: PetSpeechBubbleRole) -> Color? {
+        guard role == .conversation else { return nil }
+        let colors = [
+            Color(red: 0.28, green: 0.52, blue: 0.86),
+            Color(red: 0.14, green: 0.58, blue: 0.52),
+            Color(red: 0.76, green: 0.42, blue: 0.24)
+        ]
+        return colors[max(0, index - 1) % colors.count]
     }
 }
 
