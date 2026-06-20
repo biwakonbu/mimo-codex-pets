@@ -86,6 +86,10 @@ Computer Use limitation:
   the production companion because it is an `LSUIElement` app using a
   non-activating screen-saver-level panel. This is a Computer Use attachment
   limitation, not proof that the panel is absent.
+- The latest Computer Use recheck reproduced both limitations: `com.openai.codex`
+  was rejected by the Computer Use safety policy, and a running production
+  `MimoDesktopPet` returned only a `remoteConnection` marker instead of a useful
+  accessibility tree.
 - Companion visual QA therefore uses CGWindow discovery plus
   `screencapture -l` on the exact Mimo window. The capture is then inspected for
   transparent corners, bounded alpha coverage, white speech-bubble pixels, and
@@ -175,6 +179,7 @@ swift test
 ./script/e2e_fake_app_server.sh
 ./script/e2e_unavailable_app_server.sh
 ./script/e2e_disconnect_app_server.sh
+./script/e2e_state_matrix.sh
 ./script/build_and_run.sh --verify
 ```
 
@@ -212,6 +217,10 @@ Manual or visual checks:
   thread-summary state and then exits. Mimo must stay alive, keep the production
   surface transparent, and show `Codex 接続切れ` instead of leaving stale
   connected bubbles onscreen.
+- State-matrix E2E launches against the fake app-server with autonomous motion
+  disabled, waits for active, waiting, simultaneous multi-thread, review, and
+  failed presentation states, captures the exact production window for each
+  state, and runs `inspect_production_capture.swift` against every image.
 - `Debug Overlay` can be toggled from the menu and is not enabled by default.
 - Temporary screenshots and logs stay under `/tmp` and are not committed.
 

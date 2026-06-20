@@ -33,6 +33,7 @@ swift test
 ./script/e2e_fake_app_server.sh
 ./script/e2e_unavailable_app_server.sh
 ./script/e2e_disconnect_app_server.sh
+./script/e2e_state_matrix.sh
 ```
 
 The script stages a local app bundle under `dist/MimoDesktopPet.app`, launches it
@@ -57,6 +58,9 @@ production mode with an offline speech bubble.
 `./script/e2e_disconnect_app_server.sh` verifies that Mimo first reaches a
 connected thread summary state, then survives a stdio app-server exit and shows
 the disconnect offline bubble.
+`./script/e2e_state_matrix.sh` captures the exact production window for active,
+waiting, multi-thread, review, and failed fake-Codex states, then runs the same
+transparent-surface inspection on every capture.
 Production E2E scripts capture the exact Mimo window and run
 `script/inspect_production_capture.swift` to reject blank, fully opaque, or
 debug-style surfaces.
