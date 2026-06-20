@@ -40,6 +40,9 @@ Verified runtime behavior:
 - `codex app-server --stdio` returns a Codex Desktop user agent and can read local thread state.
 - App-server responses and notifications may interleave on stdout; the client must dispatch by `method` vs `id`.
 - `thread/list` can return no interactive threads; the companion must stay open and remain idle/offline-safe.
+- The companion should periodically refresh visible threads, not only the
+  currently selected thread, so stacked production bubbles keep following
+  secondary thread progress after initial load.
 - `codex app-server proxy` exists, but in this local environment it did not
   respond without changing daemon remote-control settings. The companion uses
   direct `codex app-server --stdio` to avoid mutating user configuration.
@@ -121,7 +124,7 @@ Manual or visual checks:
   production bubble text is a Mimo-style summary of the active thread title and
   latest progress/tool activity, including notification-driven tool activity and
   streaming delta activity, plus simultaneous stacked bubbles for a second
-  visible thread.
+  visible thread and a later secondary-thread update discovered by polling.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.

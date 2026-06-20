@@ -17,22 +17,17 @@ CURRENT_TURNS = [
         ],
     }
 ]
-SECOND_THREAD = {
-    "id": "fake-review",
-    "name": "別スレッドの確認",
-    "preview": "レビュー可能な結果があります",
-    "status": {"type": "idle"},
-    "turns": [
-        {
-            "id": "turn-other",
-            "status": "completed",
-            "items": [
-                {"id": "u2", "type": "userMessage", "content": [{"type": "inputText", "text": "QA 結果を見せて"}]},
-                {"id": "a2", "type": "agentMessage", "content": [{"type": "outputText", "text": "検証はすべて通っています"}]},
-            ],
-        }
-    ],
-}
+SECOND_THREAD_STATUS = {"type": "idle"}
+SECOND_THREAD_TURNS = [
+    {
+        "id": "turn-other",
+        "status": "completed",
+        "items": [
+            {"id": "u2", "type": "userMessage", "content": [{"type": "inputText", "text": "QA 結果を見せて"}]},
+            {"id": "a2", "type": "agentMessage", "content": [{"type": "outputText", "text": "検証はすべて通っています"}]},
+        ],
+    }
+]
 
 
 def log(message):
@@ -46,8 +41,18 @@ def write_message(message):
     sys.stdout.flush()
 
 
+def second_thread_snapshot():
+    return {
+        "id": "fake-review",
+        "name": "別スレッドの確認",
+        "preview": "レビュー可能な結果があります",
+        "status": dict(SECOND_THREAD_STATUS),
+        "turns": [dict(turn) for turn in SECOND_THREAD_TURNS],
+    }
+
+
 def state_sequence():
-    global CURRENT_STATUS, CURRENT_TURNS
+    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_TURNS
     time.sleep(2.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": []}
@@ -123,6 +128,27 @@ def state_sequence():
             "params": {
                 "threadId": "fake-thread",
                 "status": {"type": "active", "activeFlags": ["waitingOnUserInput"]},
+            },
+        }
+    )
+    with STATE_LOCK:
+        SECOND_THREAD_STATUS = {"type": "active", "activeFlags": []}
+        SECOND_THREAD_TURNS = [
+            {
+                "id": "turn-other-followup",
+                "status": "inProgress",
+                "items": [
+                    {"id": "u7", "type": "userMessage", "content": [{"type": "inputText", "text": "別スレッドも進めて"}]},
+                    {"id": "a7", "type": "agentMessage", "content": [{"type": "outputText", "text": "追加作業を進めています"}]},
+                ],
+            }
+        ]
+    write_message(
+        {
+            "method": "thread/status/changed",
+            "params": {
+                "threadId": "fake-review",
+                "status": {"type": "active", "activeFlags": []},
             },
         }
     )
@@ -215,6 +241,7 @@ def run_stdio_server():
             with STATE_LOCK:
                 status = dict(CURRENT_STATUS)
                 turns = [dict(turn) for turn in CURRENT_TURNS]
+                second_thread = second_thread_snapshot()
             write_message(
                 {
                     "id": request_id,
@@ -227,7 +254,7 @@ def run_stdio_server():
                                 "status": status,
                                 "turns": turns,
                             },
-                            SECOND_THREAD,
+                            second_thread,
                         ],
                         "nextCursor": None,
                     },
@@ -236,7 +263,8 @@ def run_stdio_server():
         elif method == "thread/read":
             thread_id = request.get("params", {}).get("threadId", "fake-thread")
             if thread_id == "fake-review":
-                thread = SECOND_THREAD
+                with STATE_LOCK:
+                    thread = second_thread_snapshot()
             else:
                 with STATE_LOCK:
                     status = dict(CURRENT_STATUS)

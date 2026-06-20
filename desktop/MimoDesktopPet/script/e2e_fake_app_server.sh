@@ -113,7 +113,7 @@ guard largestDeltaChange <= 14 else {
 }
 SWIFT
 
-sleep 8
+sleep 10
 kill -0 "$APP_PID" >/dev/null
 
 grep -Fq 'ご主人、「Mimo runtime QA」は作業を進めています' "$PRESENTATION_LOG"
@@ -122,6 +122,7 @@ grep -Fq 'ご主人、「Mimo runtime QA」は応答をまとめています' "$
 grep -Fq 'ご主人、「Mimo runtime QA」はコマンドを実行中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「別スレッドの確認」は作業を進めています' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json

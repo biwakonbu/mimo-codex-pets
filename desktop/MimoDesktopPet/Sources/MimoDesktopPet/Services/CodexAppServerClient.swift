@@ -199,22 +199,14 @@ final class CodexAppServerClient {
         let timer = DispatchSource.makeTimerSource(queue: queue)
         timer.schedule(deadline: .now() + 2.0, repeating: 3.0)
         timer.setEventHandler { [weak self] in
-            self?.refreshCurrentThread()
+            self?.refreshVisibleThreads()
         }
         timer.resume()
         pollTimer = timer
     }
 
-    private func refreshCurrentThread() {
-        if let selectedThreadId {
-            sendRequest(
-                method: "thread/read",
-                params: ["threadId": selectedThreadId, "includeTurns": true],
-                kind: .threadRead(threadId: selectedThreadId)
-            )
-        } else {
-            sendRequest(method: "thread/loaded/list", params: ["limit": 10], kind: .loadedList)
-        }
+    private func refreshVisibleThreads() {
+        sendRequest(method: "thread/loaded/list", params: ["limit": 10], kind: .loadedList)
     }
 
     private func sendInitialize() {
@@ -609,17 +601,20 @@ final class CodexAppServerClient {
     }
 
     private func rememberThreadOrder(_ ids: [String]) {
-        for id in ids where !threadDisplayOrder.contains(id) {
+        for id in ids {
+            threadDisplayOrder.removeAll { $0 == id }
             threadDisplayOrder.append(id)
         }
         if threadDisplayOrder.count > 6 {
-            threadDisplayOrder = Array(threadDisplayOrder.prefix(6))
+            threadDisplayOrder = Array(threadDisplayOrder.suffix(6))
         }
     }
 
     private func combinedConversationLines() -> [CodexConversationLine] {
-        let orderedLines = threadDisplayOrder.flatMap { conversationByThread[$0] ?? [] }
-        return Array(orderedLines.suffix(6))
+        let orderedLines = threadDisplayOrder.flatMap { threadId in
+            Array((conversationByThread[threadId] ?? []).suffix(3))
+        }
+        return Array(orderedLines.suffix(12))
     }
 
     private func focusedConversationLine() -> CodexConversationLine? {
