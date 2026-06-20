@@ -1,5 +1,6 @@
 import AppKit
 import Combine
+import MimoDesktopPetCore
 
 @MainActor
 final class StatusItemController: NSObject {
@@ -65,11 +66,13 @@ final class StatusItemController: NSObject {
         clickThroughItem = clickItem
         menu.addItem(clickItem)
 
-        let debugItem = NSMenuItem(title: "Debug Overlay", action: #selector(toggleDebugOverlay), keyEquivalent: "")
-        debugItem.target = self
-        debugItem.state = viewModel.debugOverlay ? .on : .off
-        debugOverlayItem = debugItem
-        menu.addItem(debugItem)
+        if PetDebugOverlayPolicy.isMenuVisible() {
+            let debugItem = NSMenuItem(title: "Debug Overlay", action: #selector(toggleDebugOverlay), keyEquivalent: "")
+            debugItem.target = self
+            debugItem.state = viewModel.debugOverlay ? .on : .off
+            debugOverlayItem = debugItem
+            menu.addItem(debugItem)
+        }
 
         let reconnectItem = NSMenuItem(title: "Reconnect Codex", action: #selector(reconnectCodex), keyEquivalent: "")
         reconnectItem.target = self

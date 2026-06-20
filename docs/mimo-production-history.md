@@ -214,7 +214,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   tool/command progress immediately from their schema-backed `item` payloads
 - streaming delta notifications are treated as activity signals and converted
   into generic Mimo reports without quoting raw delta strings
-- the white conversation-feed panel is a `Debug Overlay` menu mode, not the production surface
+- the white conversation-feed panel is a `Debug Overlay` mode, not the
+  production surface; its menu toggle is hidden unless `MIMO_DEBUG_MENU=1` or
+  `MIMO_DEBUG_OVERLAY=1` is set
 - Codex state is read through `codex app-server --stdio` JSON-RPC with schema
   aligned `initialize.clientInfo` and `capabilities.experimentalApi`
 - the app reads `thread/loaded/list`, `thread/list(limit: 6)`, and

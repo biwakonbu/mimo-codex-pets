@@ -213,6 +213,8 @@ Conversation behavior:
   identifiers, or tool arguments in production bubbles.
 - Machine payload-looking text is suppressed and replaced with a generic short phrase.
 - Bubble text is transient; durable feed display belongs only in `Debug Overlay`.
+  The debug overlay menu item is hidden in production by default and is only
+  exposed when `MIMO_DEBUG_MENU=1` or `MIMO_DEBUG_OVERLAY=1` is set.
 
 ## Verification Gates
 
@@ -288,7 +290,9 @@ Manual or visual checks:
   conversation bubbles. Overflow E2E separately verifies one focused primary
   bubble, two concrete conversation bubbles, and one overflow counter bubble.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
-  the transcript/feed panel remains opt-in debug UI.
+  the transcript/feed panel remains opt-in debug UI. Production menu builds
+  should not expose the debug toggle unless `MIMO_DEBUG_MENU=1` or
+  `MIMO_DEBUG_OVERLAY=1` is set.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log, verifies that the UI state leaves offline/connection
   presentation after a real app-server connection, then captures the exact
@@ -321,7 +325,8 @@ Manual or visual checks:
   failed presentation states, captures the exact production window for each
   state, runs `inspect_production_capture.swift` against every image, and
   applies the hierarchy check to the simultaneous multi-thread image.
-- `Debug Overlay` can be toggled from the menu and is not enabled by default.
+- `Debug Overlay` can be toggled from the menu only when the debug menu is
+  explicitly enabled, and is not enabled by default.
 - Temporary screenshots and logs stay under `/tmp` and are not committed.
 
 ## Open Research
