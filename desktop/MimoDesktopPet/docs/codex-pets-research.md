@@ -64,6 +64,10 @@ Verified runtime behavior:
   JSON-RPC `jsonrpc` fields are tolerated but not required.
 - `codex app-server --stdio` returns a Codex Desktop user agent and can read local thread state.
 - App-server responses and notifications may interleave on stdout; the client must dispatch by `method` vs `id`.
+- The client accepts both newline-delimited JSON and `Content-Length` JSON-RPC
+  response framing. It auto-detects `Content-Length` on stdout and switches
+  subsequent writes to the same framing, while keeping newline JSON as the
+  default first write for the current `--stdio` app-server.
 - App-server enum-like fields may grow over time. Unknown thread active flags
   are ignored, unknown turn statuses are treated as in-progress, and missing
   thread status defaults to idle so one protocol addition does not make Mimo
@@ -207,8 +211,8 @@ cd desktop/MimoDesktopPet
 
 `./script/qa_all.sh` is the canonical local gate. It runs the unit suite,
 static syntax checks, generated app-server schema drift checks, live app-server
-read/presentation smoke checks, fake/offline/disconnect/state-matrix production
-E2E capture gates, and bundle verification. When a real Codex app-server is
+read/presentation smoke checks, fake/content-length/offline/disconnect/state-matrix
+production E2E capture gates, and bundle verification. When a real Codex app-server is
 intentionally unavailable, run `./script/qa_all.sh fake-only` and then rerun full
 mode before accepting app-server integration changes.
 
@@ -220,6 +224,7 @@ swift test
 ./script/live_app_server_smoke.py
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh
+./script/e2e_content_length_app_server.sh
 ./script/e2e_unavailable_app_server.sh
 ./script/e2e_disconnect_app_server.sh
 ./script/e2e_state_matrix.sh

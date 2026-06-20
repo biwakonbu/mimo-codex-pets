@@ -18,11 +18,6 @@ final class CodexAppServerClient {
         case unavailable
     }
 
-    private enum StreamFraming {
-        case jsonLines
-        case contentLength
-    }
-
     private let queue = DispatchQueue(label: "MimoDesktopPet.CodexAppServerClient")
     private let decoder = JSONDecoder()
     private let invocation = CodexCommandLocator.resolve()
@@ -31,8 +26,8 @@ final class CodexAppServerClient {
     private var stdoutPipe: Pipe?
     private var stderrPipe: Pipe?
     private var proxyIsRunning = false
-    private var streamFraming: StreamFraming = .jsonLines
-    private var stdoutBuffer = Data()
+    private var outgoingFraming: CodexJSONRPCStreamParser.Framing = .jsonLines
+    private var streamParser = CodexJSONRPCStreamParser()
     private var nextRequestId = 1
     private var pendingRequests: [Int: RequestKind] = [:]
     private var selectedThreadId: String?
@@ -132,7 +127,8 @@ final class CodexAppServerClient {
             stdoutPipe = stdout
             stderrPipe = stderr
             proxyIsRunning = true
-            streamFraming = .jsonLines
+            outgoingFraming = .jsonLines
+            streamParser.reset()
             sendInitialize()
             startHandshakeTimeout()
         } catch {
@@ -170,7 +166,8 @@ final class CodexAppServerClient {
         stdoutPipe = nil
         stderrPipe?.fileHandleForReading.readabilityHandler = nil
         stderrPipe = nil
-        stdoutBuffer.removeAll()
+        streamParser.reset()
+        outgoingFraming = .jsonLines
         pendingRequests.removeAll()
     }
 
@@ -268,7 +265,7 @@ final class CodexAppServerClient {
         do {
             let data = try JSONSerialization.data(withJSONObject: object)
             let framedData: Data
-            switch streamFraming {
+            switch outgoingFraming {
             case .jsonLines:
                 var lineData = data
                 lineData.append(0x0A)
@@ -281,6 +278,10 @@ final class CodexAppServerClient {
                 }
                 contentLengthData.append(data)
                 framedData = contentLengthData
+            case .undecided:
+                var lineData = data
+                lineData.append(0x0A)
+                framedData = lineData
             }
             guard writeData(framedData, to: stdinPipe.fileHandleForWriting.fileDescriptor) else {
                 transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
@@ -315,61 +316,17 @@ final class CodexAppServerClient {
     }
 
     private func consumeOutput(_ data: Data) {
-        stdoutBuffer.append(data)
-
-        switch streamFraming {
-        case .jsonLines:
-            consumeJSONLines()
-        case .contentLength:
-            consumeContentLengthMessages()
-        }
-    }
-
-    private func consumeJSONLines() {
-        while let newlineIndex = stdoutBuffer.firstIndex(of: 0x0A) {
-            var lineData = stdoutBuffer.subdata(in: stdoutBuffer.startIndex..<newlineIndex)
-            stdoutBuffer.removeSubrange(stdoutBuffer.startIndex...newlineIndex)
-            if lineData.last == 0x0D {
-                lineData.removeLast()
+        do {
+            let messages = try streamParser.append(data)
+            if streamParser.framing == .contentLength {
+                outgoingFraming = .contentLength
             }
-            guard !lineData.isEmpty else { continue }
-            handleLine(lineData)
-        }
-    }
-
-    private func consumeContentLengthMessages() {
-        let headerSeparator = Data([0x0D, 0x0A, 0x0D, 0x0A])
-        while let headerRange = stdoutBuffer.range(of: headerSeparator) {
-            let headerData = stdoutBuffer.subdata(in: stdoutBuffer.startIndex..<headerRange.lowerBound)
-            guard
-                let headerText = String(data: headerData, encoding: .utf8),
-                let contentLength = parseContentLength(from: headerText)
-            else {
-                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
-                return
+            for message in messages where !message.isEmpty {
+                handleLine(message)
             }
-
-            let bodyStart = headerRange.upperBound
-            let bodyEnd = bodyStart + contentLength
-            guard stdoutBuffer.count >= bodyEnd else {
-                return
-            }
-
-            let body = stdoutBuffer.subdata(in: bodyStart..<bodyEnd)
-            stdoutBuffer.removeSubrange(stdoutBuffer.startIndex..<bodyEnd)
-            handleLine(body)
+        } catch {
+            transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
         }
-    }
-
-    private func parseContentLength(from headerText: String) -> Int? {
-        for line in headerText.components(separatedBy: "\r\n") {
-            let parts = line.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
-            guard parts.count == 2, parts[0].trimmingCharacters(in: .whitespaces).lowercased() == "content-length" else {
-                continue
-            }
-            return Int(parts[1].trimmingCharacters(in: .whitespaces))
-        }
-        return nil
     }
 
     private func handleLine(_ data: Data) {

@@ -82,6 +82,7 @@ else
 fi
 
 run_from_root "fake app-server production E2E" ./script/e2e_fake_app_server.sh
+run_from_root "content-length app-server production E2E" ./script/e2e_content_length_app_server.sh
 run_from_root "unavailable app-server production E2E" ./script/e2e_unavailable_app_server.sh
 run_from_root "disconnect production E2E" ./script/e2e_disconnect_app_server.sh
 run_from_root "production state matrix E2E" ./script/e2e_state_matrix.sh

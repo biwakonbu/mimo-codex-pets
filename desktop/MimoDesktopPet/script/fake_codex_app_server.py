@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import json
+import os
 import sys
 import threading
 import time
 
 LOG_PATH = "/tmp/mimo-fake-codex.log"
+OUTPUT_FRAMING = os.environ.get("MIMO_FAKE_CODEX_FRAMING", "json-lines")
 STATE_LOCK = threading.Lock()
 CURRENT_STATUS = {"type": "idle"}
 CURRENT_TURNS = [
@@ -43,8 +45,74 @@ def log(message):
 
 def write_message(message):
     log("out " + json.dumps(message, separators=(",", ":")))
-    sys.stdout.write(json.dumps(message, separators=(",", ":")) + "\n")
+    payload = json.dumps(message, separators=(",", ":")).encode("utf-8")
+    if OUTPUT_FRAMING == "content-length":
+        sys.stdout.buffer.write(f"Content-Length: {len(payload)}\r\n\r\n".encode("ascii"))
+        sys.stdout.buffer.write(payload)
+    else:
+        sys.stdout.buffer.write(payload + b"\n")
     sys.stdout.flush()
+
+
+def lower_ascii(data):
+    return bytes(byte + 32 if 65 <= byte <= 90 else byte for byte in data)
+
+
+def starts_content_length(buffer):
+    prefix = b"content-length"
+    return len(buffer) >= len(prefix) and lower_ascii(buffer[: len(prefix)]) == prefix
+
+
+def could_be_content_length(buffer):
+    prefix = b"content-length"
+    data = lower_ascii(buffer[: len(prefix)])
+    return len(data) < len(prefix) and prefix.startswith(data)
+
+
+def content_length_from_header(header):
+    for line in header.decode("utf-8").split("\r\n"):
+        key, sep, value = line.partition(":")
+        if sep and key.strip().lower() == "content-length":
+            return int(value.strip())
+    raise ValueError("missing Content-Length")
+
+
+def read_messages():
+    buffer = bytearray()
+    while True:
+        chunk = sys.stdin.buffer.read(1)
+        if not chunk:
+            return
+        buffer.extend(chunk)
+        while buffer:
+            if starts_content_length(buffer):
+                separator = buffer.find(b"\r\n\r\n")
+                if separator < 0:
+                    break
+                header = bytes(buffer[:separator])
+                length = content_length_from_header(header)
+                body_start = separator + 4
+                body_end = body_start + length
+                if len(buffer) < body_end:
+                    break
+                body = bytes(buffer[body_start:body_end])
+                del buffer[:body_end]
+                if body.strip():
+                    log("in-framing content-length")
+                    yield json.loads(body)
+                continue
+
+            if could_be_content_length(buffer):
+                break
+
+            newline = buffer.find(b"\n")
+            if newline < 0:
+                break
+            line = bytes(buffer[:newline]).rstrip(b"\r")
+            del buffer[: newline + 1]
+            if line.strip():
+                log("in-framing json-lines")
+                yield json.loads(line)
 
 
 def second_thread_snapshot():
@@ -313,11 +381,8 @@ def state_sequence():
 def run_stdio_server():
     log("stdio start")
     sequence_started = False
-    for line in sys.stdin:
-        if not line.strip():
-            continue
-        log("in " + line.strip())
-        request = json.loads(line)
+    for request in read_messages():
+        log("in " + json.dumps(request, separators=(",", ":")))
         method = request.get("method")
         request_id = request.get("id")
 
