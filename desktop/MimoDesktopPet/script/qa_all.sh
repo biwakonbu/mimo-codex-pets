@@ -64,6 +64,9 @@ run_from_repo "shell syntax checks" bash -n \
   desktop/MimoDesktopPet/script/check_app_server_schema.sh \
   desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh \
   desktop/MimoDesktopPet/script/e2e_fake_app_server.sh \
+  desktop/MimoDesktopPet/script/e2e_content_length_app_server.sh \
+  desktop/MimoDesktopPet/script/e2e_empty_thread_list.sh \
+  desktop/MimoDesktopPet/script/e2e_overflow_thread_list.sh \
   desktop/MimoDesktopPet/script/e2e_unavailable_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_disconnect_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_state_matrix.sh

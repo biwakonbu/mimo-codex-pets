@@ -9,6 +9,8 @@ import time
 
 CODEX_BIN = os.environ.get("CODEX_BIN", "codex")
 TIMEOUT_SECONDS = float(os.environ.get("MIMO_LIVE_SMOKE_TIMEOUT", "8"))
+LOADED_THREAD_LIMIT = 10
+LISTED_THREAD_LIMIT = 6
 
 
 class SmokeFailure(Exception):
@@ -64,18 +66,24 @@ def request(process, request_id, method, params):
     return read_response(process, request_id)
 
 
-def first_thread_id(loaded_result, list_result):
+def thread_ids(loaded_result, list_result):
+    ids = []
     if isinstance(loaded_result, dict):
         data = loaded_result.get("data")
-        if isinstance(data, list) and data:
-            return data[0]
+        if isinstance(data, list):
+            ids.extend(item for item in data if isinstance(item, str))
     if isinstance(list_result, dict):
         data = list_result.get("data")
         if isinstance(data, list):
             for thread in data:
                 if isinstance(thread, dict) and isinstance(thread.get("id"), str):
-                    return thread["id"]
-    return None
+                    ids.append(thread["id"])
+
+    unique_ids = []
+    for thread_id in ids:
+        if thread_id not in unique_ids:
+            unique_ids.append(thread_id)
+    return unique_ids[:LISTED_THREAD_LIMIT]
 
 
 def main():
@@ -106,24 +114,28 @@ def main():
             raise SmokeFailure("initialize response did not include userAgent")
 
         write_notification(process, "initialized")
-        loaded = request(process, 2, "thread/loaded/list", {"limit": 10})
-        listed = request(process, 3, "thread/list", {"limit": 4, "archived": False})
-        thread_id = first_thread_id(loaded, listed)
-        read_status = "skipped-no-thread"
-        if thread_id:
+        loaded = request(process, 2, "thread/loaded/list", {"limit": LOADED_THREAD_LIMIT})
+        listed = request(process, 3, "thread/list", {"limit": LISTED_THREAD_LIMIT, "archived": False})
+        candidate_thread_ids = thread_ids(loaded, listed)
+        read_count = 0
+        for offset, thread_id in enumerate(candidate_thread_ids):
             read = request(
                 process,
-                4,
+                4 + offset,
                 "thread/read",
                 {"threadId": thread_id, "includeTurns": True},
             )
             if not isinstance(read, dict) or not isinstance(read.get("thread"), dict):
-                raise SmokeFailure("thread/read response did not include thread")
-            read_status = "read"
+                raise SmokeFailure(f"thread/read response did not include thread for {thread_id!r}")
+            read_count += 1
+
+        read_status = f"read:{read_count}" if read_count else "skipped-no-thread"
 
         print(
             "Live app-server smoke passed: "
             f"userAgent={initialize['userAgent']!r}, "
+            f"loadedLimit={LOADED_THREAD_LIMIT}, "
+            f"listedLimit={LISTED_THREAD_LIMIT}, "
             f"loaded={len(loaded.get('data', [])) if isinstance(loaded, dict) else 'unknown'}, "
             f"listed={len(listed.get('data', [])) if isinstance(listed, dict) else 'unknown'}, "
             f"threadRead={read_status}."
