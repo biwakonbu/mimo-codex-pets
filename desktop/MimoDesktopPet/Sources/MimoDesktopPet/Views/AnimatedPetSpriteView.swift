@@ -6,7 +6,7 @@ struct AnimatedPetSpriteView: View {
     let frameProvider: AtlasFrameImageProvider?
 
     @State private var frameIndex = 0
-    private let timer = Timer.publish(every: 0.18, on: .main, in: .common).autoconnect()
+    private let timer = Timer.publish(every: 0.36, on: .main, in: .common).autoconnect()
 
     var body: some View {
         Group {
