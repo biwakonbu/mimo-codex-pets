@@ -115,6 +115,21 @@ The final repair regenerated `running-right` as a true 8-frame chibi gait row, t
 
 Important lesson: for directional movement, smooth bbox metrics are not enough. The row must visibly alternate support foot and sending foot. A hover-step is acceptable only if the state intentionally wants floating movement; it should not be described as natural running.
 
+The first regenerated gait still had two QA problems:
+
+- the body/upper silhouette changed size between frames
+- tiny disconnected alpha components remained around the character
+
+The accepted cleanup stabilizes the upper body while preserving the generated leg gait:
+
+- keep only the largest connected alpha component in each frame
+- use a stable upper-body composite for head, torso, wings, backpack, pen, and tablet
+- blend in the generated lower-body/leg motion below the coat line
+- mirror the cleaned `running-right` into `running-left`
+- require `non_main_area_total == 0` for directional running rows
+
+After cleanup, the running rows have no disconnected sprite debris and the upper-body width range is reduced to about 3 px.
+
 ## QA Performed
 
 Static QA:

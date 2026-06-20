@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "frames_root": "work/live-qa/running-gait-rework/frames-final-generated-run",
+  "frames_root": "work/live-qa/running-size-cleanup/frames-final-stable-size",
   "errors": [],
   "warnings": [],
   "rows": [
@@ -15,7 +15,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/idle/00.png",
+          "file": "frames-final-stable-size/idle/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13530,
@@ -30,7 +30,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/idle/01.png",
+          "file": "frames-final-stable-size/idle/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13449,
@@ -45,7 +45,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/idle/02.png",
+          "file": "frames-final-stable-size/idle/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13477,
@@ -60,7 +60,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/idle/03.png",
+          "file": "frames-final-stable-size/idle/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13432,
@@ -75,7 +75,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/idle/04.png",
+          "file": "frames-final-stable-size/idle/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13358,
@@ -90,7 +90,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-generated-run/idle/05.png",
+          "file": "frames-final-stable-size/idle/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13361,
@@ -116,7 +116,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/running-right/00.png",
+          "file": "frames-final-stable-size/running-right/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13429,
@@ -131,55 +131,55 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/running-right/01.png",
+          "file": "frames-final-stable-size/running-right/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13166,
+          "nontransparent_pixels": 13156,
           "bbox": [
-            47,
-            14,
+            46,
+            15,
             145,
-            202
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/running-right/02.png",
+          "file": "frames-final-stable-size/running-right/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14373,
+          "nontransparent_pixels": 14063,
           "bbox": [
             36,
-            14,
+            13,
             155,
-            202
+            201
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/running-right/03.png",
+          "file": "frames-final-stable-size/running-right/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12609,
+          "nontransparent_pixels": 12768,
           "bbox": [
-            47,
-            14,
-            144,
-            202
+            46,
+            15,
+            145,
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/running-right/04.png",
+          "file": "frames-final-stable-size/running-right/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13527,
+          "nontransparent_pixels": 13562,
           "bbox": [
             46,
             14,
@@ -191,45 +191,45 @@
         },
         {
           "index": 5,
-          "file": "frames-final-generated-run/running-right/05.png",
+          "file": "frames-final-stable-size/running-right/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13432,
+          "nontransparent_pixels": 13370,
           "bbox": [
-            47,
-            14,
+            46,
+            15,
             145,
-            202
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 6,
-          "file": "frames-final-generated-run/running-right/06.png",
+          "file": "frames-final-stable-size/running-right/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13917,
+          "nontransparent_pixels": 13732,
           "bbox": [
             40,
-            14,
+            13,
             151,
-            202
+            201
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 7,
-          "file": "frames-final-generated-run/running-right/07.png",
+          "file": "frames-final-stable-size/running-right/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13895,
+          "nontransparent_pixels": 13550,
           "bbox": [
-            44,
-            14,
+            46,
+            15,
             147,
-            202
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -247,7 +247,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/running-left/00.png",
+          "file": "frames-final-stable-size/running-left/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13429,
@@ -262,55 +262,55 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/running-left/01.png",
+          "file": "frames-final-stable-size/running-left/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13166,
+          "nontransparent_pixels": 13156,
           "bbox": [
             47,
-            14,
-            145,
-            202
+            15,
+            146,
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/running-left/02.png",
+          "file": "frames-final-stable-size/running-left/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14373,
+          "nontransparent_pixels": 14063,
           "bbox": [
             37,
-            14,
+            13,
             156,
-            202
+            201
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/running-left/03.png",
+          "file": "frames-final-stable-size/running-left/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12609,
+          "nontransparent_pixels": 12768,
           "bbox": [
-            48,
-            14,
-            145,
-            202
+            47,
+            15,
+            146,
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/running-left/04.png",
+          "file": "frames-final-stable-size/running-left/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13527,
+          "nontransparent_pixels": 13562,
           "bbox": [
             46,
             14,
@@ -322,45 +322,45 @@
         },
         {
           "index": 5,
-          "file": "frames-final-generated-run/running-left/05.png",
+          "file": "frames-final-stable-size/running-left/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13432,
+          "nontransparent_pixels": 13370,
           "bbox": [
             47,
-            14,
-            145,
-            202
+            15,
+            146,
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 6,
-          "file": "frames-final-generated-run/running-left/06.png",
+          "file": "frames-final-stable-size/running-left/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13917,
+          "nontransparent_pixels": 13732,
           "bbox": [
             41,
-            14,
+            13,
             152,
-            202
+            201
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 7,
-          "file": "frames-final-generated-run/running-left/07.png",
+          "file": "frames-final-stable-size/running-left/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13895,
+          "nontransparent_pixels": 13550,
           "bbox": [
             45,
-            14,
-            148,
-            202
+            15,
+            146,
+            203
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -378,7 +378,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/waving/00.png",
+          "file": "frames-final-stable-size/waving/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13342,
@@ -393,7 +393,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/waving/01.png",
+          "file": "frames-final-stable-size/waving/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13564,
@@ -408,7 +408,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/waving/02.png",
+          "file": "frames-final-stable-size/waving/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13245,
@@ -423,7 +423,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/waving/03.png",
+          "file": "frames-final-stable-size/waving/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13200,
@@ -449,7 +449,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/jumping/00.png",
+          "file": "frames-final-stable-size/jumping/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9208,
@@ -464,7 +464,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/jumping/01.png",
+          "file": "frames-final-stable-size/jumping/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9961,
@@ -479,7 +479,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/jumping/02.png",
+          "file": "frames-final-stable-size/jumping/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9885,
@@ -494,7 +494,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/jumping/03.png",
+          "file": "frames-final-stable-size/jumping/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 10515,
@@ -509,7 +509,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/jumping/04.png",
+          "file": "frames-final-stable-size/jumping/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9247,
@@ -535,7 +535,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/failed/00.png",
+          "file": "frames-final-stable-size/failed/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13989,
@@ -550,7 +550,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/failed/01.png",
+          "file": "frames-final-stable-size/failed/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13331,
@@ -565,7 +565,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/failed/02.png",
+          "file": "frames-final-stable-size/failed/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12518,
@@ -580,7 +580,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/failed/03.png",
+          "file": "frames-final-stable-size/failed/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 10751,
@@ -595,7 +595,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/failed/04.png",
+          "file": "frames-final-stable-size/failed/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 11628,
@@ -610,7 +610,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-generated-run/failed/05.png",
+          "file": "frames-final-stable-size/failed/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13323,
@@ -625,7 +625,7 @@
         },
         {
           "index": 6,
-          "file": "frames-final-generated-run/failed/06.png",
+          "file": "frames-final-stable-size/failed/06.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13136,
@@ -640,7 +640,7 @@
         },
         {
           "index": 7,
-          "file": "frames-final-generated-run/failed/07.png",
+          "file": "frames-final-stable-size/failed/07.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13329,
@@ -666,7 +666,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/waiting/00.png",
+          "file": "frames-final-stable-size/waiting/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13729,
@@ -681,7 +681,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/waiting/01.png",
+          "file": "frames-final-stable-size/waiting/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13430,
@@ -696,7 +696,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/waiting/02.png",
+          "file": "frames-final-stable-size/waiting/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12951,
@@ -711,7 +711,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/waiting/03.png",
+          "file": "frames-final-stable-size/waiting/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13235,
@@ -726,7 +726,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/waiting/04.png",
+          "file": "frames-final-stable-size/waiting/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12877,
@@ -741,7 +741,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-generated-run/waiting/05.png",
+          "file": "frames-final-stable-size/waiting/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13195,
@@ -767,7 +767,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/running/00.png",
+          "file": "frames-final-stable-size/running/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14880,
@@ -782,7 +782,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/running/01.png",
+          "file": "frames-final-stable-size/running/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14526,
@@ -797,7 +797,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/running/02.png",
+          "file": "frames-final-stable-size/running/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14374,
@@ -812,7 +812,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/running/03.png",
+          "file": "frames-final-stable-size/running/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14110,
@@ -827,7 +827,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/running/04.png",
+          "file": "frames-final-stable-size/running/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13859,
@@ -842,7 +842,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-generated-run/running/05.png",
+          "file": "frames-final-stable-size/running/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14282,
@@ -868,7 +868,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-generated-run/review/00.png",
+          "file": "frames-final-stable-size/review/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13463,
@@ -883,7 +883,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-generated-run/review/01.png",
+          "file": "frames-final-stable-size/review/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12757,
@@ -898,7 +898,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-generated-run/review/02.png",
+          "file": "frames-final-stable-size/review/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12625,
@@ -913,7 +913,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-generated-run/review/03.png",
+          "file": "frames-final-stable-size/review/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13080,
@@ -928,7 +928,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-generated-run/review/04.png",
+          "file": "frames-final-stable-size/review/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12742,
@@ -943,7 +943,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-generated-run/review/05.png",
+          "file": "frames-final-stable-size/review/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12822,

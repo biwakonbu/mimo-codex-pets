@@ -4,5 +4,75 @@
   "green_dominant_16_low_alpha": 0,
   "close_key_alpha_gt0": 0,
   "cell_edge_alpha": 0,
-  "transparent_rgb_residue_pixels": 0
+  "transparent_rgb_residue_pixels": 0,
+  "running_component_report": {
+    "running-right": {
+      "upper_widths": [
+        99,
+        99,
+        99,
+        99,
+        99,
+        99,
+        102,
+        101
+      ],
+      "upper_width_range": 3,
+      "component_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "non_main_area": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "non_main_area_total": 0
+    },
+    "running-left": {
+      "upper_widths": [
+        99,
+        99,
+        99,
+        99,
+        99,
+        99,
+        102,
+        101
+      ],
+      "upper_width_range": 3,
+      "component_counts": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "non_main_area": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "non_main_area_total": 0
+    }
+  }
 }
