@@ -50,6 +50,9 @@ state after connecting.
 `./script/e2e_unavailable_app_server.sh` launches the real app with an
 unavailable Codex command and verifies that Mimo stays alive in transparent
 production mode with an offline speech bubble.
+Both E2E scripts capture the exact Mimo window and run
+`script/inspect_production_capture.swift` to reject blank, fully opaque, or
+debug-style surfaces.
 
 ## Controls
 

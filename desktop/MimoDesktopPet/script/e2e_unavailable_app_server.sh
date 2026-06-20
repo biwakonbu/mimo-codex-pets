@@ -106,41 +106,6 @@ PY
 
 kill -0 "$APP_PID" >/dev/null
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
-
-swift - "$SCREENSHOT_PATH" <<'SWIFT'
-import AppKit
-import Foundation
-
-let path = CommandLine.arguments[1]
-guard let image = NSImage(contentsOfFile: path),
-      let tiff = image.tiffRepresentation,
-      let bitmap = NSBitmapImageRep(data: tiff) else {
-    fputs("failed to load screenshot\n", stderr)
-    exit(1)
-}
-
-guard bitmap.pixelsWide <= 900, bitmap.pixelsHigh <= 900 else {
-    fputs("unexpected production window size \(bitmap.pixelsWide)x\(bitmap.pixelsHigh)\n", stderr)
-    exit(1)
-}
-
-let points = [
-    (0, 0),
-    (bitmap.pixelsWide - 1, 0),
-    (0, bitmap.pixelsHigh - 1),
-    (bitmap.pixelsWide - 1, bitmap.pixelsHigh - 1)
-]
-var opaqueCorners = 0
-for (x, y) in points {
-    let alpha = bitmap.colorAt(x: x, y: y)?.alphaComponent ?? 1
-    if alpha > 0.02 {
-        opaqueCorners += 1
-    }
-}
-guard opaqueCorners <= 1 else {
-    fputs("too many opaque screenshot corners for transparent production surface: \(opaqueCorners)\n", stderr)
-    exit(1)
-}
-SWIFT
+swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 
 echo "E2E passed: unavailable Codex app-server keeps transparent production Mimo alive with an offline bubble."

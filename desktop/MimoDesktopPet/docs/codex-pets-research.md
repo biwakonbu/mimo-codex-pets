@@ -74,7 +74,14 @@ Verified runtime behavior:
 Computer Use limitation:
 
 - Direct Computer Use inspection of `com.openai.codex` is blocked by safety policy in this environment.
-- Companion QA can still use Computer Use on `MimoDesktopPet` and local screenshot/alpha inspection.
+- Direct Computer Use app-state inspection of `MimoDesktopPet` may also fail for
+  the production companion because it is an `LSUIElement` app using a
+  non-activating screen-saver-level panel. This is a Computer Use attachment
+  limitation, not proof that the panel is absent.
+- Companion visual QA therefore uses CGWindow discovery plus
+  `screencapture -l` on the exact Mimo window. The capture is then inspected for
+  transparent corners, bounded alpha coverage, white speech-bubble pixels, and
+  Mimo sprite color pixels.
 
 ## Mimic Rules
 
@@ -161,9 +168,15 @@ swift test
 
 Manual or visual checks:
 
-- Computer Use on `MimoDesktopPet` shows only speech bubble plus Mimo in production mode.
+- Computer Use should be attempted when available, but current production-window
+  evidence comes from CGWindow discovery and `screencapture -l` because
+  Computer Use may not attach to `LSUIElement` screen-saver-level panels.
 - Window capture corner alpha is transparent.
 - Window capture reports the Mimo window at screen-saver layer.
+- `script/inspect_production_capture.swift` verifies that the captured
+  production window is neither blank nor a debug-style opaque panel: it must
+  contain transparent background, white speech-bubble pixels, and Mimo sprite
+  color pixels.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
