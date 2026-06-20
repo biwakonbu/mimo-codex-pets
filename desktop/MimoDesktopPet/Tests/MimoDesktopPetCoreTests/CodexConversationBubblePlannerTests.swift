@@ -34,6 +34,29 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(planned.map(\.text), ["A2", "B1"])
     }
 
+    func testPreferredThreadKeepsStreamingProgressBeforeLatestLine() {
+        let lines = [
+            line(threadId: "current", speaker: "tool", text: "ツールで確認中", isAssistant: true),
+            line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true),
+            line(threadId: "current", speaker: "tool", text: "コマンド出力を確認中", isAssistant: true),
+            line(threadId: "current", speaker: "codex", text: "最後の通常応答", isAssistant: true),
+            line(threadId: "other", speaker: "codex", text: "別スレッド", isAssistant: true)
+        ]
+
+        let planned = CodexConversationBubblePlanner.orderedThreadUpdates(
+            from: lines,
+            preferredThreadId: "current"
+        )
+
+        XCTAssertEqual(planned.map(\.text), [
+            "ツールで確認中",
+            "応答を作成中",
+            "コマンド出力を確認中",
+            "最後の通常応答",
+            "別スレッド"
+        ])
+    }
+
     func testConversationAnimationUsesNonWalkingMotionWhenIdle() {
         let assistant = line(threadId: "a", speaker: "codex", text: "完了", isAssistant: true)
         let user = line(threadId: "a", speaker: "you", text: "お願い", isAssistant: false)

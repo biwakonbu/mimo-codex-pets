@@ -118,6 +118,8 @@ kill -0 "$APP_PID" >/dev/null
 
 grep -Fq 'ご主人、「Mimo runtime QA」は作業を進めています' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」はツールで確認中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は応答をまとめています' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」はコマンドを実行中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 

@@ -74,6 +74,11 @@ public enum CodexNotificationMethod: String, CaseIterable, Equatable, Sendable {
     case turnCompleted = "turn/completed"
     case itemStarted = "item/started"
     case itemCompleted = "item/completed"
+    case agentMessageDelta = "item/agentMessage/delta"
+    case planDelta = "item/plan/delta"
+    case commandExecutionOutputDelta = "item/commandExecution/outputDelta"
+    case fileChangeOutputDelta = "item/fileChange/outputDelta"
+    case mcpToolCallProgress = "item/mcpToolCall/progress"
 }
 
 public struct CodexJSONRPCNotification<Params: Decodable>: Decodable {
@@ -94,4 +99,18 @@ public struct TurnNotification: Decodable, Equatable, Sendable {
 public struct ItemLifecycleNotification: Decodable, Equatable, Sendable {
     public let threadId: String
     public let turnId: String
+}
+
+public struct ItemTextDeltaNotification: Decodable, Equatable, Sendable {
+    public let threadId: String
+    public let turnId: String
+    public let itemId: String
+    public let delta: String
+}
+
+public struct McpToolCallProgressNotification: Decodable, Equatable, Sendable {
+    public let threadId: String
+    public let turnId: String
+    public let itemId: String
+    public let message: String
 }

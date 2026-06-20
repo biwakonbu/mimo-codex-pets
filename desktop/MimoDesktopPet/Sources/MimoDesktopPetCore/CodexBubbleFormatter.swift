@@ -40,6 +40,12 @@ public enum CodexBubbleFormatter {
         if text.contains("待ち") || text.contains("待って") || text.contains("入力") || text.contains("確認が必要") {
             return "確認待ちです"
         }
+        if text.contains("応答") || text.contains("返答") {
+            return "応答をまとめています"
+        }
+        if text.contains("計画") || text.contains("プラン") {
+            return "計画を整理中です"
+        }
         if text.contains("テスト") || text.contains("検証") || text.contains("qa") {
             return "検証中です"
         }
@@ -62,7 +68,7 @@ public enum CodexBubbleFormatter {
         if text.contains("ファイル") || text.contains("変更") {
             return "変更を反映中です"
         }
-        if text.contains("実行") || text.contains("command") {
+        if text.contains("実行") || text.contains("出力") || text.contains("command") {
             return "コマンドを実行中です"
         }
         return "作業中です"

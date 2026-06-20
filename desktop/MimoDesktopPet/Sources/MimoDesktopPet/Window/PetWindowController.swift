@@ -311,6 +311,7 @@ final class PetWindowController: NSObject {
     }
 
     private func playRandomRestingMoment() {
+        guard !viewModel.hasPendingConversationBubbles else { return }
         let options: [(PetAnimationState, String?)] = [
             (.idle, nil),
             (.review, viewModel.conversationLines.isEmpty ? nil : "メモ中"),

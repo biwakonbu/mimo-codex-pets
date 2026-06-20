@@ -8,7 +8,12 @@ final class CodexNotificationTests: XCTestCase {
             "turn/started",
             "turn/completed",
             "item/started",
-            "item/completed"
+            "item/completed",
+            "item/agentMessage/delta",
+            "item/plan/delta",
+            "item/commandExecution/outputDelta",
+            "item/fileChange/outputDelta",
+            "item/mcpToolCall/progress"
         ])
     }
 
@@ -80,5 +85,50 @@ final class CodexNotificationTests: XCTestCase {
         XCTAssertEqual(notification.method, "item/completed")
         XCTAssertEqual(notification.params.threadId, "thread-1")
         XCTAssertEqual(notification.params.turnId, "turn-1")
+    }
+
+    func testItemTextDeltaNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "item/agentMessage/delta",
+          "params": {
+            "threadId": "thread-1",
+            "turnId": "turn-1",
+            "itemId": "item-1",
+            "delta": "partial output"
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ItemTextDeltaNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "item/agentMessage/delta")
+        XCTAssertEqual(notification.params.itemId, "item-1")
+        XCTAssertEqual(notification.params.delta, "partial output")
+    }
+
+    func testMcpToolCallProgressNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "item/mcpToolCall/progress",
+          "params": {
+            "threadId": "thread-1",
+            "turnId": "turn-1",
+            "itemId": "item-1",
+            "message": "Fetching UI tree"
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<McpToolCallProgressNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "item/mcpToolCall/progress")
+        XCTAssertEqual(notification.params.message, "Fetching UI tree")
     }
 }

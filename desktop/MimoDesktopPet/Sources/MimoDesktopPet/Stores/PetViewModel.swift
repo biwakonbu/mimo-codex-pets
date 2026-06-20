@@ -7,6 +7,9 @@ final class PetViewModel: ObservableObject {
     @Published private(set) var conversationLines: [CodexConversationLine] = []
     @Published var clickThrough = false
     @Published var debugOverlay: Bool
+    var hasPendingConversationBubbles: Bool {
+        conversationBubbleActive || !pendingConversationLines.isEmpty
+    }
 
     private let conversationBubbleDuration: TimeInterval
     private let presentationLogURL: URL?

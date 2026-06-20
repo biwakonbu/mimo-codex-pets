@@ -82,6 +82,28 @@ def state_sequence():
             },
         }
     )
+    write_message(
+        {
+            "method": "item/agentMessage/delta",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "itemId": "agent-stream",
+                "delta": "raw assistant text should not be shown",
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "item/commandExecution/outputDelta",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "itemId": "command-stream",
+                "delta": "secret-looking command output should not be shown",
+            },
+        }
+    )
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}

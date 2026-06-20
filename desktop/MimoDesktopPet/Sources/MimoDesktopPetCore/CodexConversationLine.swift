@@ -25,12 +25,12 @@ public struct CodexConversationLine: Equatable, Sendable {
 public enum CodexConversationExtractor {
     public static func lines(from threadObject: [String: Any], maxLines: Int = 6) -> [CodexConversationLine] {
         let threadId = threadObject["id"] as? String ?? "unknown-thread"
-        let threadTitle = sanitizedTitle(
-            firstNonEmptyString(
+        let threadTitle = CodexThreadTitleFormatter.title(
+            from: [
                 threadObject["name"],
                 threadObject["preview"],
                 "Codex Thread"
-            )
+            ]
         )
 
         var extracted: [CodexConversationLine] = []
@@ -123,6 +123,20 @@ public enum CodexConversationExtractor {
         }
     }
 
+    public static func progressLine(
+        threadId: String,
+        threadTitle: String,
+        kind: String
+    ) -> CodexConversationLine {
+        CodexConversationLine(
+            threadId: threadId,
+            threadTitle: threadTitle,
+            speaker: kind == "agentMessageDelta" || kind == "planDelta" ? "codex" : "tool",
+            text: progressText(for: kind),
+            isAssistant: true
+        )
+    }
+
     private static func lines(fromTurn turn: [String: Any], threadId: String, threadTitle: String) -> [CodexConversationLine] {
         var lines: [CodexConversationLine] = []
 
@@ -176,6 +190,23 @@ public enum CodexConversationExtractor {
             text: text,
             isAssistant: isAssistant
         )
+    }
+
+    private static func progressText(for kind: String) -> String {
+        switch kind {
+        case "agentMessageDelta":
+            return "応答を作成中"
+        case "planDelta":
+            return "計画を整理中"
+        case "commandExecutionOutputDelta":
+            return "コマンド出力を確認中"
+        case "fileChangeOutputDelta":
+            return "ファイル変更を確認中"
+        case "mcpToolCallProgress":
+            return "ツールで確認中"
+        default:
+            return "進捗を確認中"
+        }
     }
 
     private static func compactText(from value: Any?, limit: Int) -> String? {
@@ -247,7 +278,4 @@ public enum CodexConversationExtractor {
         return ""
     }
 
-    private static func sanitizedTitle(_ title: String) -> String {
-        compactText(from: title, limit: 34) ?? "Codex Thread"
-    }
 }

@@ -557,6 +557,16 @@ final class CodexAppServerClient {
                 }
                 emitSnapshot(connectionAvailable: true)
             }
+        case .agentMessageDelta:
+            appendProgressLine(from: params, kind: "agentMessageDelta")
+        case .planDelta:
+            appendProgressLine(from: params, kind: "planDelta")
+        case .commandExecutionOutputDelta:
+            appendProgressLine(from: params, kind: "commandExecutionOutputDelta")
+        case .fileChangeOutputDelta:
+            appendProgressLine(from: params, kind: "fileChangeOutputDelta")
+        case .mcpToolCallProgress:
+            appendProgressLine(from: params, kind: "mcpToolCallProgress")
         }
     }
 
@@ -629,18 +639,33 @@ final class CodexAppServerClient {
         rememberThreadOrder([threadId])
     }
 
+    private func appendProgressLine(from params: Any?, kind: String) {
+        guard let dict = params as? [String: Any],
+              let threadId = dict["threadId"] as? String
+        else { return }
+
+        selectedThreadId = selectedThreadId ?? threadId
+        let title = threadTitlesById[threadId] ?? "Codex Thread"
+        let line = CodexConversationExtractor.progressLine(
+            threadId: threadId,
+            threadTitle: title,
+            kind: kind
+        )
+        var lines = conversationByThread[threadId] ?? []
+        lines.append(line)
+        conversationByThread[threadId] = Array(lines.suffix(6))
+        rememberThreadOrder([threadId])
+        latestTurnStatus = .inProgress
+        hasRecentAssistantFinal = false
+        emitSnapshot(connectionAvailable: true)
+    }
+
     private func threadTitle(from threadObject: [String: Any]) -> String {
-        for key in ["name", "preview"] {
-            if let text = threadObject[key] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                let trimmed = text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
-                if trimmed.count <= 34 {
-                    return trimmed
-                }
-                let index = trimmed.index(trimmed.startIndex, offsetBy: 34)
-                return String(trimmed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
-            }
-        }
-        return "Codex Thread"
+        CodexThreadTitleFormatter.title(from: [
+            threadObject["name"],
+            threadObject["preview"],
+            "Codex Thread"
+        ])
     }
 
     private func itemLooksLikeAssistantFinal(_ item: Any?) -> Bool {

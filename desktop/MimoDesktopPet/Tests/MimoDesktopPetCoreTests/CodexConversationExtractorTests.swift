@@ -91,6 +91,24 @@ final class CodexConversationExtractorTests: XCTestCase {
         ])
     }
 
+    func testBuildsGenericProgressLinesForDeltaNotifications() {
+        let command = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "commandExecutionOutputDelta"
+        )
+        let agent = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "agentMessageDelta"
+        )
+
+        XCTAssertEqual(command.speaker, "tool")
+        XCTAssertEqual(command.text, "コマンド出力を確認中")
+        XCTAssertEqual(agent.speaker, "codex")
+        XCTAssertEqual(agent.text, "応答を作成中")
+    }
+
     func testSuppressesMachinePayloadText() {
         let thread: [String: Any] = [
             "id": "thread-payload",

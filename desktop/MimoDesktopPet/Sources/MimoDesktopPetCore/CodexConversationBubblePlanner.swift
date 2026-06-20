@@ -7,11 +7,15 @@ public enum CodexConversationBubblePlanner {
     ) -> [CodexConversationLine] {
         var latestByThread: [String: CodexConversationLine] = [:]
         var recencyOrder: [String] = []
+        var preferredProgressLines: [CodexConversationLine] = []
 
         for line in lines where !line.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             recencyOrder.removeAll { $0 == line.threadId }
             recencyOrder.append(line.threadId)
             latestByThread[line.threadId] = line
+            if line.threadId == preferredThreadId, isProgressLine(line) {
+                preferredProgressLines.append(line)
+            }
         }
 
         var orderedIds = Array(recencyOrder.reversed())
@@ -21,7 +25,10 @@ public enum CodexConversationBubblePlanner {
             orderedIds.insert(preferredThreadId, at: 0)
         }
 
-        return orderedIds.compactMap { latestByThread[$0] }
+        var result: [CodexConversationLine] = []
+        appendUnique(preferredProgressLines, to: &result)
+        appendUnique(orderedIds.compactMap { latestByThread[$0] }, to: &result)
+        return result
     }
 
     public static func signature(for line: CodexConversationLine) -> String {
@@ -51,5 +58,25 @@ public enum CodexConversationBubblePlanner {
             return .review
         }
         return fallback
+    }
+
+    private static func appendUnique(_ lines: [CodexConversationLine], to result: inout [CodexConversationLine]) {
+        var signatures = Set(result.map(signature(for:)))
+        for line in lines {
+            let signature = signature(for: line)
+            guard !signatures.contains(signature) else { continue }
+            result.append(line)
+            signatures.insert(signature)
+        }
+    }
+
+    private static func isProgressLine(_ line: CodexConversationLine) -> Bool {
+        if line.speaker == "tool" {
+            return true
+        }
+        return [
+            "応答を作成中",
+            "計画を整理中"
+        ].contains(line.text)
     }
 }
