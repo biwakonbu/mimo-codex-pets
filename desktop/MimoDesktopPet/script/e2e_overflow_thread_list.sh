@@ -119,7 +119,7 @@ import json
 import sys
 
 log_path = sys.argv[1]
-read_thread_ids = set()
+messages = []
 with open(log_path, "r", encoding="utf-8") as handle:
     for line in handle:
         if not line.startswith("in "):
@@ -128,12 +128,51 @@ with open(log_path, "r", encoding="utf-8") as handle:
             message = json.loads(line[3:])
         except json.JSONDecodeError:
             continue
-        if message.get("method") == "thread/read":
-            read_thread_ids.add(message.get("params", {}).get("threadId"))
+        messages.append(message)
 
+read_thread_ids = {
+    message.get("params", {}).get("threadId")
+    for message in messages
+    if message.get("method") == "thread/read"
+}
 missing = {"overflow-5", "overflow-6"} - read_thread_ids
 if missing:
     raise SystemExit(f"overflow threads were not read: {sorted(missing)}")
+
+first_refresh_index = next(
+    (
+        index
+        for index, message in enumerate(messages)
+        if message.get("method") == "thread/loaded/list"
+    ),
+    None,
+)
+if first_refresh_index is None:
+    raise SystemExit("initial thread/loaded/list request was not observed")
+
+second_refresh_index = next(
+    (
+        index
+        for index, message in enumerate(messages[first_refresh_index + 1 :], first_refresh_index + 1)
+        if message.get("method") == "thread/loaded/list"
+    ),
+    len(messages),
+)
+initial_refresh_reads = [
+    message.get("params", {}).get("threadId")
+    for message in messages[first_refresh_index + 1 : second_refresh_index]
+    if message.get("method") == "thread/read"
+]
+duplicates = sorted(
+    thread_id
+    for thread_id in set(initial_refresh_reads)
+    if initial_refresh_reads.count(thread_id) > 1
+)
+if duplicates:
+    raise SystemExit(f"initial refresh issued duplicate thread/read requests: {duplicates}")
+expected = {f"overflow-{index}" for index in range(1, 7)}
+if set(initial_refresh_reads) != expected:
+    raise SystemExit(f"initial refresh reads did not match tracked overflow threads: {initial_refresh_reads}")
 PY
 
 echo "E2E passed: overflow Codex thread list reads beyond the visible stack and shows a compact overflow bubble."

@@ -18,6 +18,11 @@ final class CodexAppServerClient {
         case threadRead(threadId: String)
     }
 
+    private enum ThreadReadReason {
+        case refresh
+        case notification
+    }
+
     private enum DaemonStartResult {
         case available
         case unavailable
@@ -49,6 +54,7 @@ final class CodexAppServerClient {
     private var loadedThreadIds: [String] = []
     private var listedThreadIds: [String] = []
     private var suppressedThreadIds = Set<String>()
+    private var threadReadIdsInRefreshCycle = Set<String>()
     private var offlineBubbleText: String?
     private var pollTimer: DispatchSourceTimer?
     private var handshakeTimer: DispatchSourceTimer?
@@ -191,6 +197,7 @@ final class CodexAppServerClient {
         loadedThreadIds.removeAll()
         listedThreadIds.removeAll()
         suppressedThreadIds.removeAll()
+        threadReadIdsInRefreshCycle.removeAll()
     }
 
     private func startHandshakeTimeout() {
@@ -222,6 +229,7 @@ final class CodexAppServerClient {
     }
 
     private func refreshVisibleThreads() {
+        threadReadIdsInRefreshCycle.removeAll()
         sendRequest(method: "thread/loaded/list", params: ["limit": ThreadContext.loadedRequestLimit], kind: .loadedList)
     }
 
@@ -364,6 +372,7 @@ final class CodexAppServerClient {
             cancelHandshakeTimeout()
             onConnectionState?(true)
             sendNotification(method: "initialized")
+            threadReadIdsInRefreshCycle.removeAll()
             sendRequest(method: "thread/loaded/list", params: ["limit": ThreadContext.loadedRequestLimit], kind: .loadedList)
             startPolling()
         case .loadedList:
@@ -400,7 +409,7 @@ final class CodexAppServerClient {
         rememberThreadOrder(loadedThreadIds)
         pruneThreadTracking(keeping: currentVisibleThreadIds())
         for id in loadedThreadIds {
-            sendThreadRead(threadId: id)
+            sendThreadRead(threadId: id, reason: .refresh)
         }
         sendRequest(method: "thread/list", params: ["limit": ThreadContext.requestLimit, "archived": false], kind: .threadList)
     }
@@ -459,7 +468,7 @@ final class CodexAppServerClient {
         }
         for thread in visibleThreads {
             guard let id = thread["id"] as? String else { continue }
-            sendThreadRead(threadId: id)
+            sendThreadRead(threadId: id, reason: .refresh)
         }
     }
 
@@ -511,7 +520,7 @@ final class CodexAppServerClient {
                 suppressedThreadIds.remove(payload.threadId)
                 selectedThreadId = selectedThreadId ?? payload.threadId
                 rememberThreadOrder([payload.threadId])
-                sendThreadRead(threadId: payload.threadId)
+                sendThreadRead(threadId: payload.threadId, reason: .notification)
                 if selectedThreadId == payload.threadId {
                     latestThreadStatus = payload.status
                     if case .systemError = payload.status {
@@ -532,7 +541,7 @@ final class CodexAppServerClient {
             if let payload = decodeNotificationParams(ThreadNameUpdatedNotification.self, from: params) {
                 let title = CodexThreadTitleFormatter.title(from: [payload.threadName, "Codex Thread"])
                 retitleThread(threadId: payload.threadId, title: title)
-                sendThreadRead(threadId: payload.threadId)
+                sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
         case .threadArchived, .threadClosed, .threadDeleted:
@@ -544,7 +553,7 @@ final class CodexAppServerClient {
             if let payload = decodeNotificationParams(ThreadIdNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
                 rememberThreadOrder([payload.threadId])
-                sendThreadRead(threadId: payload.threadId)
+                sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
         case .turnStarted:
@@ -561,7 +570,7 @@ final class CodexAppServerClient {
                     latestTurnStatus: .inProgress,
                     hasRecentAssistantFinal: false
                 )
-                sendThreadRead(threadId: payload.threadId)
+                sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
         case .turnCompleted:
@@ -578,7 +587,7 @@ final class CodexAppServerClient {
                     latestTurnStatus: payload.turn.status,
                     hasRecentAssistantFinal: payload.turn.status == .completed
                 )
-                sendThreadRead(threadId: payload.threadId)
+                sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
         case .turnPlanUpdated:
@@ -589,7 +598,7 @@ final class CodexAppServerClient {
                 suppressedThreadIds.remove(threadId)
                 selectedThreadId = selectedThreadId ?? threadId
                 appendConversationLine(from: dict["item"], threadId: threadId)
-                sendThreadRead(threadId: threadId)
+                sendThreadRead(threadId: threadId, reason: .notification)
                 guard selectedThreadId == threadId else {
                     emitSnapshot(connectionAvailable: true)
                     return
@@ -604,7 +613,7 @@ final class CodexAppServerClient {
                 suppressedThreadIds.remove(threadId)
                 selectedThreadId = selectedThreadId ?? threadId
                 appendConversationLine(from: dict["item"], threadId: threadId)
-                sendThreadRead(threadId: threadId)
+                sendThreadRead(threadId: threadId, reason: .notification)
                 guard selectedThreadId == threadId else {
                     emitSnapshot(connectionAvailable: true)
                     return
@@ -629,7 +638,11 @@ final class CodexAppServerClient {
         }
     }
 
-    private func sendThreadRead(threadId: String) {
+    private func sendThreadRead(threadId: String, reason: ThreadReadReason) {
+        if reason == .refresh {
+            guard !threadReadIdsInRefreshCycle.contains(threadId) else { return }
+            threadReadIdsInRefreshCycle.insert(threadId)
+        }
         sendRequest(
             method: "thread/read",
             params: ["threadId": threadId, "includeTurns": true],

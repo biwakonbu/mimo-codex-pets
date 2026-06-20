@@ -212,6 +212,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   `thread/read(includeTurns: true)` and sanitizes item text before display
 - periodic refresh uses `thread/loaded/list` to re-read visible threads, so
   secondary thread bubbles can update after initial load
+- refresh-cycle reads are coalesced across `thread/loaded/list` and
+  `thread/list(limit: 6)`, so a tracked thread is read once per poll even when
+  both list phases include it
 - thread, turn, and item notifications also trigger an immediate
   `thread/read(includeTurns: true)` for the affected thread, keeping secondary
   bubble text fresh without waiting for the next poll

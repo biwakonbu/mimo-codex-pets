@@ -84,6 +84,10 @@ Verified runtime behavior:
 - Thread, turn, and item notifications should also trigger an immediate
   `thread/read(includeTurns: true)` for the affected thread, so secondary
   thread bubbles do not wait for the next periodic poll.
+- Periodic refresh should coalesce `thread/read(includeTurns: true)` requests
+  across the `thread/loaded/list` and `thread/list` phases so each tracked
+  thread is read at most once per refresh cycle. Notification-triggered reads
+  are still sent immediately so live activity does not wait for the next poll.
 - Thread status alone is useful user-visible activity. A visible thread with no
   new item text should still be able to produce a short title + state report
   such as active work, confirmation waiting, review available, or failure.
