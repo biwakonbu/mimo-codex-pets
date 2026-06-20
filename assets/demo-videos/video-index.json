@@ -22,5 +22,6 @@
     "codex-live-mimo-isolated.mp4",
     "video-review-contact-sheet.jpg"
   ],
-  "exclusion_reason": "live Codex recordings include the local desktop and workspace context; they are kept out of this public repository"
+  "exclusion_reason": "live Codex recordings include the local desktop and workspace context; they are kept out of this public repository",
+  "source_note": "Videos regenerated from pets/mimo/spritesheet.webp after directional running hover-step repair."
 }

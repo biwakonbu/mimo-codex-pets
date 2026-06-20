@@ -104,6 +104,18 @@ This fixed the key motion problem:
 - `failed` keeps a lower slump frame and recovery.
 - `idle`, `waiting`, and `review` remain calm and readable.
 
+## Directional Running Repair
+
+A later GIF review found that `running-right` and `running-left` still looked too much like literal sprinting. The more visible defect was a broken foot-transfer section: the original frames `3` and `4` pulled the lower legs inward and made the sending foot look wrong mid-loop.
+
+The repair intentionally avoided full regeneration because the character identity, outline, transparency, and most frames were already clean. The final directional rows use only existing verified transparent cells:
+
+- `running-right` sequence: old frames `[0, 1, 2, 1, 0, 1, 2, 1]`
+- subtle vertical offsets: `[0, -1, -2, -1, 0, -1, -2, -1]`
+- `running-left`: mirrored from the repaired `running-right` with frame order preserved
+
+This changes the read from an athletic run to a gentle hover-step, removes the broken sending-foot frames, and avoids reintroducing chroma-key or identity drift.
+
 ## QA Performed
 
 Static QA:
@@ -121,6 +133,8 @@ Extra edge gates:
 - `close_key_alpha_gt0 == 0`
 - `cell_edge_alpha == 0`
 - `transparent_rgb_residue_pixels == 0`
+
+When saving WebP, preserve normalized transparent pixels. Pillow WebP export should use lossless output with `exact=True`; otherwise fully transparent pixels can decode with non-zero hidden RGB residue even after the source image was normalized.
 
 Visual QA:
 

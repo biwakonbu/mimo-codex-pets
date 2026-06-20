@@ -36,6 +36,14 @@ Priority rows for motion repair:
 
 Only repair `running-right` / `running-left` when cadence or direction is wrong.
 
+For `running-right` / `running-left`, reject literal sprinting if it feels too athletic for a companion pet. Also reject broken foot-transfer frames where the sending foot collapses inward, both feet stack unnaturally, or the lower-body centroid jumps mid-loop. If identity and transparency are already clean, prefer a narrow existing-frame repair before regeneration. The current repaired sequence is:
+
+```text
+running-right source frames: [0, 1, 2, 1, 0, 1, 2, 1]
+vertical offsets: [0, -1, -2, -1, 0, -1, -2, -1]
+running-left: mirror repaired running-right, preserve frame order
+```
+
 ## Prompt Requirements For Row Regeneration
 
 Use image generation only for regenerated visual rows. Ground rows with the canonical Mimo reference and, when available, a layout guide.
@@ -92,6 +100,12 @@ For final-outline Mimo:
 5. Clamp green dominance.
 6. Normalize transparent RGB.
 7. Validate.
+
+When exporting the final WebP with Pillow, use lossless output and `exact=True` so fully transparent pixels continue to decode as `(0,0,0,0)`:
+
+```python
+image.save(output, format="WEBP", lossless=True, quality=100, method=6, exact=True)
+```
 
 For no-outline transparent variants:
 

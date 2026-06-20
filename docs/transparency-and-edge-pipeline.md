@@ -36,6 +36,10 @@ Mimo currently keeps a translucent 3px white-blue edge as part of the final styl
    - if `G > max(R, B) + 5`, reduce `G` to `max(R, B) + 5`
 7. Normalize fully transparent pixels to `(0,0,0,0)`.
 8. Reject the frame if any cell-edge alpha remains.
+9. When exporting WebP with Pillow, use lossless output with `exact=True` so transparent RGB stays normalized after decode:
+   ```python
+   image.save(output, format="WEBP", lossless=True, quality=100, method=6, exact=True)
+   ```
 
 This is the version preserved in `pets/mimo/spritesheet.webp`.
 

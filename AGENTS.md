@@ -68,6 +68,7 @@ Prefer row-stable extraction and composition over per-frame fit-to-cell scaling.
 - Keep `idle` alive but calm.
 - Keep `waiting` visually distinct from `idle`.
 - Keep `running` as active task work, not literal running.
+- Keep `running-right` / `running-left` as gentle directional drag movement, not athletic sprinting. If the foot-transfer frames collapse or the lower-body centroid jumps, repair only those rows before touching other states.
 - Mirror `running-left` from `running-right` only when identity, timing, prop placement, and direction semantics remain correct.
 
 ## Required QA Before Commit

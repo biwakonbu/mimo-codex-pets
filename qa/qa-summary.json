@@ -21,5 +21,5 @@
     "cell_edge_alpha": 0,
     "transparent_rgb_residue_pixels": 0
   },
-  "motion": "row-stable rebuild preserves jump/slump vertical amplitude while keeping all frames inside cells"
+  "motion": "running-right/left repaired with existing clean frames: removed broken foot-transfer frames 3/4, preserved timing order, mirrored left from repaired right, added subtle hover bob."
 }

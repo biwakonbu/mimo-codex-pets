@@ -91,35 +91,35 @@
       "row": 1,
       "column": 3,
       "used": true,
-      "nontransparent_pixels": 13168
+      "nontransparent_pixels": 13837
     },
     {
       "state": "running-right",
       "row": 1,
       "column": 4,
       "used": true,
-      "nontransparent_pixels": 12786
+      "nontransparent_pixels": 13950
     },
     {
       "state": "running-right",
       "row": 1,
       "column": 5,
       "used": true,
-      "nontransparent_pixels": 13742
+      "nontransparent_pixels": 13837
     },
     {
       "state": "running-right",
       "row": 1,
       "column": 6,
       "used": true,
-      "nontransparent_pixels": 13112
+      "nontransparent_pixels": 13781
     },
     {
       "state": "running-right",
       "row": 1,
       "column": 7,
       "used": true,
-      "nontransparent_pixels": 13231
+      "nontransparent_pixels": 13837
     },
     {
       "state": "running-left",
@@ -147,35 +147,35 @@
       "row": 2,
       "column": 3,
       "used": true,
-      "nontransparent_pixels": 13168
+      "nontransparent_pixels": 13837
     },
     {
       "state": "running-left",
       "row": 2,
       "column": 4,
       "used": true,
-      "nontransparent_pixels": 12786
+      "nontransparent_pixels": 13950
     },
     {
       "state": "running-left",
       "row": 2,
       "column": 5,
       "used": true,
-      "nontransparent_pixels": 13742
+      "nontransparent_pixels": 13837
     },
     {
       "state": "running-left",
       "row": 2,
       "column": 6,
       "used": true,
-      "nontransparent_pixels": 13112
+      "nontransparent_pixels": 13781
     },
     {
       "state": "running-left",
       "row": 2,
       "column": 7,
       "used": true,
-      "nontransparent_pixels": 13231
+      "nontransparent_pixels": 13837
     },
     {
       "state": "waving",

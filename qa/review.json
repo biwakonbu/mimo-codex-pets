@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "frames_root": "work/mimo-pet-run/frames-rebuilt",
+  "frames_root": "work/live-qa/running-motion-repair/frames",
   "errors": [],
   "warnings": [],
   "rows": [
@@ -137,9 +137,9 @@
           "nontransparent_pixels": 13837,
           "bbox": [
             41,
-            10,
+            9,
             150,
-            195
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -152,9 +152,9 @@
           "nontransparent_pixels": 13781,
           "bbox": [
             43,
-            10,
+            8,
             148,
-            192
+            190
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -164,12 +164,12 @@
           "file": "frames/running-right/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13168,
+          "nontransparent_pixels": 13837,
           "bbox": [
-            46,
-            12,
-            145,
-            191
+            41,
+            9,
+            150,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -179,12 +179,12 @@
           "file": "frames/running-right/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12786,
+          "nontransparent_pixels": 13950,
           "bbox": [
-            46,
-            11,
-            145,
-            198
+            39,
+            10,
+            152,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -194,12 +194,12 @@
           "file": "frames/running-right/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13742,
+          "nontransparent_pixels": 13837,
           "bbox": [
-            40,
-            12,
-            151,
-            196
+            41,
+            9,
+            150,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -209,12 +209,12 @@
           "file": "frames/running-right/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13112,
+          "nontransparent_pixels": 13781,
           "bbox": [
-            45,
-            15,
-            146,
-            194
+            43,
+            8,
+            148,
+            190
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -224,12 +224,12 @@
           "file": "frames/running-right/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13231,
+          "nontransparent_pixels": 13837,
           "bbox": [
-            35,
-            17,
-            156,
-            193
+            41,
+            9,
+            150,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -268,9 +268,9 @@
           "nontransparent_pixels": 13837,
           "bbox": [
             42,
-            10,
+            9,
             151,
-            195
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -283,9 +283,9 @@
           "nontransparent_pixels": 13781,
           "bbox": [
             44,
-            10,
+            8,
             149,
-            192
+            190
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -295,12 +295,12 @@
           "file": "frames/running-left/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13168,
+          "nontransparent_pixels": 13837,
           "bbox": [
-            47,
-            12,
-            146,
-            191
+            42,
+            9,
+            151,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -310,12 +310,12 @@
           "file": "frames/running-left/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12786,
+          "nontransparent_pixels": 13950,
           "bbox": [
-            47,
-            11,
-            146,
-            198
+            40,
+            10,
+            153,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -325,12 +325,12 @@
           "file": "frames/running-left/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13742,
+          "nontransparent_pixels": 13837,
           "bbox": [
-            41,
-            12,
-            152,
-            196
+            42,
+            9,
+            151,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -340,12 +340,12 @@
           "file": "frames/running-left/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13112,
+          "nontransparent_pixels": 13781,
           "bbox": [
-            46,
-            15,
-            147,
-            194
+            44,
+            8,
+            149,
+            190
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -355,12 +355,12 @@
           "file": "frames/running-left/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13231,
+          "nontransparent_pixels": 13837,
           "bbox": [
-            36,
-            17,
-            157,
-            193
+            42,
+            9,
+            151,
+            194
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
