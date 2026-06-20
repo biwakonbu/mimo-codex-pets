@@ -7,6 +7,7 @@ import time
 
 LOG_PATH = "/tmp/mimo-fake-codex.log"
 OUTPUT_FRAMING = os.environ.get("MIMO_FAKE_CODEX_FRAMING", "json-lines")
+HANG_DAEMON = os.environ.get("MIMO_FAKE_CODEX_HANG_DAEMON") == "1"
 STATE_LOCK = threading.Lock()
 CURRENT_STATUS = {"type": "idle"}
 CURRENT_TURNS = [
@@ -481,6 +482,9 @@ def main():
     args = sys.argv[1:]
     log("argv " + json.dumps(args))
     if args == ["app-server", "daemon", "start"]:
+        if HANG_DAEMON:
+            log("daemon hanging")
+            time.sleep(60)
         return 0
     if len(args) >= 2 and args[0] == "app-server" and args[1] in ("--stdio", "proxy"):
         run_stdio_server()

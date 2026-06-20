@@ -65,6 +65,7 @@ run_from_repo "shell syntax checks" bash -n \
   desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh \
   desktop/MimoDesktopPet/script/e2e_fake_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_content_length_app_server.sh \
+  desktop/MimoDesktopPet/script/e2e_hanging_daemon_start.sh \
   desktop/MimoDesktopPet/script/e2e_empty_thread_list.sh \
   desktop/MimoDesktopPet/script/e2e_overflow_thread_list.sh \
   desktop/MimoDesktopPet/script/e2e_thread_read_timeout.sh \
@@ -96,6 +97,7 @@ fi
 
 run_from_root "fake app-server production E2E" ./script/e2e_fake_app_server.sh
 run_from_root "content-length app-server production E2E" ./script/e2e_content_length_app_server.sh
+run_from_root "hanging daemon start production E2E" ./script/e2e_hanging_daemon_start.sh
 run_from_root "empty thread-list production E2E" ./script/e2e_empty_thread_list.sh
 run_from_root "overflow thread-list production E2E" ./script/e2e_overflow_thread_list.sh
 run_from_root "thread-read timeout production E2E" ./script/e2e_thread_read_timeout.sh

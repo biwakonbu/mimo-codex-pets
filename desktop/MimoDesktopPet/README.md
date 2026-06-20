@@ -47,10 +47,11 @@ real Codex app-server is intentionally unavailable.
 `MIMO_PET_PACKAGE_DIR` to this repository's `pets/mimo` package unless you
 override it.
 
-Codex state sync tries `codex app-server daemon start` as a best-effort helper,
-then uses the JSON-RPC stdio transport via `codex app-server --stdio`. If the
-local Codex app-server cannot be launched, the companion stays open and shows an
-offline/waiting status instead of crashing.
+Codex state sync tries `codex app-server daemon start` as a best-effort helper
+with a short timeout, then uses the JSON-RPC stdio transport via
+`codex app-server --stdio`. If the daemon helper hangs or the local Codex
+app-server cannot be launched, the companion stays open and shows an
+offline/waiting status instead of crashing or waiting forever.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
 `./script/check_app_server_schema.sh` verifies the generated app-server schema
@@ -72,6 +73,9 @@ production mode with an offline speech bubble.
 `./script/e2e_disconnect_app_server.sh` verifies that Mimo first reaches a
 connected thread summary state, then survives a stdio app-server exit and shows
 the disconnect offline bubble.
+`./script/e2e_hanging_daemon_start.sh` verifies that a stuck daemon-start helper
+is timed out and does not prevent the app from reaching stdio thread-context
+bubbles.
 `./script/e2e_state_matrix.sh` captures the exact production window for active,
 waiting, multi-thread, review, and failed fake-Codex states, then runs the same
 transparent-surface inspection on every capture. The multi-thread capture also

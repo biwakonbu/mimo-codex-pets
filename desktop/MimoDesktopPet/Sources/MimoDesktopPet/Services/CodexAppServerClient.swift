@@ -38,6 +38,7 @@ final class CodexAppServerClient {
     private let invocation = CodexCommandLocator.resolve()
     private let requestTimeoutSeconds = CodexAppServerClient.requestTimeoutInterval()
     private let reconnectDelaySeconds = CodexAppServerClient.reconnectDelayInterval()
+    private let daemonStartTimeoutSeconds = CodexAppServerClient.daemonStartTimeoutInterval()
     private var proxyProcess: Process?
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
@@ -109,7 +110,21 @@ final class CodexAppServerClient {
 
         do {
             try process.run()
-            process.waitUntilExit()
+            let deadline = Date().addingTimeInterval(daemonStartTimeoutSeconds)
+            while process.isRunning && Date() < deadline {
+                Thread.sleep(forTimeInterval: 0.025)
+            }
+            if process.isRunning {
+                process.terminate()
+                let killDeadline = Date().addingTimeInterval(0.2)
+                while process.isRunning && Date() < killDeadline {
+                    Thread.sleep(forTimeInterval: 0.025)
+                }
+                if process.isRunning {
+                    kill(process.processIdentifier, SIGKILL)
+                }
+                return .unavailable
+            }
             if process.terminationStatus == 0 {
                 return .available
             }
@@ -979,6 +994,17 @@ final class CodexAppServerClient {
             return 4.0
         }
         return max(0.1, seconds)
+    }
+
+    private static func daemonStartTimeoutInterval(environment: [String: String] = ProcessInfo.processInfo.environment) -> TimeInterval {
+        guard
+            let value = environment["MIMO_APP_SERVER_DAEMON_START_TIMEOUT"],
+            let seconds = TimeInterval(value),
+            seconds > 0
+        else {
+            return 2.0
+        }
+        return max(0.05, seconds)
     }
 
     private func secondsBetween(_ start: DispatchTime, _ end: DispatchTime) -> TimeInterval {

@@ -78,6 +78,10 @@ Verified runtime behavior:
 - When the local Codex command or app-server is unavailable, the companion must
   stay open in transparent production mode and show a short offline bubble
   instead of crashing or revealing a debug surface.
+- `codex app-server daemon start` is a helper, not the primary transport. If it
+  hangs, the companion should time it out and proceed to the direct
+  `codex app-server --stdio` JSON-RPC transport rather than leaving Mimo in a
+  startup wait.
 - The companion should periodically refresh visible threads, not only the
   currently selected thread, so stacked production bubbles keep following
   secondary thread progress after initial load.
@@ -199,6 +203,10 @@ Conversation behavior:
   and overflow bubbles have their own `bubbleRoles` in presentation logs so E2E
   can distinguish a primary thread report from generic status and a concrete
   thread summary.
+- Each production bubble also carries a semantic `bubbleTone` in presentation
+  logs: `active`, `waiting`, `review`, `failed`, `overflow`, or `neutral`.
+  SwiftUI uses the tone for compact state markers and accent color, while tests
+  use it to verify that multiple thread bubbles are not just a flat text list.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary bubble text is still showing a timed moment or an older queue
   item.
@@ -248,6 +256,7 @@ swift test
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh
 ./script/e2e_content_length_app_server.sh
+./script/e2e_hanging_daemon_start.sh
 ./script/e2e_empty_thread_list.sh
 ./script/e2e_overflow_thread_list.sh
 ./script/e2e_thread_read_timeout.sh
