@@ -20,15 +20,22 @@ Verified public protocol surface:
 - `thread/read(includeTurns: true)` exposes recent `ThreadItem` values, including:
   - `userMessage`
   - `agentMessage`
+  - `plan`
   - `reasoning`
   - `commandExecution`
   - `fileChange`
   - `mcpToolCall`
+  - `dynamicToolCall`
+  - `webSearch`
+  - `imageGeneration`
+  - `contextCompaction`
 - `item/started` and `item/completed` notifications include a schema-backed
   `item` payload. Production bubbles use this to report in-progress tool or
   command activity before the next poll completes.
 - Streaming notifications such as `item/agentMessage/delta`,
-  `item/plan/delta`, `item/commandExecution/outputDelta`,
+  `item/plan/delta`, `turn/plan/updated`,
+  `item/reasoning/summaryPartAdded`, `item/reasoning/summaryTextDelta`,
+  `item/reasoning/textDelta`, `item/commandExecution/outputDelta`,
   `item/fileChange/outputDelta`, and `item/mcpToolCall/progress` exist in the
   generated schema. Production bubbles treat these as activity signals, not as
   text to quote directly.
@@ -102,8 +109,9 @@ Conversation behavior:
 - `item/started` enqueues sanitized progress immediately, especially for tool
   and command activity.
 - Delta notifications enqueue generic Mimo reports such as response drafting,
-  plan updates, command output review, file-change review, or tool progress.
-  Do not display raw delta strings in production bubbles.
+  plan updates, reasoning summary updates, command output review, file-change
+  review, or tool progress. Do not display raw delta strings in production
+  bubbles.
 - Tool activity should be summarized, not dumped.
 - Machine payload-looking text is suppressed and replaced with a generic short phrase.
 - Bubble text is transient; durable feed display belongs only in `Debug Overlay`.

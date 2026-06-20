@@ -83,6 +83,21 @@ def state_sequence():
                 "threadId": "fake-thread",
                 "turnId": "turn-active",
                 "startedAtMs": int(time.time() * 1000),
+                "item": {
+                    "id": "plan-start",
+                    "type": "plan",
+                    "text": "表示を確認してから E2E を通す",
+                },
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "item/started",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "startedAtMs": int(time.time() * 1000),
                 "item": {"id": "mcp-start", "type": "mcpToolCall", "tool": "get_app_state"},
             },
         }
@@ -100,12 +115,37 @@ def state_sequence():
     )
     write_message(
         {
+            "method": "turn/plan/updated",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "plan": [
+                    {"step": "表示を確認", "status": "inProgress"},
+                    {"step": "E2E を通す", "status": "pending"},
+                ],
+            },
+        }
+    )
+    write_message(
+        {
             "method": "item/commandExecution/outputDelta",
             "params": {
                 "threadId": "fake-thread",
                 "turnId": "turn-active",
                 "itemId": "command-stream",
                 "delta": "secret-looking command output should not be shown",
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "item/reasoning/summaryTextDelta",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "itemId": "reasoning-stream",
+                "summaryIndex": 0,
+                "delta": "raw reasoning should not be shown",
             },
         }
     )

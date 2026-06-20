@@ -58,6 +58,55 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: command), "ご主人、「Delta QA」はコマンドを実行中です")
     }
 
+    func testSummarizesExpandedSchemaActivityKinds() {
+        let cases: [(CodexConversationLine, String)] = [
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "調査",
+                    speaker: "tool",
+                    text: "Web 検索中",
+                    isAssistant: true
+                ),
+                "ご主人、「調査」は調査中です"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "画像QA",
+                    speaker: "tool",
+                    text: "画像を生成中",
+                    isAssistant: true
+                ),
+                "ご主人、「画像QA」は画像を作成中です"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "レビュー",
+                    speaker: "codex",
+                    text: "レビューを開始",
+                    isAssistant: true
+                ),
+                "ご主人、「レビュー」はレビュー中です"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "整理",
+                    speaker: "codex",
+                    text: "文脈を整理中",
+                    isAssistant: true
+                ),
+                "ご主人、「整理」は文脈を整理中です"
+            )
+        ]
+
+        for (line, expected) in cases {
+            XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), expected)
+        }
+    }
+
     func testSummarizesActiveWorkFromProgressMessage() {
         let line = CodexConversationLine(
             threadId: "thread",

@@ -91,6 +91,49 @@ final class CodexConversationExtractorTests: XCTestCase {
         ])
     }
 
+    func testExtractsAdditionalSchemaItemsWithoutDumpingPayloads() {
+        let thread: [String: Any] = [
+            "id": "thread-items",
+            "name": "schema-items",
+            "turns": [
+                [
+                    "id": "turn-1",
+                    "status": "inProgress",
+                    "items": [
+                        ["id": "plan", "type": "plan", "text": "UI 表示を確認してから E2E を通す"],
+                        ["id": "reasoning", "type": "reasoning", "summary": ["表示制約を整理"]],
+                        [
+                            "id": "dynamic",
+                            "type": "dynamicToolCall",
+                            "tool": "use_figma",
+                            "arguments": #"{"secret":"do-not-show"}"#,
+                            "status": "inProgress"
+                        ],
+                        ["id": "search", "type": "webSearch", "query": "private query should not show"],
+                        ["id": "image", "type": "imageGeneration", "status": "inProgress"],
+                        ["id": "compact", "type": "contextCompaction"],
+                        ["id": "review", "type": "enteredReviewMode", "review": [:]],
+                        ["id": "hook", "type": "hookPrompt", "fragments": [["text": "not user facing"]]]
+                    ]
+                ]
+            ]
+        ]
+
+        let lines = CodexConversationExtractor.lines(from: thread, maxLines: 20)
+
+        XCTAssertEqual(lines.map(\.text), [
+            "計画: UI 表示を確認してから E2E を通す",
+            "表示制約を整理",
+            "ツール: use_figma",
+            "Web 検索中",
+            "画像を生成中",
+            "文脈を整理中",
+            "レビューを開始"
+        ])
+        XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("secret"))
+        XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("private query"))
+    }
+
     func testBuildsGenericProgressLinesForDeltaNotifications() {
         let command = CodexConversationExtractor.progressLine(
             threadId: "thread-delta",
@@ -107,6 +150,20 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(command.text, "コマンド出力を確認中")
         XCTAssertEqual(agent.speaker, "codex")
         XCTAssertEqual(agent.text, "応答を作成中")
+
+        let plan = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "turnPlanUpdated"
+        )
+        let reasoning = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "reasoningDelta"
+        )
+
+        XCTAssertEqual(plan.text, "計画を更新中")
+        XCTAssertEqual(reasoning.text, "文脈を整理中")
     }
 
     func testSuppressesMachinePayloadText() {

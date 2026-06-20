@@ -75,15 +75,32 @@ public enum CodexConversationExtractor {
                 isAssistant: true,
                 text: compactText(from: firstNonEmptyValue(item["text"], item["content"]), limit: 76) ?? "応答を受信"
             )
+        case "plan":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "codex",
+                isAssistant: true,
+                text: compactText(from: item["text"], limit: 64).map { "計画: \($0)" } ?? "計画を整理中"
+            )
         case "reasoning":
             return makeLine(
                 threadId: threadId,
                 threadTitle: threadTitle,
                 speaker: "codex",
                 isAssistant: true,
-                text: compactText(from: item["summary"], limit: 64) ?? "考えを整理しています"
+                text: compactText(from: firstNonEmptyValue(item["summary"], item["content"]), limit: 64) ?? "考えを整理しています"
             )
         case "commandExecution":
+            if itemFailed(item) {
+                return makeLine(
+                    threadId: threadId,
+                    threadTitle: threadTitle,
+                    speaker: "tool",
+                    isAssistant: true,
+                    text: "コマンド実行に失敗"
+                )
+            }
             let commandText = compactText(from: item["command"], limit: 56)
             return makeLine(
                 threadId: threadId,
@@ -98,9 +115,18 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
-                text: "ファイル変更を反映"
+                text: itemFailed(item) ? "ファイル変更に失敗" : "ファイル変更を反映"
             )
         case "mcpToolCall":
+            if itemFailed(item) {
+                return makeLine(
+                    threadId: threadId,
+                    threadTitle: threadTitle,
+                    speaker: "tool",
+                    isAssistant: true,
+                    text: "ツール実行に失敗"
+                )
+            }
             let toolName = compactText(from: firstNonEmptyValue(item["tool"], item["toolName"], item["name"]), limit: 40)
             return makeLine(
                 threadId: threadId,
@@ -109,6 +135,90 @@ public enum CodexConversationExtractor {
                 isAssistant: true,
                 text: toolName.map { "ツール: \($0)" } ?? "ツールを使用中"
             )
+        case "dynamicToolCall":
+            if itemFailed(item) {
+                return makeLine(
+                    threadId: threadId,
+                    threadTitle: threadTitle,
+                    speaker: "tool",
+                    isAssistant: true,
+                    text: "ツール実行に失敗"
+                )
+            }
+            let toolName = compactText(from: firstNonEmptyValue(item["tool"], item["namespace"]), limit: 40)
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: toolName.map { "ツール: \($0)" } ?? "ツールを使用中"
+            )
+        case "collabAgentToolCall", "subAgentActivity":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: itemFailed(item) ? "サブエージェントに失敗" : "サブエージェントを確認中"
+            )
+        case "webSearch":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "Web 検索中"
+            )
+        case "imageView":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "画像を確認中"
+            )
+        case "imageGeneration":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: itemFailed(item) ? "画像生成に失敗" : "画像を生成中"
+            )
+        case "sleep":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "tool",
+                isAssistant: true,
+                text: "少し待機中"
+            )
+        case "enteredReviewMode":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "codex",
+                isAssistant: true,
+                text: "レビューを開始"
+            )
+        case "exitedReviewMode":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "codex",
+                isAssistant: true,
+                text: "レビューを終了"
+            )
+        case "contextCompaction":
+            return makeLine(
+                threadId: threadId,
+                threadTitle: threadTitle,
+                speaker: "codex",
+                isAssistant: true,
+                text: "文脈を整理中"
+            )
+        case "hookPrompt":
+            return nil
         default:
             if let role = item["role"] as? String {
                 return makeLine(
@@ -198,6 +308,10 @@ public enum CodexConversationExtractor {
             return "応答を作成中"
         case "planDelta":
             return "計画を整理中"
+        case "turnPlanUpdated":
+            return "計画を更新中"
+        case "reasoningDelta":
+            return "文脈を整理中"
         case "commandExecutionOutputDelta":
             return "コマンド出力を確認中"
         case "fileChangeOutputDelta":
@@ -234,7 +348,7 @@ public enum CodexConversationExtractor {
             return array.compactMap(rawText(from:)).joined(separator: " ")
         }
         if let dict = value as? [String: Any] {
-            for key in ["text", "content", "message", "summary", "name", "title", "tool"] {
+            for key in ["text", "content", "message", "summary", "name", "title", "tool", "command"] {
                 if let text = rawText(from: dict[key]), !text.isEmpty {
                     return text
                 }
@@ -258,6 +372,11 @@ public enum CodexConversationExtractor {
             "\"method\""
         ]
         return payloadMarkers.contains { trimmed.contains($0) }
+    }
+
+    private static func itemFailed(_ item: [String: Any]) -> Bool {
+        guard let status = item["status"] as? String else { return false }
+        return ["failed", "errored", "error"].contains(status)
     }
 
     private static func firstNonEmptyValue(_ values: Any?...) -> Any? {

@@ -31,6 +31,27 @@ public enum CodexBubbleFormatter {
         if text.contains("失敗") || text.contains("エラー") || text.contains("failed") || text.contains("systemerror") {
             return "失敗を確認しました"
         }
+        if text.contains("レビューを開始") {
+            return "レビュー中です"
+        }
+        if text.contains("レビューを終了") {
+            return "レビューを終えました"
+        }
+        if text.contains("文脈") {
+            return "文脈を整理中です"
+        }
+        if text.contains("サブエージェント") {
+            return "別作業を確認中です"
+        }
+        if text.contains("web 検索") || text.contains("検索") || text.contains("調査") {
+            return "調査中です"
+        }
+        if text.contains("画像を生成") || text.contains("画像生成") {
+            return "画像を作成中です"
+        }
+        if text.contains("画像") {
+            return "画像を確認中です"
+        }
         if text.contains("レビュー") || text.contains("完了") || text.contains("通っています") || text.contains("できる状態") {
             return "レビューできます"
         }
@@ -62,6 +83,21 @@ public enum CodexBubbleFormatter {
     }
 
     private static func toolSummary(for text: String) -> String {
+        if text.contains("web 検索") || text.contains("検索") || text.contains("調査") {
+            return "調査中です"
+        }
+        if text.contains("画像を生成") || text.contains("画像生成") {
+            return "画像を作成中です"
+        }
+        if text.contains("画像") {
+            return "画像を確認中です"
+        }
+        if text.contains("サブエージェント") {
+            return "別作業を確認中です"
+        }
+        if text.contains("待機") {
+            return "少し待機しています"
+        }
         if text.contains("swift test") || text.contains("test") {
             return "テストを実行中です"
         }

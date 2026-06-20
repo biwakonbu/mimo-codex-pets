@@ -523,6 +523,8 @@ final class CodexAppServerClient {
                 sendThreadRead(threadId: payload.threadId)
                 emitSnapshot(connectionAvailable: true)
             }
+        case .turnPlanUpdated:
+            appendProgressLine(from: params, kind: "turnPlanUpdated")
         case .itemStarted:
             if let dict = params as? [String: Any],
                let threadId = dict["threadId"] as? String {
@@ -556,6 +558,8 @@ final class CodexAppServerClient {
             appendProgressLine(from: params, kind: "agentMessageDelta")
         case .planDelta:
             appendProgressLine(from: params, kind: "planDelta")
+        case .reasoningSummaryPartAdded, .reasoningSummaryTextDelta, .reasoningTextDelta:
+            appendProgressLine(from: params, kind: "reasoningDelta")
         case .commandExecutionOutputDelta:
             appendProgressLine(from: params, kind: "commandExecutionOutputDelta")
         case .fileChangeOutputDelta:
