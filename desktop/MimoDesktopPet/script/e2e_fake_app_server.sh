@@ -136,6 +136,8 @@ with open(log_path, "r", encoding="utf-8") as handle:
             rows.append(json.loads(line))
 
 for row in rows:
+    if row.get("debugOverlay") is not False:
+        raise SystemExit("production presentation log unexpectedly enabled debug overlay")
     bubbles = row.get("bubbleTexts", [])
     if not isinstance(bubbles, list):
         continue

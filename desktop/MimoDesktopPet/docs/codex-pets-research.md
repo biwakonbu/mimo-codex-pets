@@ -134,6 +134,8 @@ Manual or visual checks:
   from notification-triggered thread reads.
 - `MIMO_PRESENTATION_LOG` includes both `bubbleText` and `bubbleTexts`; stacked
   bubble-only updates should be logged for deterministic E2E evidence.
+- The same log includes `debugOverlay`; production E2E must keep it `false` so
+  the transcript/feed panel remains opt-in debug UI.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.

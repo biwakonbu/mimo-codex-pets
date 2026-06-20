@@ -265,6 +265,7 @@ final class PetViewModel: ObservableObject {
             "animation": state.animation.rawValue,
             "bubbleText": state.bubbleText,
             "bubbleTexts": visibleBubbles.map(\.text),
+            "debugOverlay": debugOverlay,
             "isOffline": state.isOffline
         ]
         guard
