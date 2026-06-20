@@ -49,8 +49,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(status.verticalOffset, 0)
-        XCTAssertEqual(firstThread.verticalOffset, -66)
-        XCTAssertEqual(secondThread.verticalOffset, -118)
+        XCTAssertEqual(firstThread.verticalOffset, -78)
+        XCTAssertEqual(secondThread.verticalOffset, -134)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
         XCTAssertEqual(firstThread.maxTextWidth, 216)
@@ -84,9 +84,9 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(status.verticalOffset, 0)
-        XCTAssertEqual(firstThread.verticalOffset, -62)
-        XCTAssertEqual(secondThread.verticalOffset, -112)
-        XCTAssertEqual(thirdThread.verticalOffset, -158)
+        XCTAssertEqual(firstThread.verticalOffset, -72)
+        XCTAssertEqual(secondThread.verticalOffset, -124)
+        XCTAssertEqual(thirdThread.verticalOffset, -176)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
         XCTAssertLessThan(thirdThread.horizontalOffset, secondThread.horizontalOffset)
@@ -107,7 +107,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
-        XCTAssertEqual(placement.verticalOffset, -158)
+        XCTAssertEqual(placement.verticalOffset, -176)
         XCTAssertEqual(placement.horizontalOffset, -46)
     }
 

@@ -177,6 +177,51 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ])
     }
 
+    func testProductionBubblesReserveLastConversationBubbleForOverflow() {
+        let lines = [
+            line(threadId: "alpha", speaker: "codex", text: "作業を進めています", isAssistant: true),
+            line(threadId: "beta", speaker: "codex", text: "作業を進めています", isAssistant: true),
+            line(threadId: "gamma", speaker: "codex", text: "作業を進めています", isAssistant: true),
+            line(threadId: "delta", speaker: "codex", text: "作業を進めています", isAssistant: true),
+            line(threadId: "epsilon", speaker: "codex", text: "作業を進めています", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: nil,
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "Codex が作業中",
+            "ご主人、「epsilon」は作業を進めています",
+            "ご主人、「delta」は作業を進めています",
+            "ほか3件も見ています"
+        ])
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
+        XCTAssertLessThanOrEqual(bubbles[3].text.count, PetSpeechBubbleLayout.conversationTextLimit)
+    }
+
+    func testProductionBubblesKeepAConcreteThreadWhenOnlyOneContextSlotIsAvailable() {
+        let lines = [
+            line(threadId: "alpha", speaker: "codex", text: "作業を進めています", isAssistant: true),
+            line(threadId: "beta", speaker: "codex", text: "作業を進めています", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: nil,
+            limit: 2
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "Codex が作業中",
+            "ご主人、「beta」は作業を進めています"
+        ])
+    }
+
     func testProductionBubblesSkipPrimaryThreadWhenConversationBubbleIsCurrent() {
         let current = line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true)
         let lines = [

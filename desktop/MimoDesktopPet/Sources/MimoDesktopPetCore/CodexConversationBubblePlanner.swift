@@ -113,18 +113,24 @@ public enum CodexConversationBubblePlanner {
             from: conversationLines,
             preferredThreadId: preferredThreadId
         )
+        var candidateTexts: [String] = []
 
-        for line in conversationLines where texts.count < visibleLimit {
+        for line in conversationLines {
             guard !usedThreadIds.contains(line.threadId) else { continue }
             let text = CodexBubbleFormatter.bubbleText(for: line)
             let compacted = CodexBubbleFormatter.compact(
                 text,
                 limit: PetSpeechBubbleLayout.textLimit(for: .conversation)
             )
-            guard !compacted.isEmpty, !texts.contains(compacted) else { continue }
-            texts.append(compacted)
+            guard !compacted.isEmpty,
+                  !texts.contains(compacted),
+                  !candidateTexts.contains(compacted)
+            else { continue }
+            candidateTexts.append(compacted)
             usedThreadIds.insert(line.threadId)
         }
+
+        appendConversationContext(candidateTexts, to: &texts, visibleLimit: visibleLimit)
 
         if texts.isEmpty {
             texts.append("待機中")
@@ -171,6 +177,31 @@ public enum CodexConversationBubblePlanner {
             guard !signatures.contains(signature) else { continue }
             result.append(line)
             signatures.insert(signature)
+        }
+    }
+
+    private static func appendConversationContext(
+        _ candidates: [String],
+        to texts: inout [String],
+        visibleLimit: Int
+    ) {
+        let remainingSlots = visibleLimit - texts.count
+        guard remainingSlots > 0, !candidates.isEmpty else { return }
+
+        if candidates.count <= remainingSlots || remainingSlots == 1 {
+            texts.append(contentsOf: candidates.prefix(remainingSlots))
+            return
+        }
+
+        let visibleConversationCount = remainingSlots - 1
+        texts.append(contentsOf: candidates.prefix(visibleConversationCount))
+        let overflowCount = candidates.count - visibleConversationCount
+        let overflowText = CodexBubbleFormatter.compact(
+            "ほか\(overflowCount)件も見ています",
+            limit: PetSpeechBubbleLayout.textLimit(for: .conversation)
+        )
+        if !overflowText.isEmpty {
+            texts.append(overflowText)
         }
     }
 

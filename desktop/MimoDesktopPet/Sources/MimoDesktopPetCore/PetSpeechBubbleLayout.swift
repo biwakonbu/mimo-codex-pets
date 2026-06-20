@@ -72,11 +72,11 @@ public enum PetSpeechBubbleLayout {
         case 1:
             offsets = [(0, 0)]
         case 2:
-            offsets = [(0, 0), (-92, -68)]
+            offsets = [(0, 0), (-92, -78)]
         case 3:
-            offsets = [(0, 0), (-96, -66), (96, -118)]
+            offsets = [(0, 0), (-96, -78), (96, -134)]
         default:
-            offsets = [(0, 0), (-98, -62), (98, -112), (-46, -158)]
+            offsets = [(0, 0), (-98, -72), (98, -124), (-46, -176)]
         }
         let offset = offsets[normalizedIndex]
         let isPrimary = normalizedIndex == 0

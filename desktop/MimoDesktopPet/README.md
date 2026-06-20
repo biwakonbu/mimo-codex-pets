@@ -104,7 +104,9 @@ above it as compact context notes for other visible Codex threads, with accent
 markers and no tails. They do not dump raw model output, commands, or payload
 text. Threads can be summarized from sanitized item activity or from
 thread/turn status alone. The stack favors thread coverage, so each visible
-thread appears at most once.
+thread appears at most once. If more threads are active than the compact stack
+can show, the last secondary bubble becomes a short overflow note such as
+`ほか3件も見ています` instead of silently dropping the extra context.
 The debug overlay is opt-in only: production startup keeps it disabled unless
 `MIMO_DEBUG_OVERLAY=1` is set or the menu item is toggled manually.
 

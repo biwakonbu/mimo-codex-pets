@@ -419,6 +419,14 @@ final class CodexAppServerClient {
         rememberThreadOrder(listedThreadIds)
         pruneThreadTracking(keeping: currentVisibleThreadIds())
 
+        guard !visibleThreads.isEmpty else {
+            latestThreadStatus = nil
+            latestTurnStatus = nil
+            hasRecentAssistantFinal = false
+            emitSnapshot(connectionAvailable: true)
+            return
+        }
+
         for thread in visibleThreads {
             guard let id = thread["id"] as? String else { continue }
             let title = threadTitle(from: thread)
