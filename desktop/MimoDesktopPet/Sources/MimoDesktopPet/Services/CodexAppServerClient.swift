@@ -37,6 +37,7 @@ final class CodexAppServerClient {
     private let decoder = JSONDecoder()
     private let invocation = CodexCommandLocator.resolve()
     private let requestTimeoutSeconds = CodexAppServerClient.requestTimeoutInterval()
+    private let reconnectDelaySeconds = CodexAppServerClient.reconnectDelayInterval()
     private var proxyProcess: Process?
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
@@ -65,24 +66,35 @@ final class CodexAppServerClient {
     private var pollTimer: DispatchSourceTimer?
     private var handshakeTimer: DispatchSourceTimer?
     private var requestTimeoutTimer: DispatchSourceTimer?
+    private var reconnectTimer: DispatchSourceTimer?
+    private var shouldReconnect = false
 
     func start() {
         queue.async { [weak self] in
             guard let self else { return }
-            self.stopLocked()
+            self.shouldReconnect = true
+            self.cancelReconnectLocked()
+            self.clearProxyLocked(terminate: true)
+            self.resetThreadTrackingLocked()
             self.onConnectionState?(false)
-            switch self.startDaemonBestEffort() {
-            case .available:
-                self.startAppServerStdio()
-            case .unavailable:
-                self.startAppServerStdio()
-            }
+            self.connectLocked()
         }
     }
 
     func stop() {
         queue.async { [weak self] in
+            self?.shouldReconnect = false
             self?.stopLocked()
+        }
+    }
+
+    private func connectLocked() {
+        cancelReconnectLocked()
+        switch startDaemonBestEffort() {
+        case .available:
+            startAppServerStdio()
+        case .unavailable:
+            startAppServerStdio()
         }
     }
 
@@ -156,6 +168,7 @@ final class CodexAppServerClient {
     }
 
     private func stopLocked() {
+        cancelReconnectLocked()
         clearProxyLocked(terminate: true)
         resetThreadTrackingLocked()
     }
@@ -166,6 +179,7 @@ final class CodexAppServerClient {
         self.offlineBubbleText = offlineBubbleText
         onConnectionState?(false)
         emitSnapshot(connectionAvailable: false)
+        scheduleReconnectLocked()
     }
 
     private func clearProxyLocked(terminate: Bool) {
@@ -225,6 +239,26 @@ final class CodexAppServerClient {
     private func cancelHandshakeTimeout() {
         handshakeTimer?.cancel()
         handshakeTimer = nil
+    }
+
+    private func scheduleReconnectLocked() {
+        guard shouldReconnect, reconnectTimer == nil else { return }
+
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now() + reconnectDelaySeconds)
+        timer.setEventHandler { [weak self] in
+            guard let self else { return }
+            self.reconnectTimer = nil
+            guard self.shouldReconnect, !self.proxyIsRunning else { return }
+            self.connectLocked()
+        }
+        timer.resume()
+        reconnectTimer = timer
+    }
+
+    private func cancelReconnectLocked() {
+        reconnectTimer?.cancel()
+        reconnectTimer = nil
     }
 
     private func startRequestTimeoutWatchdog() {
@@ -934,6 +968,17 @@ final class CodexAppServerClient {
             return 12.0
         }
         return max(0.25, seconds)
+    }
+
+    private static func reconnectDelayInterval(environment: [String: String] = ProcessInfo.processInfo.environment) -> TimeInterval {
+        guard
+            let value = environment["MIMO_APP_SERVER_RECONNECT_DELAY"],
+            let seconds = TimeInterval(value),
+            seconds >= 0
+        else {
+            return 4.0
+        }
+        return max(0.1, seconds)
     }
 
     private func secondsBetween(_ start: DispatchTime, _ end: DispatchTime) -> TimeInterval {

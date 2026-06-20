@@ -242,6 +242,7 @@ swift test
 ./script/e2e_thread_read_timeout.sh
 ./script/e2e_unavailable_app_server.sh
 ./script/e2e_disconnect_app_server.sh
+./script/e2e_reconnect_app_server.sh
 ./script/e2e_state_matrix.sh
 ./script/build_and_run.sh --verify
 ```
@@ -299,6 +300,13 @@ Manual or visual checks:
   context and show `Codex 接続タイムアウト` in the transparent production
   bubble. Production defaults to a 12-second request timeout; tests can shorten
   this with `MIMO_APP_SERVER_REQUEST_TIMEOUT`.
+- Reconnect E2E launches against a fake app-server that disconnects after the
+  first successful `thread/read` and then serves a different recovered thread
+  snapshot on the next stdio session. Mimo must show the initial connected
+  summary, then the offline `Codex 接続切れ` bubble, then reconnect without app
+  restart and show the recovered thread summary. Production defaults to a
+  4-second reconnect delay; tests can shorten this with
+  `MIMO_APP_SERVER_RECONNECT_DELAY`.
 - State-matrix E2E launches against the fake app-server with autonomous motion
   disabled, waits for active, waiting, simultaneous multi-thread, review, and
   failed presentation states, captures the exact production window for each
