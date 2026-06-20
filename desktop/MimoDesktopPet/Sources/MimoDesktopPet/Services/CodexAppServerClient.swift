@@ -6,6 +6,11 @@ final class CodexAppServerClient {
     var onStateSnapshot: ((CodexStateSnapshot) -> Void)?
     var onConnectionState: ((Bool) -> Void)?
 
+    private enum ThreadContext {
+        static let requestLimit = 6
+        static let loadedRequestLimit = 10
+    }
+
     private enum RequestKind {
         case initialize
         case loadedList
@@ -217,7 +222,7 @@ final class CodexAppServerClient {
     }
 
     private func refreshVisibleThreads() {
-        sendRequest(method: "thread/loaded/list", params: ["limit": 10], kind: .loadedList)
+        sendRequest(method: "thread/loaded/list", params: ["limit": ThreadContext.loadedRequestLimit], kind: .loadedList)
     }
 
     private func sendInitialize() {
@@ -359,7 +364,7 @@ final class CodexAppServerClient {
             cancelHandshakeTimeout()
             onConnectionState?(true)
             sendNotification(method: "initialized")
-            sendRequest(method: "thread/loaded/list", params: ["limit": 10], kind: .loadedList)
+            sendRequest(method: "thread/loaded/list", params: ["limit": ThreadContext.loadedRequestLimit], kind: .loadedList)
             startPolling()
         case .loadedList:
             handleLoadedList(result)
@@ -384,11 +389,11 @@ final class CodexAppServerClient {
         else {
             loadedThreadIds.removeAll()
             pruneThreadTracking(keeping: currentVisibleThreadIds())
-            sendRequest(method: "thread/list", params: ["limit": 4, "archived": false], kind: .threadList)
+            sendRequest(method: "thread/list", params: ["limit": ThreadContext.requestLimit, "archived": false], kind: .threadList)
             return
         }
 
-        loadedThreadIds = Array(ids.prefix(4))
+        loadedThreadIds = Array(ids.prefix(ThreadContext.requestLimit))
         if let first = loadedThreadIds.first, selectedThreadId == nil || !currentVisibleThreadIds().contains(selectedThreadId ?? "") {
             selectedThreadId = first
         }
@@ -397,7 +402,7 @@ final class CodexAppServerClient {
         for id in loadedThreadIds {
             sendThreadRead(threadId: id)
         }
-        sendRequest(method: "thread/list", params: ["limit": 4, "archived": false], kind: .threadList)
+        sendRequest(method: "thread/list", params: ["limit": ThreadContext.requestLimit, "archived": false], kind: .threadList)
     }
 
     private func handleThreadList(_ result: Any?) {
@@ -414,7 +419,7 @@ final class CodexAppServerClient {
             return
         }
 
-        let visibleThreads = Array(threads.prefix(4))
+        let visibleThreads = Array(threads.prefix(ThreadContext.requestLimit))
         listedThreadIds = visibleThreads.compactMap { $0["id"] as? String }
         rememberThreadOrder(listedThreadIds)
         pruneThreadTracking(keeping: currentVisibleThreadIds())

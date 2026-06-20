@@ -180,9 +180,10 @@ Conversation behavior:
 - The primary production bubble is capped at 44 characters and secondary
   thread bubbles at 34 characters. Secondary bubbles render as one-line compact
   summaries so a four-bubble stack does not crowd or clip Mimo. If more thread
-  summaries are available than the remaining compact slots can show, the final
-  secondary bubble is reserved for a short overflow note such as
-  `ほか3件も見ています` rather than silently dropping that extra context.
+  summaries are available than the remaining compact slots can show, Mimo keeps
+  up to six thread contexts internally and reserves the final secondary bubble
+  for a short overflow note such as `ほか3件も見ています` rather than silently
+  dropping that extra context.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary status bubble text is still showing a timed moment or an older
   queue item.
@@ -216,7 +217,7 @@ cd desktop/MimoDesktopPet
 
 `./script/qa_all.sh` is the canonical local gate. It runs the unit suite,
 static syntax checks, generated app-server schema drift checks, live app-server
-read/presentation smoke checks, fake/content-length/empty-list/offline/disconnect/state-matrix
+read/presentation smoke checks, fake/content-length/empty-list/overflow/offline/disconnect/state-matrix
 production E2E capture gates, and bundle verification. When a real Codex app-server is
 intentionally unavailable, run `./script/qa_all.sh fake-only` and then rerun full
 mode before accepting app-server integration changes.
@@ -231,6 +232,7 @@ swift test
 ./script/e2e_fake_app_server.sh
 ./script/e2e_content_length_app_server.sh
 ./script/e2e_empty_thread_list.sh
+./script/e2e_overflow_thread_list.sh
 ./script/e2e_unavailable_app_server.sh
 ./script/e2e_disconnect_app_server.sh
 ./script/e2e_state_matrix.sh
