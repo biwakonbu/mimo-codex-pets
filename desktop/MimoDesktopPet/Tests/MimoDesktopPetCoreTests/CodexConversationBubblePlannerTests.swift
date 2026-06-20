@@ -74,10 +74,43 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
             "ご主人、「current」はツールで確認中です",
-            "ご主人、「third」は作業を進めています",
-            "ご主人、「other」はレビューできます"
+            "ご主人、「third」は作業を進めています"
         ])
-        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation])
+    }
+
+    func testProductionBubblesRespectProductStackTextLimits() {
+        let lines = [
+            line(
+                threadId: String(repeating: "長いタイトル", count: 8),
+                speaker: "codex",
+                text: "デスクトップ上の表示座標を確認しながら移動先を調整しています",
+                isAssistant: true
+            ),
+            line(
+                threadId: String(repeating: "別スレッド", count: 8),
+                speaker: "tool",
+                text: "実行: swift test --very-long-option --another-long-option",
+                isAssistant: true
+            )
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: String(repeating: "本番ステータス", count: 8),
+            conversationLines: lines,
+            preferredThreadId: nil,
+            limit: 9
+        )
+
+        XCTAssertLessThanOrEqual(bubbles.count, PetSpeechBubbleLayout.productionVisibleLimit)
+        XCTAssertEqual(bubbles.first?.role, .status)
+        XCTAssertLessThanOrEqual(bubbles[0].text.count, PetSpeechBubbleLayout.statusTextLimit)
+        for bubble in bubbles.dropFirst() {
+            XCTAssertEqual(bubble.role, .conversation)
+            XCTAssertLessThanOrEqual(bubble.text.count, PetSpeechBubbleLayout.conversationTextLimit)
+        }
+        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .status), 2)
+        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .conversation), 1)
     }
 
     func testProductionBubblesDeduplicatePrimaryConversationText() {

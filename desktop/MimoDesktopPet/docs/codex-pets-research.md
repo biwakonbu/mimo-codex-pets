@@ -93,6 +93,9 @@ Conversation behavior:
   status/current-thread bubble plus compact summaries from other visible
   threads. This keeps Codex Pets-like multi-thread awareness in the production
   surface without rendering a console, transcript feed, or debug panel.
+- The primary production bubble is capped at 44 characters and secondary
+  thread bubbles at 34 characters. Secondary bubbles render as one-line compact
+  summaries so a three-bubble stack does not crowd or clip Mimo.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary status bubble text is still showing a timed moment or an older
   queue item.
@@ -133,7 +136,9 @@ Manual or visual checks:
   visible thread and a later secondary-thread update discovered immediately
   from notification-triggered thread reads.
 - `MIMO_PRESENTATION_LOG` includes both `bubbleText` and `bubbleTexts`; stacked
-  bubble-only updates should be logged for deterministic E2E evidence.
+  bubble-only updates should be logged for deterministic E2E evidence. Fake
+  production E2E also enforces the three-bubble visible limit and the
+  primary/secondary text-length caps.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI.
 - Live app presentation smoke launches the actual app process with a temporary

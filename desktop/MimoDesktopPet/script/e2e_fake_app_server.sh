@@ -141,6 +141,13 @@ for row in rows:
     bubbles = row.get("bubbleTexts", [])
     if not isinstance(bubbles, list):
         continue
+    if len(bubbles) > 3:
+        raise SystemExit(f"production bubble stack showed too many bubbles: {len(bubbles)}")
+    if bubbles and len(str(bubbles[0])) > 44:
+        raise SystemExit(f"primary production bubble is too long: {bubbles[0]}")
+    for bubble in bubbles[1:]:
+        if len(str(bubble)) > 34:
+            raise SystemExit(f"secondary production bubble is too long: {bubble}")
     if (
         len(bubbles) >= 2
         and any("Mimo runtime QA" in str(text) for text in bubbles)

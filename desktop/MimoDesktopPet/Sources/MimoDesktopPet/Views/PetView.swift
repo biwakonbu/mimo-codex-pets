@@ -42,11 +42,11 @@ private struct ProductionBubbleStackView: View {
 
     var body: some View {
         VStack(spacing: -1) {
-            ForEach(Array(bubbles.prefix(3).enumerated()), id: \.element.id) { index, bubble in
+            ForEach(Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit).enumerated()), id: \.element.id) { index, bubble in
                 BubbleView(
                     text: bubble.text,
                     role: bubble.role,
-                    showsTail: index == min(bubbles.count, 3) - 1
+                    showsTail: index == min(bubbles.count, PetSpeechBubbleLayout.productionVisibleLimit) - 1
                 )
                 .offset(x: horizontalOffset(for: index))
                 .zIndex(Double(3 - index))
@@ -100,7 +100,9 @@ struct BubbleView: View {
             Text(text)
                 .font(.system(size: role == .status ? 13 : 12, weight: role == .status ? .medium : .regular))
                 .foregroundStyle(.primary)
-                .lineLimit(2)
+                .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
+                .minimumScaleFactor(role == .status ? 0.9 : 0.82)
+                .truncationMode(.tail)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, role == .status ? 12 : 10)
                 .padding(.vertical, role == .status ? 8 : 7)

@@ -39,11 +39,14 @@ public enum CodexConversationBubblePlanner {
         primaryText: String,
         conversationLines: [CodexConversationLine],
         preferredThreadId: String?,
-        limit: Int = 3
+        limit: Int = PetSpeechBubbleLayout.productionVisibleLimit
     ) -> [PetSpeechBubble] {
-        let visibleLimit = max(1, limit)
+        let visibleLimit = max(1, min(limit, PetSpeechBubbleLayout.productionVisibleLimit))
         var texts: [String] = []
-        let primary = CodexBubbleFormatter.compact(primaryText, limit: 46)
+        let primary = CodexBubbleFormatter.compact(
+            primaryText,
+            limit: PetSpeechBubbleLayout.textLimit(for: .status)
+        )
         if !primary.isEmpty {
             texts.append(primary)
         }
@@ -54,7 +57,10 @@ public enum CodexConversationBubblePlanner {
         ).map { CodexBubbleFormatter.bubbleText(for: $0) }
 
         for text in conversationTexts where texts.count < visibleLimit {
-            let compacted = CodexBubbleFormatter.compact(text, limit: 46)
+            let compacted = CodexBubbleFormatter.compact(
+                text,
+                limit: PetSpeechBubbleLayout.textLimit(for: .conversation)
+            )
             guard !compacted.isEmpty, !texts.contains(compacted) else { continue }
             texts.append(compacted)
         }
