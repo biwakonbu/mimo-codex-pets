@@ -239,6 +239,7 @@ swift test
 ./script/e2e_content_length_app_server.sh
 ./script/e2e_empty_thread_list.sh
 ./script/e2e_overflow_thread_list.sh
+./script/e2e_thread_read_timeout.sh
 ./script/e2e_unavailable_app_server.sh
 ./script/e2e_disconnect_app_server.sh
 ./script/e2e_state_matrix.sh
@@ -292,6 +293,12 @@ Manual or visual checks:
   thread-summary state and then exits. Mimo must stay alive, keep the production
   surface transparent, and show `Codex 接続切れ` instead of leaving stale
   connected bubbles onscreen.
+- Thread-read timeout E2E launches against a fake app-server that initializes,
+  returns list data, and then deliberately never responds to `thread/read`.
+  Mimo must first show the connected thread summary, then clear stale connected
+  context and show `Codex 接続タイムアウト` in the transparent production
+  bubble. Production defaults to a 12-second request timeout; tests can shorten
+  this with `MIMO_APP_SERVER_REQUEST_TIMEOUT`.
 - State-matrix E2E launches against the fake app-server with autonomous motion
   disabled, waits for active, waiting, simultaneous multi-thread, review, and
   failed presentation states, captures the exact production window for each

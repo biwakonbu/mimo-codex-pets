@@ -67,6 +67,7 @@ run_from_repo "shell syntax checks" bash -n \
   desktop/MimoDesktopPet/script/e2e_content_length_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_empty_thread_list.sh \
   desktop/MimoDesktopPet/script/e2e_overflow_thread_list.sh \
+  desktop/MimoDesktopPet/script/e2e_thread_read_timeout.sh \
   desktop/MimoDesktopPet/script/e2e_unavailable_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_disconnect_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_state_matrix.sh
@@ -74,6 +75,7 @@ run_from_repo "python syntax checks" python3 -m py_compile \
   desktop/MimoDesktopPet/script/fake_codex_app_server.py \
   desktop/MimoDesktopPet/script/fake_disconnect_codex_app_server.py \
   desktop/MimoDesktopPet/script/fake_empty_codex_app_server.py \
+  desktop/MimoDesktopPet/script/fake_hanging_read_codex_app_server.py \
   desktop/MimoDesktopPet/script/fake_overflow_codex_app_server.py \
   desktop/MimoDesktopPet/script/live_app_server_smoke.py
 run_from_repo "git whitespace check" git diff --check
@@ -90,6 +92,7 @@ run_from_root "fake app-server production E2E" ./script/e2e_fake_app_server.sh
 run_from_root "content-length app-server production E2E" ./script/e2e_content_length_app_server.sh
 run_from_root "empty thread-list production E2E" ./script/e2e_empty_thread_list.sh
 run_from_root "overflow thread-list production E2E" ./script/e2e_overflow_thread_list.sh
+run_from_root "thread-read timeout production E2E" ./script/e2e_thread_read_timeout.sh
 run_from_root "unavailable app-server production E2E" ./script/e2e_unavailable_app_server.sh
 run_from_root "disconnect production E2E" ./script/e2e_disconnect_app_server.sh
 run_from_root "production state matrix E2E" ./script/e2e_state_matrix.sh

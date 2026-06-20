@@ -18,6 +18,11 @@ final class CodexAppServerClient {
         case threadRead(threadId: String)
     }
 
+    private struct PendingRequest {
+        let kind: RequestKind
+        let sentAt: DispatchTime
+    }
+
     private enum ThreadReadReason {
         case refresh
         case notification
@@ -31,6 +36,7 @@ final class CodexAppServerClient {
     private let queue = DispatchQueue(label: "MimoDesktopPet.CodexAppServerClient")
     private let decoder = JSONDecoder()
     private let invocation = CodexCommandLocator.resolve()
+    private let requestTimeoutSeconds = CodexAppServerClient.requestTimeoutInterval()
     private var proxyProcess: Process?
     private var stdinPipe: Pipe?
     private var stdoutPipe: Pipe?
@@ -39,7 +45,7 @@ final class CodexAppServerClient {
     private var outgoingFraming: CodexJSONRPCStreamParser.Framing = .jsonLines
     private var streamParser = CodexJSONRPCStreamParser()
     private var nextRequestId = 1
-    private var pendingRequests: [Int: RequestKind] = [:]
+    private var pendingRequests: [Int: PendingRequest] = [:]
     private var selectedThreadId: String?
     private var latestThreadStatus: CodexThreadStatus?
     private var latestTurnStatus: CodexTurnStatus?
@@ -58,6 +64,7 @@ final class CodexAppServerClient {
     private var offlineBubbleText: String?
     private var pollTimer: DispatchSourceTimer?
     private var handshakeTimer: DispatchSourceTimer?
+    private var requestTimeoutTimer: DispatchSourceTimer?
 
     func start() {
         queue.async { [weak self] in
@@ -140,6 +147,7 @@ final class CodexAppServerClient {
             proxyIsRunning = true
             outgoingFraming = .jsonLines
             streamParser.reset()
+            startRequestTimeoutWatchdog()
             sendInitialize()
             startHandshakeTimeout()
         } catch {
@@ -165,6 +173,8 @@ final class CodexAppServerClient {
         handshakeTimer = nil
         pollTimer?.cancel()
         pollTimer = nil
+        requestTimeoutTimer?.cancel()
+        requestTimeoutTimer = nil
 
         proxyProcess?.terminationHandler = nil
         if terminate, proxyProcess?.isRunning == true {
@@ -217,6 +227,29 @@ final class CodexAppServerClient {
         handshakeTimer = nil
     }
 
+    private func startRequestTimeoutWatchdog() {
+        requestTimeoutTimer?.cancel()
+        let timer = DispatchSource.makeTimerSource(queue: queue)
+        timer.schedule(deadline: .now() + requestTimeoutSeconds, repeating: 1.0)
+        timer.setEventHandler { [weak self] in
+            self?.expireTimedOutRequests()
+        }
+        timer.resume()
+        requestTimeoutTimer = timer
+    }
+
+    private func expireTimedOutRequests() {
+        guard proxyIsRunning, proxyProcess?.isRunning == true else { return }
+        let now = DispatchTime.now()
+        for request in pendingRequests.values {
+            guard !isInitializeRequest(request.kind) else { continue }
+            if secondsBetween(request.sentAt, now) >= requestTimeoutSeconds {
+                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続タイムアウト")
+                return
+            }
+        }
+    }
+
     private func startPolling() {
         pollTimer?.cancel()
         let timer = DispatchSource.makeTimerSource(queue: queue)
@@ -253,7 +286,7 @@ final class CodexAppServerClient {
     private func sendRequest(method: String, params: [String: Any], kind: RequestKind) {
         let id = nextRequestId
         nextRequestId += 1
-        pendingRequests[id] = kind
+        pendingRequests[id] = PendingRequest(kind: kind, sentAt: .now())
         writeJSONObject(["method": method, "id": id, "params": params])
     }
 
@@ -355,10 +388,10 @@ final class CodexAppServerClient {
         }
 
         guard let id = object["id"] as? Int else { return }
-        let kind = pendingRequests.removeValue(forKey: id)
+        let kind = pendingRequests.removeValue(forKey: id)?.kind
         guard object["error"] == nil else {
             if !isInitializeRequest(kind) {
-                emitSnapshot(connectionAvailable: false)
+                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
             }
             return
         }
@@ -890,5 +923,20 @@ final class CodexAppServerClient {
             return true
         }
         return false
+    }
+
+    private static func requestTimeoutInterval(environment: [String: String] = ProcessInfo.processInfo.environment) -> TimeInterval {
+        guard
+            let value = environment["MIMO_APP_SERVER_REQUEST_TIMEOUT"],
+            let seconds = TimeInterval(value),
+            seconds > 0
+        else {
+            return 12.0
+        }
+        return max(0.25, seconds)
+    }
+
+    private func secondsBetween(_ start: DispatchTime, _ end: DispatchTime) -> TimeInterval {
+        TimeInterval(end.uptimeNanoseconds - start.uptimeNanoseconds) / 1_000_000_000
     }
 }
