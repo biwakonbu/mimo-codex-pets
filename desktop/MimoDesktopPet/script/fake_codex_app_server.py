@@ -30,8 +30,10 @@ SECOND_THREAD_TURNS = [
         ],
     }
 ]
-STATUS_ONLY_THREAD_STATUS = {"type": "idle"}
+STATUS_ONLY_THREAD_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}
 STATUS_ONLY_THREAD_TURNS = []
+THIRD_THREAD_STATUS = {"type": "active", "activeFlags": []}
+THIRD_THREAD_TURNS = []
 
 
 def log(message):
@@ -62,6 +64,16 @@ def status_only_thread_snapshot():
         "preview": "ステータスだけで進捗を伝える検証",
         "status": dict(STATUS_ONLY_THREAD_STATUS),
         "turns": [dict(turn) for turn in STATUS_ONLY_THREAD_TURNS],
+    }
+
+
+def third_thread_snapshot():
+    return {
+        "id": "fake-docs",
+        "name": "資料整理",
+        "preview": "資料整理の進捗を短く伝える検証",
+        "status": dict(THIRD_THREAD_STATUS),
+        "turns": [dict(turn) for turn in THIRD_THREAD_TURNS],
     }
 
 
@@ -324,7 +336,11 @@ def run_stdio_server():
         elif method == "thread/loaded/list":
             with STATE_LOCK:
                 closed = SECOND_THREAD_CLOSED
-            ids = ["fake-thread", "fake-status-only"] if closed else ["fake-thread", "fake-review", "fake-status-only"]
+            ids = (
+                ["fake-thread", "fake-status-only", "fake-docs"]
+                if closed
+                else ["fake-thread", "fake-review", "fake-status-only", "fake-docs"]
+            )
             write_message(
                 {
                     "id": request_id,
@@ -338,6 +354,7 @@ def run_stdio_server():
                 closed = SECOND_THREAD_CLOSED
                 second_thread = second_thread_snapshot()
                 status_only_thread = status_only_thread_snapshot()
+                third_thread = third_thread_snapshot()
             threads = [
                 {
                     "id": "fake-thread",
@@ -350,6 +367,7 @@ def run_stdio_server():
             if not closed:
                 threads.append(second_thread)
             threads.append(status_only_thread)
+            threads.append(third_thread)
             write_message(
                 {
                     "id": request_id,
@@ -367,6 +385,9 @@ def run_stdio_server():
             elif thread_id == "fake-status-only":
                 with STATE_LOCK:
                     thread = status_only_thread_snapshot()
+            elif thread_id == "fake-docs":
+                with STATE_LOCK:
+                    thread = third_thread_snapshot()
             else:
                 with STATE_LOCK:
                     status = dict(CURRENT_STATUS)

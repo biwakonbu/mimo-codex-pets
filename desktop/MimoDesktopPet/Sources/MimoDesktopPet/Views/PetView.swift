@@ -111,6 +111,9 @@ struct BubbleView: View {
 
     var body: some View {
         let resolvedFillOpacity = fillOpacity ?? (role == .status ? 0.94 : 0.88)
+        let bubbleFill = role == .status
+            ? Color.white
+            : Color(red: 0.965, green: 0.982, blue: 1.0)
 
         VStack(spacing: 0) {
             HStack(spacing: role == .status ? 0 : 7) {
@@ -131,16 +134,16 @@ struct BubbleView: View {
             .padding(.horizontal, role == .status ? 12 : 10)
             .padding(.vertical, role == .status ? 8 : 7)
             .frame(maxWidth: CGFloat(maxTextWidth ?? (role == .status ? 284 : 252)))
-            .background(Color.white.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background(bubbleFill.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .strokeBorder(Color.black.opacity(0.1), lineWidth: 1)
             )
             .shadow(color: Color.black.opacity(role == .status ? 0.14 : 0.1), radius: role == .status ? 8 : 6, x: 0, y: 3)
 
             if showsTail {
                 BubbleTail()
-                    .fill(Color.white.opacity(resolvedFillOpacity))
+                    .fill(bubbleFill.opacity(resolvedFillOpacity))
                     .frame(width: 18, height: 9)
                     .offset(y: -1)
                     .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 2)

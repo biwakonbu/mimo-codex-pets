@@ -3,8 +3,8 @@ import XCTest
 
 final class PetSpeechBubbleLayoutTests: XCTestCase {
     func testProductionLayoutFitsWindowWithSprite() {
-        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowWidth, 360)
-        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowHeight, 360)
+        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowWidth, 392)
+        XCTAssertEqual(PetSpeechBubbleLayout.productionWindowHeight, 408)
 
         let verticalContent =
             4.0 +
@@ -24,8 +24,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placement.index, 0)
         XCTAssertEqual(placement.horizontalOffset, 0)
         XCTAssertEqual(placement.verticalOffset, 0)
-        XCTAssertEqual(placement.maxTextWidth, 292)
-        XCTAssertEqual(placement.zIndex, 3)
+        XCTAssertEqual(placement.maxTextWidth, 308)
+        XCTAssertEqual(placement.zIndex, 4)
     }
 
     func testThreeBubbleStackFansThreadSummaries() {
@@ -45,8 +45,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: 3
         )
 
-        XCTAssertEqual(status.verticalOffset, -86)
-        XCTAssertEqual(firstThread.verticalOffset, -42)
+        XCTAssertEqual(status.verticalOffset, -100)
+        XCTAssertEqual(firstThread.verticalOffset, -50)
         XCTAssertEqual(secondThread.verticalOffset, 0)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
@@ -54,6 +54,40 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(secondThread.maxTextWidth, 246)
         XCTAssertGreaterThan(status.zIndex, firstThread.zIndex)
         XCTAssertGreaterThan(firstThread.zIndex, secondThread.zIndex)
+    }
+
+    func testFourBubbleStackShowsThreeThreadSummaries() {
+        let status = PetSpeechBubbleLayout.placement(
+            for: 0,
+            role: .status,
+            visibleCount: 4
+        )
+        let firstThread = PetSpeechBubbleLayout.placement(
+            for: 1,
+            role: .conversation,
+            visibleCount: 4
+        )
+        let secondThread = PetSpeechBubbleLayout.placement(
+            for: 2,
+            role: .conversation,
+            visibleCount: 4
+        )
+        let thirdThread = PetSpeechBubbleLayout.placement(
+            for: 3,
+            role: .conversation,
+            visibleCount: 4
+        )
+
+        XCTAssertEqual(status.verticalOffset, -136)
+        XCTAssertEqual(firstThread.verticalOffset, -92)
+        XCTAssertEqual(secondThread.verticalOffset, -46)
+        XCTAssertEqual(thirdThread.verticalOffset, 0)
+        XCTAssertLessThan(firstThread.horizontalOffset, 0)
+        XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
+        XCTAssertLessThan(thirdThread.horizontalOffset, secondThread.horizontalOffset)
+        XCTAssertEqual(firstThread.maxTextWidth, 246)
+        XCTAssertEqual(secondThread.maxTextWidth, 246)
+        XCTAssertEqual(thirdThread.maxTextWidth, 246)
     }
 
     func testPlacementClampsToVisibleLimit() {
@@ -65,6 +99,6 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
         XCTAssertEqual(placement.verticalOffset, 0)
-        XCTAssertEqual(placement.horizontalOffset, 42)
+        XCTAssertEqual(placement.horizontalOffset, -18)
     }
 }

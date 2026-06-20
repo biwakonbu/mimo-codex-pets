@@ -52,6 +52,9 @@ Verified runtime behavior:
 - `codex app-server --stdio` returns a Codex Desktop user agent and can read local thread state.
 - App-server responses and notifications may interleave on stdout; the client must dispatch by `method` vs `id`.
 - `thread/list` can return no interactive threads; the companion must stay open and remain idle/offline-safe.
+- When the local Codex command or app-server is unavailable, the companion must
+  stay open in transparent production mode and show a short offline bubble
+  instead of crashing or revealing a debug surface.
 - The companion should periodically refresh visible threads, not only the
   currently selected thread, so stacked production bubbles keep following
   secondary thread progress after initial load.
@@ -110,13 +113,14 @@ Conversation behavior:
 - The production bubble queue deduplicates by thread, speaker, and sanitized
   text, then rotates the latest short report from each visible thread instead of
   pinning only one focused thread forever.
-- Production can show up to three stacked speech bubbles at once: one primary
-  status/current-thread bubble plus compact summaries from other visible
-  threads. This keeps Codex Pets-like multi-thread awareness in the production
-  surface without rendering a console, transcript feed, or debug panel.
+- Production can show up to four stacked speech bubbles at once: one primary
+  status/current-thread bubble plus up to three compact summaries from other
+  visible threads. This keeps Codex Pets-like multi-thread awareness in the
+  production surface without rendering a console, transcript feed, or debug
+  panel.
 - The primary production bubble is capped at 44 characters and secondary
   thread bubbles at 34 characters. Secondary bubbles render as one-line compact
-  summaries so a three-bubble stack does not crowd or clip Mimo.
+  summaries so a four-bubble stack does not crowd or clip Mimo.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary status bubble text is still showing a timed moment or an older
   queue item.
@@ -141,6 +145,7 @@ swift test
 ./script/live_app_server_smoke.py
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh
+./script/e2e_unavailable_app_server.sh
 ./script/build_and_run.sh --verify
 ```
 
@@ -159,8 +164,9 @@ Manual or visual checks:
   from notification-triggered thread reads.
 - `MIMO_PRESENTATION_LOG` includes both `bubbleText` and `bubbleTexts`; stacked
   bubble-only updates should be logged for deterministic E2E evidence. Fake
-  production E2E also enforces the three-bubble visible limit and the
-  primary/secondary text-length caps.
+  production E2E also enforces the four-bubble visible limit, the
+  primary/secondary text-length caps, and a three-thread simultaneous bubble
+  case.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI.
 - Live app presentation smoke launches the actual app process with a temporary

@@ -31,6 +31,7 @@ swift test
 ./script/live_app_presentation_smoke.sh
 ./script/build_and_run.sh --verify
 ./script/e2e_fake_app_server.sh
+./script/e2e_unavailable_app_server.sh
 ```
 
 The script stages a local app bundle under `dist/MimoDesktopPet.app`, launches it
@@ -46,6 +47,9 @@ loaded-list, thread-list, and thread-read calls against the local app-server.
 `./script/live_app_presentation_smoke.sh` launches the real app process with a
 temporary presentation log and verifies that it leaves the offline/connection
 state after connecting.
+`./script/e2e_unavailable_app_server.sh` launches the real app with an
+unavailable Codex command and verifies that Mimo stays alive in transparent
+production mode with an offline speech bubble.
 
 ## Controls
 
@@ -66,7 +70,7 @@ jumping moments instead of walking endlessly.
 
 In production mode the panel stays transparent and shows only Mimo plus a short
 stack of white bubbles. The primary bubble carries the current Codex status, and
-up to two secondary bubbles summarize recent visible Codex threads without
+up to three secondary bubbles summarize recent visible Codex threads without
 dumping raw model output, commands, or payload text. Threads can be summarized
 from sanitized item activity or from thread/turn status alone.
 

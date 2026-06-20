@@ -127,6 +127,7 @@ grep -Fq 'ご主人、「別スレッドの確認」はレビューできます'
 grep -Fq 'ご主人、「別スレッドの確認」は作業を進めています' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「更新された別スレッド」は作業を進めています' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「状態だけのスレッド」は確認待ちです' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「資料整理」は作業を進めています' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -145,7 +146,7 @@ for row in rows:
     bubbles = row.get("bubbleTexts", [])
     if not isinstance(bubbles, list):
         continue
-    if len(bubbles) > 3:
+    if len(bubbles) > 4:
         raise SystemExit(f"production bubble stack showed too many bubbles: {len(bubbles)}")
     if bubbles and len(str(bubbles[0])) > 44:
         raise SystemExit(f"primary production bubble is too long: {bubbles[0]}")
@@ -153,13 +154,15 @@ for row in rows:
         if len(str(bubble)) > 34:
             raise SystemExit(f"secondary production bubble is too long: {bubble}")
     if (
-        len(bubbles) >= 2
+        len(bubbles) >= 4
         and any("Mimo runtime QA" in str(text) for text in bubbles)
         and any("別スレッドの確認" in str(text) for text in bubbles)
+        and any("状態だけのスレッド" in str(text) for text in bubbles)
+        and any("資料整理" in str(text) for text in bubbles)
     ):
         break
 else:
-    raise SystemExit("presentation log never showed multiple thread bubbles at once")
+    raise SystemExit("presentation log never showed three thread bubbles at once")
 
 closed_thread_markers = ("別スレッドの確認", "更新された別スレッド")
 tail_rows = rows[-5:]
@@ -185,7 +188,7 @@ guard let image = NSImage(contentsOfFile: path),
     exit(1)
 }
 
-guard bitmap.pixelsWide <= 380, bitmap.pixelsHigh <= 370 else {
+guard bitmap.pixelsWide <= 420, bitmap.pixelsHigh <= 420 else {
     fputs("unexpected production window size \(bitmap.pixelsWide)x\(bitmap.pixelsHigh)\n", stderr)
     exit(1)
 }

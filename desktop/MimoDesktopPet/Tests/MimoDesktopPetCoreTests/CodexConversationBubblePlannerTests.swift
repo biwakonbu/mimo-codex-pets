@@ -76,9 +76,10 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
             "ご主人、「current」はツールで確認中です",
-            "ご主人、「third」は作業を進めています"
+            "ご主人、「third」は作業を進めています",
+            "ご主人、「other」はレビューできます"
         ])
-        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation])
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }
 
     func testProductionBubblesRespectProductStackTextLimits() {

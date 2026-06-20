@@ -56,7 +56,7 @@ final class PetViewModel: ObservableObject {
             presentationState = next
         }
         lastCodexPresentation = presentationState
-        conversationLines = Array(snapshot.conversationLines.suffix(8))
+        conversationLines = Array(snapshot.conversationLines.suffix(12))
         focusedThreadId = snapshot.focusedConversationLine?.threadId
         pruneConversationQueue(keeping: Set(conversationLines.map(\.threadId)))
         let visibleBubblesChanged = refreshVisibleBubbles()

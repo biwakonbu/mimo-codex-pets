@@ -29,13 +29,13 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
 }
 
 public enum PetSpeechBubbleLayout {
-    public static let productionWindowWidth = 360.0
-    public static let productionWindowHeight = 360.0
-    public static let productionStackWidth = 348.0
-    public static let productionStackHeight = 146.0
+    public static let productionWindowWidth = 392.0
+    public static let productionWindowHeight = 408.0
+    public static let productionStackWidth = 384.0
+    public static let productionStackHeight = 188.0
     public static let productionSpriteWidth = 192.0
     public static let productionSpriteHeight = 208.0
-    public static let productionVisibleLimit = 3
+    public static let productionVisibleLimit = 4
     public static let statusTextLimit = 44
     public static let conversationTextLimit = 34
 
@@ -64,40 +64,25 @@ public enum PetSpeechBubbleLayout {
     ) -> PetSpeechBubblePlacement {
         let count = max(1, min(visibleCount, productionVisibleLimit))
         let normalizedIndex = max(0, min(index, count - 1))
-        let topOffset: Double
-        let middleOffset: Double
+        let offsets: [(x: Double, y: Double)]
         switch count {
         case 1:
-            topOffset = 0
-            middleOffset = 0
+            offsets = [(0, 0)]
         case 2:
-            topOffset = -48
-            middleOffset = 0
+            offsets = [(0, -52), (-30, 0)]
+        case 3:
+            offsets = [(0, -100), (-54, -50), (48, 0)]
         default:
-            topOffset = -86
-            middleOffset = -42
+            offsets = [(0, -136), (-58, -92), (58, -46), (-18, 0)]
         }
-
-        let horizontalOffset: Double
-        let verticalOffset: Double
-        switch normalizedIndex {
-        case 0:
-            horizontalOffset = 0
-            verticalOffset = topOffset
-        case 1:
-            horizontalOffset = count == 2 ? -32 : -46
-            verticalOffset = middleOffset
-        default:
-            horizontalOffset = 42
-            verticalOffset = 0
-        }
+        let offset = offsets[normalizedIndex]
 
         return PetSpeechBubblePlacement(
             index: normalizedIndex,
             role: role,
-            maxTextWidth: role == .status ? 292 : 246,
-            horizontalOffset: horizontalOffset,
-            verticalOffset: verticalOffset,
+            maxTextWidth: role == .status ? 308 : 246,
+            horizontalOffset: offset.x,
+            verticalOffset: offset.y,
             fillOpacity: role == .status ? 0.96 : 0.9,
             zIndex: Double(productionVisibleLimit - normalizedIndex)
         )
