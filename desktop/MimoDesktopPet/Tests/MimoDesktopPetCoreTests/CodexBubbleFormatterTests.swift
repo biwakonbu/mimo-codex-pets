@@ -210,6 +210,33 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「Codex」は応答をまとめています")
     }
 
+    func testSensitiveThreadTitleIsPresentedAsCodex() {
+        let cases = [
+            "/Users/example/private/project/.env",
+            "https://example.com/private-token",
+            "secret token 0123456789abcdef0123456789abcdef",
+            "user@example.com の設定"
+        ]
+
+        for title in cases {
+            let bubble = CodexBubbleFormatter.bubbleText(
+                for: CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: title,
+                    speaker: "codex",
+                    text: "応答を作成中",
+                    isAssistant: true
+                )
+            )
+
+            XCTAssertEqual(bubble, "ご主人、「Codex」は応答をまとめています")
+            XCTAssertFalse(bubble.contains("/Users/example"))
+            XCTAssertFalse(bubble.contains("example.com"))
+            XCTAssertFalse(bubble.contains("secret"))
+            XCTAssertFalse(bubble.contains("@"))
+        }
+    }
+
     func testCompactsLongBubbleText() {
         let line = CodexConversationLine(
             threadId: "thread",

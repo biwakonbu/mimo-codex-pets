@@ -144,6 +144,11 @@ Conversation behavior:
 - Production bubbles do not quote Codex speaker labels directly. They combine
   the thread title and the latest progress-like line into a short Mimo report to
   the user, such as `ご主人、「<title>」は作業を進めています`.
+- Thread titles are filtered for ambient display before they reach production
+  bubbles. Instruction-looking titles, URLs, local paths, email addresses,
+  token-like strings, and credential/secret markers are skipped; if another
+  safe title or preview exists it is used, otherwise the bubble falls back to
+  `Codex`.
 - The production bubble queue deduplicates by thread, speaker, and sanitized
   text, then rotates the latest short report from each visible thread instead of
   pinning only one focused thread forever.

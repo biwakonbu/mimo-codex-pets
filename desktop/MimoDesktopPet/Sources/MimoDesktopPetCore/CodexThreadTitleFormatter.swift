@@ -7,7 +7,10 @@ public enum CodexThreadTitleFormatter {
             let collapsed = text
                 .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !collapsed.isEmpty, !looksLikeInstructionTitle(collapsed) else { continue }
+            guard !collapsed.isEmpty,
+                  !looksLikeInstructionTitle(collapsed),
+                  !looksUnsafeForAmbientDisplay(collapsed)
+            else { continue }
             guard collapsed.count > limit else { return collapsed }
             let index = collapsed.index(collapsed.startIndex, offsetBy: limit)
             return String(collapsed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
@@ -56,5 +59,41 @@ public enum CodexThreadTitleFormatter {
             "you are selected"
         ]
         return blockedFragments.contains { lowercased.contains($0) }
+    }
+
+    private static func looksUnsafeForAmbientDisplay(_ title: String) -> Bool {
+        let lowercased = title.lowercased()
+        let blockedFragments = [
+            "://",
+            "www.",
+            "localhost:",
+            "127.0.0.1",
+            "/users/",
+            "/private/",
+            "/volumes/",
+            "~/",
+            "\\users\\",
+            ".env",
+            "credentials",
+            "secret",
+            "api_key",
+            "apikey",
+            "access token",
+            "bearer ",
+            "password"
+        ]
+        if blockedFragments.contains(where: { lowercased.contains($0) }) {
+            return true
+        }
+
+        let blockedPatterns = [
+            #"(?:^|\s)/(?:tmp|var|etc|opt|usr|bin|sbin)/"#,
+            #"[A-Za-z]:\\"#,
+            #"[A-Fa-f0-9]{32,}"#,
+            #"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#
+        ]
+        return blockedPatterns.contains { pattern in
+            title.range(of: pattern, options: .regularExpression) != nil
+        }
     }
 }

@@ -134,7 +134,7 @@ grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」は作業を進めています' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「更新された別スレッド」は作業を進めています' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「状態だけのスレッド」は確認待ちです' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「ステータスだけで進捗を伝える検証」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「資料整理」は作業を進めています' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
@@ -179,6 +179,9 @@ for row in rows:
         "raw assistant text",
         "secret-looking command output",
         "raw reasoning",
+        "/Users/example",
+        ".env",
+        "secret token",
     )
     for fragment in forbidden_fragments:
         if fragment in all_visible_text:
@@ -187,7 +190,7 @@ for row in rows:
         len(bubbles) >= 4
         and any("Mimo runtime QA" in str(text) for text in bubbles)
         and any("別スレッドの確認" in str(text) for text in bubbles)
-        and any("状態だけのスレッド" in str(text) for text in bubbles)
+        and any("ステータスだけで進捗を伝える検証" in str(text) for text in bubbles)
         and any("資料整理" in str(text) for text in bubbles)
     ):
         if roles != ["status", "conversation", "conversation", "conversation"]:

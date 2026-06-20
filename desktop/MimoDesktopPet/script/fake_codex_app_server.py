@@ -60,7 +60,7 @@ def second_thread_snapshot():
 def status_only_thread_snapshot():
     return {
         "id": "fake-status-only",
-        "name": "状態だけのスレッド",
+        "name": "/Users/example/private/project/.env secret token",
         "preview": "ステータスだけで進捗を伝える検証",
         "status": dict(STATUS_ONLY_THREAD_STATUS),
         "turns": [dict(turn) for turn in STATUS_ONLY_THREAD_TURNS],

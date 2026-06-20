@@ -28,4 +28,23 @@ final class CodexThreadTitleFormatterTests: XCTestCase {
         XCTAssertLessThanOrEqual(title.count, 15)
         XCTAssertTrue(title.hasSuffix("..."))
     }
+
+    func testSkipsSensitiveAmbientTitlesAndUsesNextSafeCandidate() {
+        let title = CodexThreadTitleFormatter.title(from: [
+            "/Users/example/private/project/.env を確認",
+            "https://example.com/private-token",
+            "Mimo の表示品質を確認"
+        ])
+
+        XCTAssertEqual(title, "Mimo の表示品質を確認")
+    }
+
+    func testFallsBackForOnlySensitiveAmbientTitles() {
+        let title = CodexThreadTitleFormatter.title(from: [
+            "secret token 0123456789abcdef0123456789abcdef",
+            "user@example.com の設定"
+        ])
+
+        XCTAssertEqual(title, "Codex Thread")
+    }
 }

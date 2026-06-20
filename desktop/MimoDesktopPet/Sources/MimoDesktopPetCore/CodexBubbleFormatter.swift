@@ -18,7 +18,11 @@ public enum CodexBubbleFormatter {
     }
 
     private static func compactTitle(_ title: String, limit: Int = 16) -> String {
-        let compacted = compact(title, limit: limit)
+        let compacted = CodexThreadTitleFormatter.title(
+            from: [title],
+            fallback: "Codex Thread",
+            limit: limit
+        )
         if ["Codex Thread", "unknown-thread"].contains(compacted) {
             return "Codex"
         }
