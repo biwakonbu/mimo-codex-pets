@@ -15,6 +15,7 @@ public struct PetPresentationState: Equatable, Sendable {
 public enum PetSpeechBubbleRole: String, Equatable, Sendable {
     case status
     case conversation
+    case overflow
 }
 
 public struct PetSpeechBubble: Equatable, Identifiable, Sendable {

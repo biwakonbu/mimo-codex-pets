@@ -181,13 +181,15 @@ Conversation behavior:
   status such as `Codex が作業中`; offline status keeps the generic connection
   bubble. This keeps Codex Pets-like multi-thread awareness in the production
   surface without rendering a console, transcript feed, or debug panel.
-- The primary production bubble is capped at 44 characters and secondary
-  thread bubbles at 34 characters. Secondary bubbles render as one-line compact
-  summaries so a four-bubble stack does not crowd or clip Mimo. If more thread
-  summaries are available than the remaining compact slots can show, Mimo keeps
-  up to six thread contexts internally and reserves the final secondary bubble
-  for a short overflow note such as `ほか3件も見ています` rather than silently
-  dropping that extra context.
+- The primary production bubble is capped at 44 characters, secondary thread
+  bubbles at 34 characters, and overflow bubbles at 22 characters. Secondary
+  bubbles render as one-line compact summaries so a four-bubble stack does not
+  crowd or clip Mimo. If more thread summaries are available than the remaining
+  compact slots can show, Mimo keeps up to six thread contexts internally and
+  reserves the final compact slot for a smaller overflow counter bubble such as
+  `ほか3件も見ています` rather than silently dropping that extra context. The
+  overflow bubble has its own `overflow` role in presentation logs so E2E can
+  distinguish it from a concrete thread summary.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary status bubble text is still showing a timed moment or an older
   queue item.
@@ -276,9 +278,10 @@ Manual or visual checks:
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, and
   `bubbleRoles`; stacked bubble-only updates should be logged for deterministic
   E2E evidence. Fake production E2E also enforces the four-bubble visible
-  limit, the primary/secondary text-length caps, and a three-thread
+  limit, the primary/secondary/overflow text-length caps, and a three-thread
   simultaneous bubble case with one status bubble plus three conversation
-  bubbles.
+  bubbles. Overflow E2E separately verifies one status bubble, two concrete
+  conversation bubbles, and one overflow counter bubble.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI.
 - Live app presentation smoke launches the actual app process with a temporary

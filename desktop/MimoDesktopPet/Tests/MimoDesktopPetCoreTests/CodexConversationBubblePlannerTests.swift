@@ -146,11 +146,12 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.first?.role, .status)
         XCTAssertLessThanOrEqual(bubbles[0].text.count, PetSpeechBubbleLayout.statusTextLimit)
         for bubble in bubbles.dropFirst() {
-            XCTAssertEqual(bubble.role, .conversation)
-            XCTAssertLessThanOrEqual(bubble.text.count, PetSpeechBubbleLayout.conversationTextLimit)
+            XCTAssertTrue([PetSpeechBubbleRole.conversation, .overflow].contains(bubble.role))
+            XCTAssertLessThanOrEqual(bubble.text.count, PetSpeechBubbleLayout.textLimit(for: bubble.role))
         }
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .status), 2)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .conversation), 1)
+        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .overflow), 1)
     }
 
     func testProductionBubblesUseOneSummaryPerThread() {
@@ -199,8 +200,8 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             "ご主人、「delta」は作業を進めています",
             "ほか3件も見ています"
         ])
-        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
-        XCTAssertLessThanOrEqual(bubbles[3].text.count, PetSpeechBubbleLayout.conversationTextLimit)
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .overflow])
+        XCTAssertLessThanOrEqual(bubbles[3].text.count, PetSpeechBubbleLayout.overflowTextLimit)
     }
 
     func testProductionBubblesKeepAConcreteThreadWhenOnlyOneContextSlotIsAvailable() {

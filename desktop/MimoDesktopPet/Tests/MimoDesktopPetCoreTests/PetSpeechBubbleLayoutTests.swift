@@ -99,6 +99,22 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(thirdThread.scale, 0.94)
     }
 
+    func testOverflowBubbleUsesCounterTreatmentInLastContextSlot() {
+        let overflow = PetSpeechBubbleLayout.placement(
+            for: 3,
+            role: .overflow,
+            visibleCount: 4
+        )
+
+        XCTAssertEqual(overflow.verticalOffset, -176)
+        XCTAssertEqual(overflow.horizontalOffset, -46)
+        XCTAssertEqual(overflow.maxTextWidth, 176)
+        XCTAssertEqual(overflow.fillOpacity, 0.88)
+        XCTAssertEqual(overflow.scale, 0.9)
+        XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .overflow), 22)
+        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .overflow), 1)
+    }
+
     func testPlacementClampsToVisibleLimit() {
         let placement = PetSpeechBubbleLayout.placement(
             for: 9,
@@ -113,7 +129,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
     func testFourBubbleFanFitsInsideProductionStackWidth() {
         for index in 0..<PetSpeechBubbleLayout.productionVisibleLimit {
-            let role: PetSpeechBubbleRole = index == 0 ? .status : .conversation
+            let role: PetSpeechBubbleRole = index == 0 ? .status : (index == 3 ? .overflow : .conversation)
             let placement = PetSpeechBubbleLayout.placement(
                 for: index,
                 role: role,

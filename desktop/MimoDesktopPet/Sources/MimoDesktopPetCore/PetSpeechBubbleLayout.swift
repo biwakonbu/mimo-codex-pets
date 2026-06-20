@@ -41,6 +41,7 @@ public enum PetSpeechBubbleLayout {
     public static let productionVisibleLimit = 4
     public static let statusTextLimit = 44
     public static let conversationTextLimit = 34
+    public static let overflowTextLimit = 22
 
     public static func textLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {
@@ -48,6 +49,8 @@ public enum PetSpeechBubbleLayout {
             return statusTextLimit
         case .conversation:
             return conversationTextLimit
+        case .overflow:
+            return overflowTextLimit
         }
     }
 
@@ -55,7 +58,7 @@ public enum PetSpeechBubbleLayout {
         switch role {
         case .status:
             return 2
-        case .conversation:
+        case .conversation, .overflow:
             return 1
         }
     }
@@ -80,17 +83,49 @@ public enum PetSpeechBubbleLayout {
         }
         let offset = offsets[normalizedIndex]
         let isPrimary = normalizedIndex == 0
-        let isStatus = role == .status
 
         return PetSpeechBubblePlacement(
             index: normalizedIndex,
             role: role,
-            maxTextWidth: isStatus ? 318 : 216,
+            maxTextWidth: maxTextWidth(role: role),
             horizontalOffset: offset.x,
             verticalOffset: offset.y,
-            fillOpacity: isStatus ? 0.96 : 0.84,
-            scale: isPrimary ? 1.0 : 0.94,
+            fillOpacity: fillOpacity(role: role),
+            scale: scale(role: role, isPrimary: isPrimary),
             zIndex: isPrimary ? 10 : Double(productionVisibleLimit - normalizedIndex)
         )
+    }
+
+    private static func maxTextWidth(role: PetSpeechBubbleRole) -> Double {
+        switch role {
+        case .status:
+            return 318
+        case .conversation:
+            return 216
+        case .overflow:
+            return 176
+        }
+    }
+
+    private static func fillOpacity(role: PetSpeechBubbleRole) -> Double {
+        switch role {
+        case .status:
+            return 0.96
+        case .conversation:
+            return 0.84
+        case .overflow:
+            return 0.88
+        }
+    }
+
+    private static func scale(role: PetSpeechBubbleRole, isPrimary: Bool) -> Double {
+        switch role {
+        case .status:
+            return isPrimary ? 1.0 : 0.94
+        case .conversation:
+            return 0.94
+        case .overflow:
+            return 0.9
+        }
     }
 }

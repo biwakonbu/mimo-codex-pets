@@ -113,32 +113,46 @@ struct BubbleView: View {
     var accentColor: Color?
 
     var body: some View {
-        let resolvedFillOpacity = fillOpacity ?? (role == .status ? 0.94 : 0.88)
+        let resolvedFillOpacity = fillOpacity ?? defaultFillOpacity
         let accent = accentColor ?? Color(red: 0.36, green: 0.58, blue: 0.86)
         let bubbleFill = Color.white
-        let borderColor = role == .status
-            ? Color.black.opacity(0.1)
-            : accent.opacity(0.28)
+        let borderColor = role == .status ? Color.black.opacity(0.1) : accent.opacity(role == .overflow ? 0.34 : 0.28)
 
         VStack(spacing: 0) {
-            HStack(spacing: role == .status ? 0 : 7) {
-                if role == .conversation {
+            HStack(spacing: leadingMarkerSpacing) {
+                switch role {
+                case .conversation:
                     Capsule(style: .continuous)
                         .fill(accent.opacity(0.92))
                         .frame(width: 4, height: 18)
+                case .overflow:
+                    ZStack {
+                        Capsule(style: .continuous)
+                            .fill(accent.opacity(0.9))
+                        Text("+")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white)
+                            .offset(y: -0.5)
+                    }
+                    .frame(width: 18, height: 18)
+                case .status:
+                    EmptyView()
                 }
 
                 Text(text)
-                    .font(.system(size: role == .status ? 13 : 12, weight: role == .status ? .medium : .regular))
+                    .font(.system(size: fontSize, weight: fontWeight))
                     .foregroundStyle(.primary)
                     .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
-                    .minimumScaleFactor(role == .status ? 0.9 : 0.82)
+                    .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
-                    .multilineTextAlignment(role == .status ? .center : .leading)
+                    .multilineTextAlignment(role == .conversation ? .leading : .center)
             }
-            .padding(.horizontal, role == .status ? 12 : 10)
-            .padding(.vertical, role == .status ? 8 : 7)
-            .frame(maxWidth: CGFloat(maxTextWidth ?? (role == .status ? 284 : 252)))
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .frame(
+                minWidth: role == .overflow ? 158 : nil,
+                maxWidth: CGFloat(maxTextWidth ?? defaultMaxTextWidth)
+            )
             .background(bubbleFill.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -155,11 +169,98 @@ struct BubbleView: View {
             }
         }
     }
+
+    private var defaultFillOpacity: Double {
+        switch role {
+        case .status:
+            return 0.94
+        case .conversation:
+            return 0.88
+        case .overflow:
+            return 0.9
+        }
+    }
+
+    private var leadingMarkerSpacing: CGFloat {
+        switch role {
+        case .status:
+            return 0
+        case .conversation, .overflow:
+            return 7
+        }
+    }
+
+    private var fontSize: CGFloat {
+        switch role {
+        case .status:
+            return 13
+        case .conversation:
+            return 12
+        case .overflow:
+            return 11.5
+        }
+    }
+
+    private var fontWeight: Font.Weight {
+        switch role {
+        case .status, .overflow:
+            return .medium
+        case .conversation:
+            return .regular
+        }
+    }
+
+    private var minimumScaleFactor: CGFloat {
+        switch role {
+        case .status:
+            return 0.9
+        case .conversation:
+            return 0.82
+        case .overflow:
+            return 0.86
+        }
+    }
+
+    private var horizontalPadding: CGFloat {
+        switch role {
+        case .status:
+            return 12
+        case .conversation:
+            return 10
+        case .overflow:
+            return 9
+        }
+    }
+
+    private var verticalPadding: CGFloat {
+        switch role {
+        case .status:
+            return 8
+        case .conversation:
+            return 7
+        case .overflow:
+            return 6
+        }
+    }
+
+    private var defaultMaxTextWidth: Double {
+        switch role {
+        case .status:
+            return 284
+        case .conversation:
+            return 252
+        case .overflow:
+            return 176
+        }
+    }
 }
 
 private enum BubbleAccentPalette {
     static func color(for index: Int, role: PetSpeechBubbleRole) -> Color? {
-        guard role == .conversation else { return nil }
+        guard role != .status else { return nil }
+        if role == .overflow {
+            return Color(red: 0.42, green: 0.47, blue: 0.55)
+        }
         let colors = [
             Color(red: 0.28, green: 0.52, blue: 0.86),
             Color(red: 0.14, green: 0.58, blue: 0.52),

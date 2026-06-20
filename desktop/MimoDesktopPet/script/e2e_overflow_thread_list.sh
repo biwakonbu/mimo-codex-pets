@@ -88,8 +88,9 @@ while time.time() < deadline:
         if len(bubbles) != 4:
             last_error = f"expected four production bubbles, got {bubbles!r}"
             continue
-        if roles != ["status", "conversation", "conversation", "conversation"]:
-            raise SystemExit(f"unexpected overflow bubble roles: roles={roles} bubbles={bubbles}")
+        if roles != ["status", "conversation", "conversation", "overflow"]:
+            last_error = f"expected overflow bubble role, got roles={roles} bubbles={bubbles}"
+            continue
         if "ほか3件も見ています" not in bubbles:
             last_error = f"overflow note missing from {bubbles!r}"
             continue

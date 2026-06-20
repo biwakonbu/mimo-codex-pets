@@ -199,6 +199,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - the production surface can stack up to four speech bubbles at once: one
   primary Mimo report plus three compact context bubbles, while the app tracks
   up to six Codex thread contexts internally for overflow reporting
+- when more tracked threads exist than visible context slots, the last compact
+  bubble becomes a smaller `overflow` counter such as `ほか3件も見ています`
+  instead of pretending that the hidden threads are concrete visible summaries
 - the stacked bubble list is rebuilt when conversation context changes, even
   when the primary timed bubble text is unchanged
 - `item/started` and `item/completed` notifications enqueue sanitized
