@@ -58,8 +58,10 @@ and cross-checks that the Swift notification enum and active flags remain
 schema-backed.
 `./script/live_app_presentation_smoke.sh` launches the real app process with a
 temporary presentation log and verifies that it leaves the offline/connection
-state after connecting, then captures the exact production window and inspects
-the transparent pet-and-bubble surface.
+state after connecting. When the live app-server exposes readable threads, the
+smoke also requires a `focus` or `conversation` production bubble from that live
+thread context before it captures the exact production window and inspects the
+transparent pet-and-bubble surface.
 `./script/e2e_unavailable_app_server.sh` launches the real app with an
 unavailable Codex command and verifies that Mimo stays alive in transparent
 production mode with an offline speech bubble.
