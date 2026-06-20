@@ -51,6 +51,19 @@ private struct ProductionBubbleStackView: View {
         let visible = Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit))
 
         ZStack(alignment: .bottom) {
+            if visible.count > 1 {
+                BubbleClusterGuide(visibleCount: visible.count)
+                    .stroke(
+                        Color(red: 0.35, green: 0.56, blue: 0.82).opacity(0.18),
+                        style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)
+                    )
+                    .frame(
+                        width: CGFloat(PetSpeechBubbleLayout.productionStackWidth),
+                        height: CGFloat(PetSpeechBubbleLayout.productionStackHeight)
+                    )
+                    .zIndex(0)
+            }
+
             ForEach(Array(visible.enumerated()), id: \.element.id) { index, bubble in
                 let placement = PetSpeechBubbleLayout.placement(
                     for: index,
@@ -78,6 +91,36 @@ private struct ProductionBubbleStackView: View {
             height: CGFloat(PetSpeechBubbleLayout.productionStackHeight),
             alignment: .bottom
         )
+    }
+}
+
+private struct BubbleClusterGuide: Shape {
+    let visibleCount: Int
+
+    func path(in rect: CGRect) -> Path {
+        let count = max(1, min(visibleCount, PetSpeechBubbleLayout.productionVisibleLimit))
+        var path = Path()
+        guard count > 1 else { return path }
+
+        let primaryAnchor = CGPoint(x: rect.midX, y: rect.maxY - 24)
+        for index in 1..<count {
+            let placement = PetSpeechBubbleLayout.placement(
+                for: index,
+                role: .conversation,
+                visibleCount: count
+            )
+            let secondaryAnchor = CGPoint(
+                x: rect.midX + CGFloat(placement.horizontalOffset),
+                y: rect.maxY - 24 + CGFloat(placement.verticalOffset)
+            )
+            let control = CGPoint(
+                x: (primaryAnchor.x + secondaryAnchor.x) / 2,
+                y: min(primaryAnchor.y, secondaryAnchor.y) - 12
+            )
+            path.move(to: primaryAnchor)
+            path.addQuadCurve(to: secondaryAnchor, control: control)
+        }
+        return path
     }
 }
 

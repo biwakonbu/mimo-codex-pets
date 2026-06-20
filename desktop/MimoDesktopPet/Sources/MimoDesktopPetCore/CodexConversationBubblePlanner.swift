@@ -124,7 +124,7 @@ public enum CodexConversationBubblePlanner {
 
         for line in conversationLines {
             guard !usedThreadIds.contains(line.threadId) else { continue }
-            let text = CodexBubbleFormatter.bubbleText(for: line)
+            let text = CodexBubbleFormatter.contextText(for: line)
             let compacted = CodexBubbleFormatter.compact(
                 text,
                 limit: PetSpeechBubbleLayout.textLimit(for: .conversation)

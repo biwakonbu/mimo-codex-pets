@@ -177,21 +177,23 @@ Conversation behavior:
   it uses the `focus` presentation role, a stronger accent marker, and the
   Mimo-style thread report instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
-  Secondary thread bubbles are smaller context notes above it: they stay white,
-  use compact accent markers, and alternate left/right placement so concurrent
-  thread status is readable without becoming a feed panel. This keeps Codex
-  Pets-like multi-thread awareness in the production surface without rendering
-  a console, transcript feed, or debug panel.
+  Secondary thread bubbles are smaller context chips above it: they stay white,
+  use compact accent markers, omit the longer `ご主人、...です` phrase, and
+  alternate left/right placement with a subtle cluster guide behind the bubbles
+  so concurrent thread status is readable without becoming a feed panel. This
+  keeps Codex Pets-like multi-thread awareness in the production surface without
+  rendering a console, transcript feed, or debug panel.
 - Status bubbles are capped at 44 characters, focused-thread primary bubbles at
-  48 characters, secondary thread bubbles at 34 characters, and overflow
-  bubbles at 22 characters. Secondary bubbles render as one-line compact
-  summaries so a four-bubble stack does not crowd or clip Mimo. If more thread
-  summaries are available than the remaining compact slots can show, Mimo keeps
-  up to six thread contexts internally and reserves the final compact slot for
-  a smaller overflow counter bubble such as `ほか3件も見ています` rather than
-  silently dropping that extra context. The focus and overflow bubbles have
-  their own `bubbleRoles` in presentation logs so E2E can distinguish a primary
-  thread report from generic status and a concrete thread summary.
+  48 characters, secondary thread chips at 34 characters, and overflow bubbles
+  at 22 characters. Secondary bubbles render as one-line compact summaries such
+  as `「資料整理」作業中` or `「承認」確認待ち`, so a four-bubble stack does not crowd
+  or clip Mimo. If more thread summaries are available than the remaining
+  compact slots can show, Mimo keeps up to six thread contexts internally and
+  reserves the final compact slot for a smaller overflow counter bubble such as
+  `ほか3件も見ています` rather than silently dropping that extra context. The focus
+  and overflow bubbles have their own `bubbleRoles` in presentation logs so E2E
+  can distinguish a primary thread report from generic status and a concrete
+  thread summary.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary bubble text is still showing a timed moment or an older queue
   item.
@@ -248,6 +250,7 @@ swift test
 ./script/e2e_disconnect_app_server.sh
 ./script/e2e_reconnect_app_server.sh
 ./script/e2e_single_instance.sh
+./script/e2e_status_menu.sh
 ./script/e2e_state_matrix.sh
 ./script/build_and_run.sh --verify
 ```
@@ -320,6 +323,11 @@ Manual or visual checks:
   the first transparent desktop pet alive. Tests use
   `MIMO_SINGLE_INSTANCE_LOCK_PATH` so the lock is isolated from any normal user
   launch.
+- Status-menu E2E launches the real app process and reads the assembled menu
+  via `MIMO_STATUS_MENU_LOG`. Production must expose Show/Hide, Click Through,
+  Reconnect Codex, and Quit, but must not expose `Debug Overlay`. Separate
+  opt-in runs verify that `MIMO_DEBUG_MENU=1` and `MIMO_DEBUG_OVERLAY=1` both
+  expose the debug item for development.
 - State-matrix E2E launches against the fake app-server with autonomous motion
   disabled, waits for active, waiting, simultaneous multi-thread, review, and
   failed presentation states, captures the exact production window for each

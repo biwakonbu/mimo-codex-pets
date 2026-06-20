@@ -10,6 +10,7 @@ final class StatusItemController: NSObject {
     private let onHide: () -> Void
     private let onReconnect: () -> Void
     private let onQuit: () -> Void
+    private let menuLogURL: URL?
     private var clickThroughItem: NSMenuItem?
     private var debugOverlayItem: NSMenuItem?
     private var cancellables: Set<AnyCancellable> = []
@@ -27,6 +28,7 @@ final class StatusItemController: NSObject {
         self.onReconnect = onReconnect
         self.onQuit = onQuit
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        self.menuLogURL = Self.resolveMenuLogURL()
         super.init()
 
         statusItem.button?.title = "Mimo"
@@ -85,6 +87,7 @@ final class StatusItemController: NSObject {
         menu.addItem(quitItem)
 
         statusItem.menu = menu
+        appendMenuLog(menu)
     }
 
     @objc private func showMimo() {
@@ -109,5 +112,42 @@ final class StatusItemController: NSObject {
 
     @objc private func quit() {
         onQuit()
+    }
+
+    private static func resolveMenuLogURL() -> URL? {
+        guard let path = ProcessInfo.processInfo.environment["MIMO_STATUS_MENU_LOG"], !path.isEmpty else {
+            return nil
+        }
+        let url = URL(fileURLWithPath: path)
+        try? FileManager.default.removeItem(at: url)
+        FileManager.default.createFile(atPath: path, contents: nil)
+        return url
+    }
+
+    private func appendMenuLog(_ menu: NSMenu) {
+        guard let menuLogURL else { return }
+        let itemTitles = menu.items.compactMap { item in
+            item.isSeparatorItem ? nil : item.title
+        }
+        let object: [String: Any] = [
+            "buttonTitle": statusItem.button?.title ?? "",
+            "menuTitles": itemTitles,
+            "debugMenuVisible": itemTitles.contains("Debug Overlay")
+        ]
+        guard
+            let data = try? JSONSerialization.data(withJSONObject: object),
+            let newline = "\n".data(using: .utf8)
+        else { return }
+
+        if let handle = try? FileHandle(forWritingTo: menuLogURL) {
+            _ = try? handle.seekToEnd()
+            _ = try? handle.write(contentsOf: data)
+            _ = try? handle.write(contentsOf: newline)
+            _ = try? handle.close()
+        } else {
+            var line = data
+            line.append(newline)
+            try? line.write(to: menuLogURL)
+        }
     }
 }

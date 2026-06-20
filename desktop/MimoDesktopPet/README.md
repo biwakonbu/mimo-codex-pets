@@ -100,9 +100,11 @@ In production mode the panel stays transparent and shows only Mimo plus a short
 fan of white bubbles. When Codex conversation context is available, the primary
 bubble sits closest to Mimo, keeps the speech tail, and promotes the focused
 thread into a short Mimo-style report. Up to three smaller secondary bubbles sit
-above it as compact context notes for other visible Codex threads, with accent
-markers and no tails. They do not dump raw model output, commands, or payload
-text. Threads can be summarized from sanitized item activity or from
+above it as compact thread-status chips, with accent markers, no tails, and a
+subtle cluster guide behind the bubbles so concurrent threads read as one Mimo
+reporting surface rather than a feed panel. They do not repeat the longer
+`ご主人、...です` phrase, and they do not dump raw model output, commands, or
+payload text. Threads can be summarized from sanitized item activity or from
 thread/turn status alone. The stack favors thread coverage, so each visible
 thread appears at most once. If more threads are active than the compact stack
 can show, Mimo tracks up to six thread contexts and the last secondary bubble

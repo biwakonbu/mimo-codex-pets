@@ -14,6 +14,34 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「実装」はレビューできます")
     }
 
+    func testFormatsSecondaryContextAsShortThreadChip() {
+        let review = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "実装",
+            speaker: "codex",
+            text: "レビューできる状態になりました",
+            isAssistant: true
+        )
+        let command = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "QA",
+            speaker: "tool",
+            text: "コマンドを実行中",
+            isAssistant: true
+        )
+        let waiting = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "承認",
+            speaker: "thread",
+            text: "確認待ち",
+            isAssistant: true
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: review), "「実装」レビュー可")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: command), "「QA」実行中")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「承認」確認待ち")
+    }
+
     func testSummarizesUserLineAsAcknowledgement() {
         let line = CodexConversationLine(
             threadId: "thread",
@@ -235,6 +263,22 @@ final class CodexBubbleFormatterTests: XCTestCase {
             XCTAssertFalse(bubble.contains("secret"))
             XCTAssertFalse(bubble.contains("@"))
         }
+    }
+
+    func testSecondaryContextKeepsUnsafeTitleOutOfAmbientDisplay() {
+        let bubble = CodexBubbleFormatter.contextText(
+            for: CodexConversationLine(
+                threadId: "thread",
+                threadTitle: "/Users/example/private/project/.env",
+                speaker: "codex",
+                text: "応答を作成中",
+                isAssistant: true
+            )
+        )
+
+        XCTAssertEqual(bubble, "「Codex」応答中")
+        XCTAssertFalse(bubble.contains("/Users/example"))
+        XCTAssertFalse(bubble.contains(".env"))
     }
 
     func testCompactsLongBubbleText() {

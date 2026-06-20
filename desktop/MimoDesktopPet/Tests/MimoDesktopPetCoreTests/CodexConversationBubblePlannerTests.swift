@@ -112,9 +112,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
-            "ご主人、「other」はレビューできます",
-            "ご主人、「current」はツールで確認中です",
-            "ご主人、「third」は作業を進めています"
+            "「other」レビュー可",
+            "「current」ツール確認",
+            "「third」作業中"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }
@@ -172,9 +172,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
-            "ご主人、「other」はレビューできます",
-            "ご主人、「current」はツールで確認中です",
-            "ご主人、「third」は作業を進めています"
+            "「other」レビュー可",
+            "「current」ツール確認",
+            "「third」作業中"
         ])
     }
 
@@ -196,8 +196,8 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
-            "ご主人、「epsilon」は作業を進めています",
-            "ご主人、「delta」は作業を進めています",
+            "「epsilon」作業中",
+            "「delta」作業中",
             "ほか3件も見ています"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .overflow])
@@ -219,7 +219,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
-            "ご主人、「beta」は作業を進めています"
+            "「beta」作業中"
         ])
     }
 
@@ -242,9 +242,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "ご主人、「current」は応答をまとめています",
-            "ご主人、「fourth」は確認待ちです",
-            "ご主人、「other」はレビューできます",
-            "ご主人、「third」は作業を進めています"
+            "「fourth」確認待ち",
+            "「other」レビュー可",
+            "「third」作業中"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation])
     }
@@ -289,8 +289,8 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(primary.threadId, "current")
         XCTAssertEqual(bubbles.map(\.text), [
             "ご主人、「current」は失敗を確認しました",
-            "ご主人、「waiting」は確認待ちです",
-            "ご主人、「docs」は作業を進めています"
+            "「waiting」確認待ち",
+            "「docs」作業中"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation])
     }

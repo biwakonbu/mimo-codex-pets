@@ -132,8 +132,8 @@ grep -Fq 'ご主人、「Mimo runtime QA」は文脈を整理中です' "$PRESEN
 grep -Fq 'ご主人、「Mimo runtime QA」はコマンドを実行中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「別スレッドの確認」は作業を進めています' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「更新された別スレッド」は作業を進めています' "$PRESENTATION_LOG"
+grep -Fq '「別スレッドの確認」作業中' "$PRESENTATION_LOG"
+grep -Fq '「更新された別スレッド」作業中' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「ステータスだけで進捗を伝える検証」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「資料整理」は作業を進めています' "$PRESENTATION_LOG"
 
@@ -190,7 +190,7 @@ for row in rows:
         len(bubbles) >= 4
         and any("Mimo runtime QA" in str(text) for text in bubbles)
         and any("別スレッドの確認" in str(text) for text in bubbles)
-        and any("ステータスだけで進捗を伝える検証" in str(text) for text in bubbles)
+        and any("ステータスだけで進捗を伝" in str(text) for text in bubbles)
         and any("資料整理" in str(text) for text in bubbles)
     ):
         if roles != ["focus", "conversation", "conversation", "conversation"]:

@@ -7,6 +7,12 @@ public enum CodexBubbleFormatter {
         return compact("ご主人、「\(title)」は\(summary)", limit: limit)
     }
 
+    public static func contextText(for line: CodexConversationLine, limit: Int = 34) -> String {
+        let title = compactTitle(line.threadTitle, limit: 12)
+        let summary = compactSummary(for: mimoSummary(for: line))
+        return compact("「\(title)」\(summary)", limit: limit)
+    }
+
     public static func compact(_ text: String, limit: Int = 42) -> String {
         let collapsed = text
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
@@ -27,6 +33,66 @@ public enum CodexBubbleFormatter {
             return "Codex"
         }
         return compacted.isEmpty ? "Codex" : compacted
+    }
+
+    private static func compactSummary(for summary: String) -> String {
+        switch summary {
+        case "失敗を確認しました":
+            return "失敗"
+        case "レビュー中です":
+            return "レビュー中"
+        case "レビューを終えました":
+            return "レビュー完了"
+        case "文脈を整理中です":
+            return "文脈整理"
+        case "別作業を確認中です":
+            return "別作業確認"
+        case "スキルを確認中です":
+            return "スキル確認"
+        case "ページを確認中です":
+            return "ページ確認"
+        case "調査中です":
+            return "調査中"
+        case "画像を作成中です":
+            return "画像作成中"
+        case "画像を確認中です":
+            return "画像確認"
+        case "レビューできます":
+            return "レビュー可"
+        case "テストを実行中です":
+            return "テスト中"
+        case "ツールで確認中です":
+            return "ツール確認"
+        case "少し待機しています":
+            return "待機中"
+        case "変更を反映中です":
+            return "変更反映"
+        case "コマンドを実行中です":
+            return "実行中"
+        case "作業中です":
+            return "作業中"
+        case "依頼を確認しました":
+            return "依頼確認"
+        case "確認待ちです":
+            return "確認待ち"
+        case "応答をまとめています":
+            return "応答中"
+        case "計画を整理中です":
+            return "計画中"
+        case "検証中です":
+            return "検証中"
+        case "作業を進めています":
+            return "作業中"
+        case "進捗を確認しました":
+            return "進捗あり"
+        case "更新を確認しました":
+            return "更新あり"
+        default:
+            return summary
+                .replacingOccurrences(of: "しています", with: "中")
+                .replacingOccurrences(of: "しました", with: "済み")
+                .replacingOccurrences(of: "です", with: "")
+        }
     }
 
     private static func mimoSummary(for line: CodexConversationLine) -> String {
