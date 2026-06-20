@@ -5,6 +5,11 @@ final class CodexNotificationTests: XCTestCase {
     func testSupportedNotificationMethodNames() {
         XCTAssertEqual(CodexNotificationMethod.allCases.map(\.rawValue), [
             "thread/status/changed",
+            "thread/name/updated",
+            "thread/archived",
+            "thread/closed",
+            "thread/deleted",
+            "thread/unarchived",
             "turn/started",
             "turn/completed",
             "turn/plan/updated",
@@ -134,5 +139,45 @@ final class CodexNotificationTests: XCTestCase {
 
         XCTAssertEqual(notification.method, "item/mcpToolCall/progress")
         XCTAssertEqual(notification.params.message, "Fetching UI tree")
+    }
+
+    func testThreadNameNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "thread/name/updated",
+          "params": {
+            "threadId": "thread-1",
+            "threadName": "更新されたスレッド"
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadNameUpdatedNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "thread/name/updated")
+        XCTAssertEqual(notification.params.threadId, "thread-1")
+        XCTAssertEqual(notification.params.threadName, "更新されたスレッド")
+    }
+
+    func testThreadLifecycleNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "thread/closed",
+          "params": {
+            "threadId": "thread-1"
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadIdNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "thread/closed")
+        XCTAssertEqual(notification.params.threadId, "thread-1")
     }
 }

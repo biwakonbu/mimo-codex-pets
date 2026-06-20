@@ -13,6 +13,11 @@ Verified public protocol surface:
   - `thread/read`
 - The same schema exposes the server notifications used by the companion:
   - `thread/status/changed`
+  - `thread/name/updated`
+  - `thread/archived`
+  - `thread/closed`
+  - `thread/deleted`
+  - `thread/unarchived`
   - `turn/started`
   - `turn/completed`
   - `item/started`
@@ -53,6 +58,9 @@ Verified runtime behavior:
 - Thread, turn, and item notifications should also trigger an immediate
   `thread/read(includeTurns: true)` for the affected thread, so secondary
   thread bubbles do not wait for the next periodic poll.
+- Thread name updates should retitle already visible conversation summaries.
+  Thread archived, closed, or deleted notifications must remove that thread's
+  cached title and bubble text immediately so stale bubbles do not linger.
 - `codex app-server proxy` exists, but in this local environment it did not
   respond without changing daemon remote-control settings. The companion uses
   direct `codex app-server --stdio` to avoid mutating user configuration.

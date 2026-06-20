@@ -125,6 +125,7 @@ grep -Fq 'ご主人、「Mimo runtime QA」はコマンドを実行中です' "$
 grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」は作業を進めています' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「更新された別スレッド」は作業を進めています' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -155,9 +156,18 @@ for row in rows:
         and any("Mimo runtime QA" in str(text) for text in bubbles)
         and any("別スレッドの確認" in str(text) for text in bubbles)
     ):
-        sys.exit(0)
+        break
+else:
+    raise SystemExit("presentation log never showed multiple thread bubbles at once")
 
-raise SystemExit("presentation log never showed multiple thread bubbles at once")
+closed_thread_markers = ("別スレッドの確認", "更新された別スレッド")
+tail_rows = rows[-5:]
+if any(
+    any(marker in str(text) for marker in closed_thread_markers)
+    for row in tail_rows
+    for text in row.get("bubbleTexts", [])
+):
+    raise SystemExit("closed secondary thread remained in recent production bubbles")
 PY
 
 screencapture -x -l "$WINDOW_ID" "$SCREENSHOT_PATH"
@@ -252,6 +262,19 @@ next_poll_index = next(
 )
 if next_poll_index is not None and read_index > next_poll_index:
     raise SystemExit("fake-review thread/read waited for the next poll")
+
+close_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events)
+        if direction == "out"
+        and message.get("method") == "thread/closed"
+        and message.get("params", {}).get("threadId") == "fake-review"
+    ),
+    None,
+)
+if close_index is None:
+    raise SystemExit("fake-review close notification was not emitted")
 PY
 
 echo "E2E passed: fake Codex app-server, notification-driven multi-thread Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."

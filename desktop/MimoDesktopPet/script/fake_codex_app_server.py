@@ -18,6 +18,8 @@ CURRENT_TURNS = [
     }
 ]
 SECOND_THREAD_STATUS = {"type": "idle"}
+SECOND_THREAD_NAME = "別スレッドの確認"
+SECOND_THREAD_CLOSED = False
 SECOND_THREAD_TURNS = [
     {
         "id": "turn-other",
@@ -44,7 +46,7 @@ def write_message(message):
 def second_thread_snapshot():
     return {
         "id": "fake-review",
-        "name": "別スレッドの確認",
+        "name": SECOND_THREAD_NAME,
         "preview": "レビュー可能な結果があります",
         "status": dict(SECOND_THREAD_STATUS),
         "turns": [dict(turn) for turn in SECOND_THREAD_TURNS],
@@ -52,7 +54,7 @@ def second_thread_snapshot():
 
 
 def state_sequence():
-    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_TURNS
+    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS
     time.sleep(2.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": []}
@@ -193,6 +195,30 @@ def state_sequence():
             },
         }
     )
+    time.sleep(0.8)
+    with STATE_LOCK:
+        SECOND_THREAD_NAME = "更新された別スレッド"
+    write_message(
+        {
+            "method": "thread/name/updated",
+            "params": {
+                "threadId": "fake-review",
+                "threadName": "更新された別スレッド",
+            },
+        }
+    )
+    time.sleep(0.8)
+    with STATE_LOCK:
+        SECOND_THREAD_CLOSED = True
+        SECOND_THREAD_STATUS = {"type": "idle"}
+    write_message(
+        {
+            "method": "thread/closed",
+            "params": {
+                "threadId": "fake-review",
+            },
+        }
+    )
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "idle"}
@@ -272,31 +298,37 @@ def run_stdio_server():
                 }
             )
         elif method == "thread/loaded/list":
+            with STATE_LOCK:
+                closed = SECOND_THREAD_CLOSED
+            ids = ["fake-thread"] if closed else ["fake-thread", "fake-review"]
             write_message(
                 {
                     "id": request_id,
-                    "result": {"data": ["fake-thread", "fake-review"], "nextCursor": None},
+                    "result": {"data": ids, "nextCursor": None},
                 }
             )
         elif method == "thread/list":
             with STATE_LOCK:
                 status = dict(CURRENT_STATUS)
                 turns = [dict(turn) for turn in CURRENT_TURNS]
+                closed = SECOND_THREAD_CLOSED
                 second_thread = second_thread_snapshot()
+            threads = [
+                {
+                    "id": "fake-thread",
+                    "name": "Mimo runtime QA",
+                    "preview": "自律移動と会話表示を検証中",
+                    "status": status,
+                    "turns": turns,
+                }
+            ]
+            if not closed:
+                threads.append(second_thread)
             write_message(
                 {
                     "id": request_id,
                     "result": {
-                        "data": [
-                            {
-                                "id": "fake-thread",
-                                "name": "Mimo runtime QA",
-                                "preview": "自律移動と会話表示を検証中",
-                                "status": status,
-                                "turns": turns,
-                            },
-                            second_thread,
-                        ],
+                        "data": threads,
                         "nextCursor": None,
                     },
                 }

@@ -21,6 +21,7 @@ final class PetViewModel: ObservableObject {
     private var shownConversationSignatures: Set<String> = []
     private var pendingConversationLines: [CodexConversationLine] = []
     private var conversationBubbleActive = false
+    private var currentConversationThreadId: String?
     private var focusedThreadId: String?
 
     init(debugOverlay: Bool = ProcessInfo.processInfo.environment["MIMO_DEBUG_OVERLAY"] == "1") {
@@ -57,6 +58,7 @@ final class PetViewModel: ObservableObject {
         lastCodexPresentation = presentationState
         conversationLines = Array(snapshot.conversationLines.suffix(8))
         focusedThreadId = snapshot.focusedConversationLine?.threadId
+        pruneConversationQueue(keeping: Set(conversationLines.map(\.threadId)))
         let visibleBubblesChanged = refreshVisibleBubbles()
 
         if snapshot.connectionAvailable {
@@ -115,6 +117,7 @@ final class PetViewModel: ObservableObject {
         let token = UUID()
         momentToken = token
         conversationBubbleActive = true
+        currentConversationThreadId = line.threadId
         setPresentation(
             PetPresentationState(
                 animation: CodexConversationBubblePlanner.animation(
@@ -137,6 +140,7 @@ final class PetViewModel: ObservableObject {
         guard momentToken == token else { return }
         if pendingConversationLines.isEmpty {
             conversationBubbleActive = false
+            currentConversationThreadId = nil
             setPresentation(lastCodexPresentation)
         } else {
             showNextConversationBubble()
@@ -146,6 +150,27 @@ final class PetViewModel: ObservableObject {
     private func clearConversationQueue() {
         pendingConversationLines.removeAll()
         conversationBubbleActive = false
+        currentConversationThreadId = nil
+    }
+
+    private func pruneConversationQueue(keeping activeThreadIds: Set<String>) {
+        guard !activeThreadIds.isEmpty else {
+            clearConversationQueue()
+            shownConversationSignatures.removeAll()
+            momentToken = UUID()
+            return
+        }
+
+        pendingConversationLines.removeAll { !activeThreadIds.contains($0.threadId) }
+        shownConversationSignatures = Set(shownConversationSignatures.filter { signature in
+            guard let threadId = signature.split(separator: "|", maxSplits: 1).first else { return false }
+            return activeThreadIds.contains(String(threadId))
+        })
+        if let currentConversationThreadId, !activeThreadIds.contains(currentConversationThreadId) {
+            conversationBubbleActive = false
+            self.currentConversationThreadId = nil
+            momentToken = UUID()
+        }
     }
 
     func setConnectionAvailable(_ available: Bool) {
