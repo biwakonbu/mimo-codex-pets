@@ -38,7 +38,7 @@ public enum CodexConversationBubblePlanner {
         var result: [CodexConversationLine] = []
         appendUnique(preferredProgressLines, to: &result)
         appendUnique(orderedIds.compactMap { latestByThread[$0] }, to: &result)
-        return result
+        return result.stableSortedByDisplayPriority()
     }
 
     public static func signature(for line: CodexConversationLine) -> String {
@@ -47,6 +47,20 @@ public enum CodexConversationBubblePlanner {
 
     public static func displaySignature(for line: CodexConversationLine) -> String {
         "\(line.threadId)|\(CodexBubbleFormatter.bubbleText(for: line))"
+    }
+
+    public static func displayPriority(for line: CodexConversationLine) -> Int {
+        let text = line.text.lowercased()
+        if text.contains("失敗") || text.contains("エラー") || text.contains("failed") || text.contains("systemerror") {
+            return 0
+        }
+        if text.contains("確認待ち") || text.contains("待ち") || text.contains("入力") || text.contains("承認") {
+            return 1
+        }
+        if text.contains("レビュー可能") || text.contains("レビューでき") || text.contains("レビューを開始") {
+            return 2
+        }
+        return 3
     }
 
     public static func primaryBubble(
@@ -169,5 +183,20 @@ public enum CodexConversationBubblePlanner {
             "計画を整理中",
             "計画を更新中"
         ].contains(line.text)
+    }
+}
+
+private extension Array where Element == CodexConversationLine {
+    func stableSortedByDisplayPriority() -> [CodexConversationLine] {
+        enumerated()
+            .sorted { lhs, rhs in
+                let lhsPriority = CodexConversationBubblePlanner.displayPriority(for: lhs.element)
+                let rhsPriority = CodexConversationBubblePlanner.displayPriority(for: rhs.element)
+                if lhsPriority != rhsPriority {
+                    return lhsPriority < rhsPriority
+                }
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
     }
 }

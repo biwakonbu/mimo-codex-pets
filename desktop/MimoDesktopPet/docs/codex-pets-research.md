@@ -157,6 +157,9 @@ Conversation behavior:
   bubbles show at most one summary per thread, and if the primary bubble is
   already speaking for a conversation thread, that same thread is skipped in
   the secondary bubbles.
+- When multiple threads compete for the stack, action-required states are
+  promoted before ordinary work chatter: failure first, then confirmation
+  waiting, then review-ready, then the existing preferred-thread/recency order.
 - Production can show up to four fanned speech bubbles at once: one primary
   current-thread/status bubble plus up to three compact summaries from other
   visible threads. The primary bubble stays lowest, widest, and visually

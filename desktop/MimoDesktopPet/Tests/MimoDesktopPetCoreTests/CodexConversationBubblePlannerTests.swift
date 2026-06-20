@@ -79,6 +79,23 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ])
     }
 
+    func testOrderedThreadUpdatesPrioritizeActionRequiredStatuses() {
+        let lines = [
+            line(threadId: "active", speaker: "thread", text: "作業中", isAssistant: true),
+            line(threadId: "review", speaker: "thread", text: "レビュー可能", isAssistant: true),
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "failed", speaker: "thread", text: "失敗を確認", isAssistant: true)
+        ]
+
+        let planned = CodexConversationBubblePlanner.orderedThreadUpdates(
+            from: lines,
+            preferredThreadId: "active"
+        )
+
+        XCTAssertEqual(planned.map(\.threadId), ["failed", "waiting", "review", "active"])
+        XCTAssertEqual(planned.map(CodexConversationBubblePlanner.displayPriority(for:)), [0, 1, 2, 3])
+    }
+
     func testProductionBubblesIncludeMultipleThreadSummaries() {
         let lines = [
             line(threadId: "current", speaker: "tool", text: "ツールで確認中", isAssistant: true),
@@ -95,9 +112,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
+            "ご主人、「other」はレビューできます",
             "ご主人、「current」はツールで確認中です",
-            "ご主人、「third」は作業を進めています",
-            "ご主人、「other」はレビューできます"
+            "ご主人、「third」は作業を進めています"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }
@@ -154,9 +171,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
+            "ご主人、「other」はレビューできます",
             "ご主人、「current」はツールで確認中です",
-            "ご主人、「third」は作業を進めています",
-            "ご主人、「other」はレビューできます"
+            "ご主人、「third」は作業を進めています"
         ])
     }
 
@@ -180,8 +197,8 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.text), [
             "ご主人、「current」は応答をまとめています",
             "ご主人、「fourth」は確認待ちです",
-            "ご主人、「third」は作業を進めています",
-            "ご主人、「other」はレビューできます"
+            "ご主人、「other」はレビューできます",
+            "ご主人、「third」は作業を進めています"
         ])
     }
 
