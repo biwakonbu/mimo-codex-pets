@@ -273,7 +273,9 @@ Manual or visual checks:
   `inspect_production_capture.swift --multi-bubble-hierarchy`, which segments
   white bubble components and verifies exactly four bubble surfaces: the
   primary Mimo report must be widest, visually largest, and separated below the
-  three secondary context bubbles.
+  three secondary context bubbles. The same hierarchy check verifies that only
+  the primary Mimo report has a speech tail; secondary thread context chips
+  must stay tailless.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that

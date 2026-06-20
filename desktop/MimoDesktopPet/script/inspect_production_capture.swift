@@ -166,6 +166,35 @@ if requiresMultiBubbleHierarchy {
         fail("primary bubble is not separated below the secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
 
+    let primaryTailCandidates = components.filter { component in
+        isBubbleTail(component) &&
+            component.minY > primary.maxY &&
+            component.maxY <= primary.maxY + 32 &&
+            component.minX >= primary.minX &&
+            component.maxX <= primary.maxX
+    }
+    guard primaryTailCandidates.count == 1, let primaryTail = primaryTailCandidates.first else {
+        fail("multi-thread capture should show exactly one primary bubble tail, found \(primaryTailCandidates.count): \(describe(primaryTailCandidates))")
+    }
+    let primaryCenterX = (primary.minX + primary.maxX) / 2
+    let tailCenterX = (primaryTail.minX + primaryTail.maxX) / 2
+    guard abs(tailCenterX - primaryCenterX) <= primary.width / 5 else {
+        fail("primary bubble tail is not centered under the primary bubble: primary=\(describe(primary)), tail=\(describe(primaryTail))")
+    }
+
+    for secondary in secondaryComponents {
+        let secondaryTailCandidates = components.filter { component in
+            isBubbleTail(component) &&
+                component.minY > secondary.maxY &&
+                component.maxY <= secondary.maxY + 32 &&
+                component.minX >= secondary.minX &&
+                component.maxX <= secondary.maxX
+        }
+        guard secondaryTailCandidates.isEmpty else {
+            fail("secondary context chip unexpectedly has a speech tail: secondary=\(describe(secondary)), tails=\(describe(secondaryTailCandidates))")
+        }
+    }
+
     print("Multi-bubble hierarchy inspection passed: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
 }
 
@@ -236,4 +265,13 @@ func describe(_ component: WhiteComponent) -> String {
 
 func describe(_ components: [WhiteComponent]) -> String {
     "[" + components.map(describe).joined(separator: "; ") + "]"
+}
+
+func isBubbleTail(_ component: WhiteComponent) -> Bool {
+    component.area >= 45 &&
+        component.area <= 260 &&
+        component.width >= 14 &&
+        component.width <= 54 &&
+        component.height >= 6 &&
+        component.height <= 22
 }

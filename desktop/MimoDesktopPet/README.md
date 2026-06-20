@@ -73,7 +73,8 @@ the disconnect offline bubble.
 waiting, multi-thread, review, and failed fake-Codex states, then runs the same
 transparent-surface inspection on every capture. The multi-thread capture also
 checks that the primary Mimo report is the largest, lowest bubble and that the
-secondary thread summaries remain smaller context bubbles above it.
+secondary thread summaries remain smaller context bubbles above it without
+speech tails.
 Production E2E scripts capture the exact Mimo window and run
 `script/inspect_production_capture.swift` to reject blank, fully opaque, or
 debug-style surfaces.

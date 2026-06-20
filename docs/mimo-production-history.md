@@ -204,7 +204,8 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   six Codex thread contexts internally for overflow reporting
 - secondary thread bubbles use short context-chip text such as
   `「資料整理」作業中`, omit the longer Mimo address phrase, and sit on a subtle
-  visual guide so multiple Codex threads read as one compact reporting cluster
+  visual guide so multiple Codex threads read as one compact reporting cluster;
+  only the primary Mimo report keeps a speech tail
 - the primary bubble uses the `focus` role when it is reporting a specific
   Codex thread, keeping generic `status` bubbles for idle/offline state and
   making the current thread visually distinct from secondary thread summaries
