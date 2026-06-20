@@ -98,17 +98,19 @@ public enum CodexConversationBubblePlanner {
         conversationLines: [CodexConversationLine],
         preferredThreadId: String?,
         primaryThreadId: String? = nil,
+        primaryRole: PetSpeechBubbleRole? = nil,
         limit: Int = PetSpeechBubbleLayout.productionVisibleLimit
     ) -> [PetSpeechBubble] {
         let visibleLimit = max(1, min(limit, PetSpeechBubbleLayout.productionVisibleLimit))
         var bubbles: [BubbleCandidate] = []
         var usedThreadIds = Set<String>()
+        let resolvedPrimaryRole = primaryRole ?? (primaryThreadId == nil ? .status : .focus)
         let primary = CodexBubbleFormatter.compact(
             primaryText,
-            limit: PetSpeechBubbleLayout.textLimit(for: .status)
+            limit: PetSpeechBubbleLayout.textLimit(for: resolvedPrimaryRole)
         )
         if !primary.isEmpty {
-            bubbles.append(BubbleCandidate(text: primary, role: .status))
+            bubbles.append(BubbleCandidate(text: primary, role: resolvedPrimaryRole))
         }
         if let primaryThreadId {
             usedThreadIds.insert(primaryThreadId)

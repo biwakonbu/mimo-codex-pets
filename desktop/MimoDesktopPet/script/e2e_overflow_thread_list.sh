@@ -88,7 +88,7 @@ while time.time() < deadline:
         if len(bubbles) != 4:
             last_error = f"expected four production bubbles, got {bubbles!r}"
             continue
-        if roles != ["status", "conversation", "conversation", "overflow"]:
+        if roles != ["focus", "conversation", "conversation", "overflow"]:
             last_error = f"expected overflow bubble role, got roles={roles} bubbles={bubbles}"
             continue
         if "ほか3件も見ています" not in bubbles:

@@ -246,6 +246,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             "ご主人、「other」はレビューできます",
             "ご主人、「third」は作業を進めています"
         ])
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation])
     }
 
     func testProductionBubblesDeduplicatePrimaryConversationText() {
@@ -261,6 +262,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.text), [
             "ご主人、「current」は応答をまとめています"
         ])
+        XCTAssertEqual(bubbles.map(\.role), [.focus])
     }
 
     func testPrimaryBubblePromotesFocusedThreadSummaryAndSkipsDuplicateThread() {
@@ -290,6 +292,36 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             "ご主人、「waiting」は確認待ちです",
             "ご主人、「docs」は作業を進めています"
         ])
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation])
+    }
+
+    func testFocusedPrimaryThreadUsesFocusRoleAndKeepsOverflowForExtraThreads() {
+        let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+        let lines = [
+            current,
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "review", speaker: "thread", text: "レビュー可能", isAssistant: true),
+            line(threadId: "docs", speaker: "codex", text: "資料作業を進めています", isAssistant: true),
+            line(threadId: "tests", speaker: "tool", text: "テストを実行中", isAssistant: true)
+        ]
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            limit: 4
+        )
+
+        XCTAssertEqual(primary.threadId, "current")
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
+        XCTAssertEqual(bubbles.first?.text, "ご主人、「current」はコマンドを実行中です")
+        XCTAssertEqual(bubbles.last?.text, "ほか2件も見ています")
     }
 
     func testPrimaryBubbleKeepsOfflineStatusText() {

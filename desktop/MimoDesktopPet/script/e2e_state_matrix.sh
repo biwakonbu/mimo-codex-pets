@@ -114,7 +114,7 @@ while time.time() < deadline:
         if require_four_bubbles == "1":
             if len(bubbles) != 4:
                 continue
-            if roles != ["status", "conversation", "conversation", "conversation"]:
+            if roles != ["focus", "conversation", "conversation", "conversation"]:
                 raise SystemExit(f"{label}: unexpected four-bubble roles: {roles}")
         print(f"{label} presentation observed.")
         raise SystemExit(0)

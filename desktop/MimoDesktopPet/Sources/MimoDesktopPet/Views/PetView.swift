@@ -116,11 +116,15 @@ struct BubbleView: View {
         let resolvedFillOpacity = fillOpacity ?? defaultFillOpacity
         let accent = accentColor ?? Color(red: 0.36, green: 0.58, blue: 0.86)
         let bubbleFill = Color.white
-        let borderColor = role == .status ? Color.black.opacity(0.1) : accent.opacity(role == .overflow ? 0.34 : 0.28)
+        let borderColor = role == .status ? Color.black.opacity(0.1) : accent.opacity(borderOpacity)
 
         VStack(spacing: 0) {
             HStack(spacing: leadingMarkerSpacing) {
                 switch role {
+                case .focus:
+                    Capsule(style: .continuous)
+                        .fill(accent.opacity(0.95))
+                        .frame(width: 5, height: 22)
                 case .conversation:
                     Capsule(style: .continuous)
                         .fill(accent.opacity(0.92))
@@ -145,7 +149,7 @@ struct BubbleView: View {
                     .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
-                    .multilineTextAlignment(role == .conversation ? .leading : .center)
+                    .multilineTextAlignment(role == .status ? .center : .leading)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
@@ -156,9 +160,9 @@ struct BubbleView: View {
             .background(bubbleFill.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(borderColor, lineWidth: role == .status ? 1 : 1.2)
+                    .strokeBorder(borderColor, lineWidth: role == .focus ? 1.4 : (role == .status ? 1 : 1.2))
             )
-            .shadow(color: Color.black.opacity(role == .status ? 0.12 : 0.08), radius: role == .status ? 5 : 3, x: 0, y: 2)
+            .shadow(color: Color.black.opacity(role == .overflow ? 0.07 : 0.1), radius: role == .overflow ? 3 : 5, x: 0, y: 2)
 
             if showsTail {
                 BubbleTail()
@@ -172,7 +176,7 @@ struct BubbleView: View {
 
     private var defaultFillOpacity: Double {
         switch role {
-        case .status:
+        case .status, .focus:
             return 0.94
         case .conversation:
             return 0.88
@@ -181,10 +185,25 @@ struct BubbleView: View {
         }
     }
 
+    private var borderOpacity: Double {
+        switch role {
+        case .status:
+            return 0.1
+        case .focus:
+            return 0.38
+        case .conversation:
+            return 0.28
+        case .overflow:
+            return 0.34
+        }
+    }
+
     private var leadingMarkerSpacing: CGFloat {
         switch role {
         case .status:
             return 0
+        case .focus:
+            return 8
         case .conversation, .overflow:
             return 7
         }
@@ -192,7 +211,7 @@ struct BubbleView: View {
 
     private var fontSize: CGFloat {
         switch role {
-        case .status:
+        case .status, .focus:
             return 13
         case .conversation:
             return 12
@@ -203,7 +222,7 @@ struct BubbleView: View {
 
     private var fontWeight: Font.Weight {
         switch role {
-        case .status, .overflow:
+        case .status, .focus, .overflow:
             return .medium
         case .conversation:
             return .regular
@@ -212,7 +231,7 @@ struct BubbleView: View {
 
     private var minimumScaleFactor: CGFloat {
         switch role {
-        case .status:
+        case .status, .focus:
             return 0.9
         case .conversation:
             return 0.82
@@ -225,6 +244,8 @@ struct BubbleView: View {
         switch role {
         case .status:
             return 12
+        case .focus:
+            return 11
         case .conversation:
             return 10
         case .overflow:
@@ -234,7 +255,7 @@ struct BubbleView: View {
 
     private var verticalPadding: CGFloat {
         switch role {
-        case .status:
+        case .status, .focus:
             return 8
         case .conversation:
             return 7
@@ -245,7 +266,7 @@ struct BubbleView: View {
 
     private var defaultMaxTextWidth: Double {
         switch role {
-        case .status:
+        case .status, .focus:
             return 284
         case .conversation:
             return 252
@@ -258,6 +279,9 @@ struct BubbleView: View {
 private enum BubbleAccentPalette {
     static func color(for index: Int, role: PetSpeechBubbleRole) -> Color? {
         guard role != .status else { return nil }
+        if role == .focus {
+            return Color(red: 0.24, green: 0.49, blue: 0.86)
+        }
         if role == .overflow {
             return Color(red: 0.42, green: 0.47, blue: 0.55)
         }

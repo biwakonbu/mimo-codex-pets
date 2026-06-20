@@ -193,7 +193,7 @@ for row in rows:
         and any("ステータスだけで進捗を伝える検証" in str(text) for text in bubbles)
         and any("資料整理" in str(text) for text in bubbles)
     ):
-        if roles != ["status", "conversation", "conversation", "conversation"]:
+        if roles != ["focus", "conversation", "conversation", "conversation"]:
             raise SystemExit(f"three-thread bubble stack had unexpected roles: {roles}")
         break
 else:

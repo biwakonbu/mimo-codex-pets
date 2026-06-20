@@ -31,6 +31,22 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placement.zIndex, 10)
     }
 
+    func testFocusedThreadBubbleUsesPrimaryGeometryWithLongerTwoLineText() {
+        let placement = PetSpeechBubbleLayout.placement(
+            for: 0,
+            role: .focus,
+            visibleCount: 4
+        )
+
+        XCTAssertEqual(placement.index, 0)
+        XCTAssertEqual(placement.horizontalOffset, 0)
+        XCTAssertEqual(placement.verticalOffset, 0)
+        XCTAssertEqual(placement.maxTextWidth, 318)
+        XCTAssertEqual(placement.scale, 1)
+        XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .focus), 48)
+        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .focus), 2)
+    }
+
     func testThreeBubbleStackKeepsPrimaryBubbleAttachedToMimo() {
         let status = PetSpeechBubbleLayout.placement(
             for: 0,

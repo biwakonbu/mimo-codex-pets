@@ -40,6 +40,7 @@ public enum PetSpeechBubbleLayout {
     public static let productionSpriteHeight = 208.0
     public static let productionVisibleLimit = 4
     public static let statusTextLimit = 44
+    public static let focusTextLimit = 48
     public static let conversationTextLimit = 34
     public static let overflowTextLimit = 22
 
@@ -47,6 +48,8 @@ public enum PetSpeechBubbleLayout {
         switch role {
         case .status:
             return statusTextLimit
+        case .focus:
+            return focusTextLimit
         case .conversation:
             return conversationTextLimit
         case .overflow:
@@ -56,7 +59,7 @@ public enum PetSpeechBubbleLayout {
 
     public static func lineLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {
-        case .status:
+        case .status, .focus:
             return 2
         case .conversation, .overflow:
             return 1
@@ -98,7 +101,7 @@ public enum PetSpeechBubbleLayout {
 
     private static func maxTextWidth(role: PetSpeechBubbleRole) -> Double {
         switch role {
-        case .status:
+        case .status, .focus:
             return 318
         case .conversation:
             return 216
@@ -109,7 +112,7 @@ public enum PetSpeechBubbleLayout {
 
     private static func fillOpacity(role: PetSpeechBubbleRole) -> Double {
         switch role {
-        case .status:
+        case .status, .focus:
             return 0.96
         case .conversation:
             return 0.84
@@ -120,7 +123,7 @@ public enum PetSpeechBubbleLayout {
 
     private static func scale(role: PetSpeechBubbleRole, isPrimary: Bool) -> Double {
         switch role {
-        case .status:
+        case .status, .focus:
             return isPrimary ? 1.0 : 0.94
         case .conversation:
             return 0.94
