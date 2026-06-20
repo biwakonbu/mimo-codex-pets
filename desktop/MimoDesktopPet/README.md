@@ -54,6 +54,9 @@ app-server cannot be launched, the companion stays open and shows an
 offline/waiting status instead of crashing or waiting forever.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
+It retries transient response timeouts with a fresh stdio app-server process so
+momentary local Codex stalls do not make the full gate flaky; protocol errors
+still fail immediately.
 `./script/check_app_server_schema.sh` verifies the generated app-server schema
 and cross-checks that the Swift notification enum and active flags remain
 schema-backed.
@@ -113,14 +116,16 @@ bubble sits closest to Mimo, keeps the speech tail, and promotes the focused
 thread into a short Mimo-style report. Up to three smaller secondary bubbles sit
 above it as compact thread-status chips, with accent markers, no tails, and a
 subtle cluster guide behind the bubbles so concurrent threads read as one Mimo
-reporting surface rather than a feed panel. They do not repeat the longer
-`ご主人、...です` phrase, and they do not dump raw model output, commands, or
-payload text. Threads can be summarized from sanitized item activity or from
-thread/turn status alone. The stack favors thread coverage, so each visible
-thread appears at most once. If more threads are active than the compact stack
-can show, Mimo tracks up to six thread contexts and the last secondary bubble
-becomes a short overflow note such as `ほか3件も見ています` instead of silently
-dropping the extra context.
+reporting surface rather than a feed panel. Thread bubbles split
+`「thread title」summary` text into a tiny title line plus Mimo's short report, so
+multiple bubbles can be scanned without relying on a transcript-like list. They
+do not repeat the longer `ご主人、...です` phrase, and they do not dump raw model
+output, commands, or payload text. Threads can be summarized from sanitized item
+activity or from thread/turn status alone. The stack favors thread coverage, so
+each visible thread appears at most once. If more threads are active than the
+compact stack can show, Mimo tracks up to six thread contexts and the last
+secondary bubble becomes a short overflow note such as `ほか3件も見ています`
+instead of silently dropping the extra context.
 The debug overlay is opt-in only: production startup keeps it disabled unless
 `MIMO_DEBUG_OVERLAY=1` is set or the menu item is toggled manually.
 

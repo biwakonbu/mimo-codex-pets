@@ -63,6 +63,10 @@ Verified runtime behavior:
 - `initialize` requires `clientInfo.name` and `clientInfo.version`; extra
   JSON-RPC `jsonrpc` fields are tolerated but not required.
 - `codex app-server --stdio` returns a Codex Desktop user agent and can read local thread state.
+- Read-only live smoke checks use a fresh stdio app-server process per attempt
+  and retry transient response timeouts. This keeps the product gate resilient
+  to momentary local Codex stalls while still failing immediately on protocol
+  errors or malformed responses.
 - App-server responses and notifications may interleave on stdout; the client must dispatch by `method` vs `id`.
 - The client accepts both newline-delimited JSON and `Content-Length` JSON-RPC
   response framing. It auto-detects `Content-Length` on stdout and switches
@@ -196,7 +200,10 @@ Conversation behavior:
   48 characters, secondary thread chips at 34 characters, and overflow bubbles
   at 22 characters. Secondary bubbles render as one-line compact summaries such
   as `「資料整理」作業中` or `「承認」確認待ち`, so a four-bubble stack does not crowd
-  or clip Mimo. If more thread summaries are available than the remaining
+  or clip Mimo. SwiftUI splits those thread bubble strings into a small title
+  line and a short Mimo report line at render time, preserving compact app-server
+  logs while making simultaneous thread bubbles easier to scan visually. If more
+  thread summaries are available than the remaining
   compact slots can show, Mimo keeps up to six thread contexts internally and
   reserves the final compact slot for a smaller overflow counter bubble such as
   `ほか3件も見ています` rather than silently dropping that extra context. The focus
@@ -252,6 +259,7 @@ The full gate expands to:
 ```bash
 swift test
 ./script/check_app_server_schema.sh
+./script/test_live_app_server_smoke_retry.sh
 ./script/live_app_server_smoke.py
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh
@@ -319,6 +327,11 @@ Manual or visual checks:
   `conversation` bubble whose title matches a sanitized title candidate from
   that live thread context. It then captures the exact production window and
   runs `inspect_production_capture.swift` against it.
+- Live app-server smoke retry check launches the live-smoke client against a
+  fake stdio app-server that deliberately times out the first request path,
+  then verifies that the second fresh app-server process succeeds and writes
+  the expected summary JSON. This protects the full gate from one-shot local
+  app-server stalls without hiding deterministic protocol failures.
 - Disconnect E2E launches against a fake app-server that reaches a connected
   thread-summary state and then exits. Mimo must stay alive, keep the production
   surface transparent, and show `Codex 接続切れ` instead of leaving stale

@@ -10,6 +10,7 @@ import time
 
 CODEX_BIN = os.environ.get("CODEX_BIN", "codex")
 TIMEOUT_SECONDS = float(os.environ.get("MIMO_LIVE_SMOKE_TIMEOUT", "8"))
+ATTEMPTS = int(os.environ.get("MIMO_LIVE_SMOKE_ATTEMPTS", "2"))
 LOADED_THREAD_LIMIT = 10
 LISTED_THREAD_LIMIT = 6
 
@@ -18,11 +19,21 @@ class SmokeFailure(Exception):
     pass
 
 
+class TransientSmokeFailure(SmokeFailure):
+    pass
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Read-only smoke test for Codex app-server.")
     parser.add_argument(
         "--summary-json",
         help="Write a machine-readable summary for follow-up presentation checks.",
+    )
+    parser.add_argument(
+        "--attempts",
+        type=int,
+        default=ATTEMPTS,
+        help="Retry transient app-server response timeouts this many times. Defaults to MIMO_LIVE_SMOKE_ATTEMPTS or 2.",
     )
     return parser.parse_args()
 
@@ -68,7 +79,7 @@ def read_response(process, request_id, timeout=TIMEOUT_SECONDS):
             if "error" in message:
                 raise SmokeFailure(f"{request_id} returned error: {message['error']}")
             return message.get("result")
-    raise SmokeFailure(f"timed out waiting for response id {request_id}")
+    raise TransientSmokeFailure(f"timed out waiting for response id {request_id}")
 
 
 def request(process, request_id, method, params):
@@ -221,8 +232,7 @@ def write_summary(path, initialize, loaded, listed, thread_objects, read_count):
         handle.write("\n")
 
 
-def main():
-    args = parse_args()
+def run_once(args):
     process = None
     try:
         process = subprocess.Popen(
@@ -284,9 +294,6 @@ def main():
     except FileNotFoundError:
         print(f"Codex binary not found: {CODEX_BIN}", file=sys.stderr)
         return 1
-    except SmokeFailure as error:
-        print(f"Live app-server smoke failed: {error}", file=sys.stderr)
-        return 1
     finally:
         if process is not None:
             process.terminate()
@@ -295,6 +302,37 @@ def main():
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait()
+
+
+def main():
+    args = parse_args()
+    attempts = max(1, args.attempts)
+    last_transient_error = None
+
+    for attempt in range(1, attempts + 1):
+        try:
+            return run_once(args)
+        except TransientSmokeFailure as error:
+            last_transient_error = error
+            if args.summary_json:
+                try:
+                    os.remove(args.summary_json)
+                except FileNotFoundError:
+                    pass
+            if attempt < attempts:
+                print(
+                    f"Live app-server smoke transient failure on attempt {attempt}/{attempts}: {error}",
+                    file=sys.stderr,
+                )
+                time.sleep(0.5 * attempt)
+                continue
+            break
+        except SmokeFailure as error:
+            print(f"Live app-server smoke failed: {error}", file=sys.stderr)
+            return 1
+
+    print(f"Live app-server smoke failed: {last_transient_error}", file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":

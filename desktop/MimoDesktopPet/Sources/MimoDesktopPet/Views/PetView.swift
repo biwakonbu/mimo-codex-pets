@@ -169,13 +169,14 @@ struct BubbleView: View {
                     BubbleStateMarker(role: role, tone: tone, accentColor: accent)
                 }
 
-                Text(text)
-                    .font(.system(size: fontSize, weight: fontWeight))
-                    .foregroundStyle(.primary)
-                    .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
-                    .minimumScaleFactor(minimumScaleFactor)
-                    .truncationMode(.tail)
-                    .multilineTextAlignment(role == .status && tone == .neutral ? .center : .leading)
+                BubbleTextContent(
+                    text: text,
+                    role: role,
+                    accentColor: accent,
+                    fontSize: fontSize,
+                    fontWeight: fontWeight,
+                    minimumScaleFactor: minimumScaleFactor
+                )
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
@@ -306,6 +307,69 @@ struct BubbleView: View {
             return tone != .neutral
         case .focus, .conversation, .overflow:
             return true
+        }
+    }
+}
+
+private struct BubbleTextContent: View {
+    let text: String
+    let role: PetSpeechBubbleRole
+    let accentColor: Color
+    let fontSize: CGFloat
+    let fontWeight: Font.Weight
+    let minimumScaleFactor: CGFloat
+
+    var body: some View {
+        let parts = PetSpeechBubbleTextParts.parse(text)
+
+        if role != .status, let threadTitle = parts.threadTitle {
+            VStack(alignment: .leading, spacing: role == .focus ? 2 : 1) {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    if role == .focus, let prefix = parts.prefix {
+                        Text(prefix)
+                            .font(.system(size: titleFontSize - 0.5, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.84)
+                    }
+
+                    Text(threadTitle)
+                        .font(.system(size: titleFontSize, weight: .semibold))
+                        .foregroundStyle(accentColor.opacity(0.96))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.76)
+                        .truncationMode(.tail)
+                }
+
+                Text(parts.summary)
+                    .font(.system(size: fontSize, weight: fontWeight))
+                    .foregroundStyle(.primary)
+                    .lineLimit(role == .focus ? 2 : 1)
+                    .minimumScaleFactor(minimumScaleFactor)
+                    .truncationMode(.tail)
+                    .multilineTextAlignment(.leading)
+            }
+        } else {
+            Text(text)
+                .font(.system(size: fontSize, weight: fontWeight))
+                .foregroundStyle(.primary)
+                .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
+                .minimumScaleFactor(minimumScaleFactor)
+                .truncationMode(.tail)
+                .multilineTextAlignment(role == .status ? .center : .leading)
+        }
+    }
+
+    private var titleFontSize: CGFloat {
+        switch role {
+        case .focus:
+            return 10.8
+        case .conversation:
+            return 9.8
+        case .overflow:
+            return 9.4
+        case .status:
+            return 10
         }
     }
 }
