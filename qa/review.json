@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "frames_root": "work/live-qa/running-size-cleanup/frames-final-stable-size",
+  "frames_root": "work/live-qa/running-storyboard-regeneration/frames-final-storyboard-fullbody",
   "errors": [],
   "warnings": [],
   "rows": [
@@ -15,7 +15,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/idle/00.png",
+          "file": "frames-final-storyboard-fullbody/idle/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13530,
@@ -30,7 +30,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/idle/01.png",
+          "file": "frames-final-storyboard-fullbody/idle/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13449,
@@ -45,7 +45,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/idle/02.png",
+          "file": "frames-final-storyboard-fullbody/idle/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13477,
@@ -60,7 +60,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/idle/03.png",
+          "file": "frames-final-storyboard-fullbody/idle/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13432,
@@ -75,7 +75,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/idle/04.png",
+          "file": "frames-final-storyboard-fullbody/idle/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13358,
@@ -90,7 +90,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-stable-size/idle/05.png",
+          "file": "frames-final-storyboard-fullbody/idle/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13361,
@@ -116,14 +116,14 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/running-right/00.png",
+          "file": "frames-final-storyboard-fullbody/running-right/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13429,
+          "nontransparent_pixels": 13838,
           "bbox": [
-            46,
+            43,
             14,
-            145,
+            149,
             202
           ],
           "edge_pixels": 0,
@@ -131,57 +131,72 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/running-right/01.png",
+          "file": "frames-final-storyboard-fullbody/running-right/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13156,
+          "nontransparent_pixels": 13889,
           "bbox": [
-            46,
-            15,
-            145,
-            203
+            44,
+            14,
+            148,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/running-right/02.png",
+          "file": "frames-final-storyboard-fullbody/running-right/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14063,
+          "nontransparent_pixels": 14452,
           "bbox": [
-            36,
-            13,
-            155,
-            201
+            35,
+            14,
+            157,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/running-right/03.png",
+          "file": "frames-final-storyboard-fullbody/running-right/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12768,
+          "nontransparent_pixels": 14180,
           "bbox": [
-            46,
-            15,
-            145,
-            203
+            43,
+            14,
+            149,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/running-right/04.png",
+          "file": "frames-final-storyboard-fullbody/running-right/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13562,
+          "nontransparent_pixels": 13863,
           "bbox": [
-            46,
+            44,
+            14,
+            148,
+            202
+          ],
+          "edge_pixels": 0,
+          "chroma_adjacent_pixels": 0
+        },
+        {
+          "index": 5,
+          "file": "frames-final-storyboard-fullbody/running-right/05.png",
+          "width": 192,
+          "height": 208,
+          "nontransparent_pixels": 13551,
+          "bbox": [
+            45,
             14,
             146,
             202
@@ -190,46 +205,31 @@
           "chroma_adjacent_pixels": 0
         },
         {
-          "index": 5,
-          "file": "frames-final-stable-size/running-right/05.png",
-          "width": 192,
-          "height": 208,
-          "nontransparent_pixels": 13370,
-          "bbox": [
-            46,
-            15,
-            145,
-            203
-          ],
-          "edge_pixels": 0,
-          "chroma_adjacent_pixels": 0
-        },
-        {
           "index": 6,
-          "file": "frames-final-stable-size/running-right/06.png",
+          "file": "frames-final-storyboard-fullbody/running-right/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13732,
+          "nontransparent_pixels": 14312,
           "bbox": [
-            40,
-            13,
-            151,
-            201
+            36,
+            14,
+            156,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 7,
-          "file": "frames-final-stable-size/running-right/07.png",
+          "file": "frames-final-storyboard-fullbody/running-right/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13550,
+          "nontransparent_pixels": 14079,
           "bbox": [
-            46,
-            15,
-            147,
-            203
+            44,
+            14,
+            148,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -247,14 +247,14 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/running-left/00.png",
+          "file": "frames-final-storyboard-fullbody/running-left/00.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13429,
+          "nontransparent_pixels": 13838,
           "bbox": [
-            47,
+            43,
             14,
-            146,
+            149,
             202
           ],
           "edge_pixels": 0,
@@ -262,59 +262,59 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/running-left/01.png",
+          "file": "frames-final-storyboard-fullbody/running-left/01.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13156,
+          "nontransparent_pixels": 13889,
           "bbox": [
-            47,
-            15,
-            146,
-            203
+            44,
+            14,
+            148,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/running-left/02.png",
+          "file": "frames-final-storyboard-fullbody/running-left/02.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 14063,
+          "nontransparent_pixels": 14452,
           "bbox": [
-            37,
-            13,
-            156,
-            201
+            35,
+            14,
+            157,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/running-left/03.png",
+          "file": "frames-final-storyboard-fullbody/running-left/03.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 12768,
+          "nontransparent_pixels": 14180,
           "bbox": [
-            47,
-            15,
-            146,
-            203
+            43,
+            14,
+            149,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/running-left/04.png",
+          "file": "frames-final-storyboard-fullbody/running-left/04.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13562,
+          "nontransparent_pixels": 13863,
           "bbox": [
-            46,
+            44,
             14,
-            146,
+            148,
             202
           ],
           "edge_pixels": 0,
@@ -322,45 +322,45 @@
         },
         {
           "index": 5,
-          "file": "frames-final-stable-size/running-left/05.png",
+          "file": "frames-final-storyboard-fullbody/running-left/05.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13370,
+          "nontransparent_pixels": 13551,
           "bbox": [
-            47,
-            15,
-            146,
-            203
+            46,
+            14,
+            147,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 6,
-          "file": "frames-final-stable-size/running-left/06.png",
+          "file": "frames-final-storyboard-fullbody/running-left/06.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13732,
+          "nontransparent_pixels": 14312,
           "bbox": [
-            41,
-            13,
-            152,
-            201
+            36,
+            14,
+            156,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
         },
         {
           "index": 7,
-          "file": "frames-final-stable-size/running-left/07.png",
+          "file": "frames-final-storyboard-fullbody/running-left/07.png",
           "width": 192,
           "height": 208,
-          "nontransparent_pixels": 13550,
+          "nontransparent_pixels": 14079,
           "bbox": [
-            45,
-            15,
-            146,
-            203
+            44,
+            14,
+            148,
+            202
           ],
           "edge_pixels": 0,
           "chroma_adjacent_pixels": 0
@@ -378,7 +378,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/waving/00.png",
+          "file": "frames-final-storyboard-fullbody/waving/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13342,
@@ -393,7 +393,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/waving/01.png",
+          "file": "frames-final-storyboard-fullbody/waving/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13564,
@@ -408,7 +408,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/waving/02.png",
+          "file": "frames-final-storyboard-fullbody/waving/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13245,
@@ -423,7 +423,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/waving/03.png",
+          "file": "frames-final-storyboard-fullbody/waving/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13200,
@@ -449,7 +449,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/jumping/00.png",
+          "file": "frames-final-storyboard-fullbody/jumping/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9208,
@@ -464,7 +464,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/jumping/01.png",
+          "file": "frames-final-storyboard-fullbody/jumping/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9961,
@@ -479,7 +479,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/jumping/02.png",
+          "file": "frames-final-storyboard-fullbody/jumping/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9885,
@@ -494,7 +494,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/jumping/03.png",
+          "file": "frames-final-storyboard-fullbody/jumping/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 10515,
@@ -509,7 +509,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/jumping/04.png",
+          "file": "frames-final-storyboard-fullbody/jumping/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 9247,
@@ -535,7 +535,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/failed/00.png",
+          "file": "frames-final-storyboard-fullbody/failed/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13989,
@@ -550,7 +550,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/failed/01.png",
+          "file": "frames-final-storyboard-fullbody/failed/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13331,
@@ -565,7 +565,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/failed/02.png",
+          "file": "frames-final-storyboard-fullbody/failed/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12518,
@@ -580,7 +580,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/failed/03.png",
+          "file": "frames-final-storyboard-fullbody/failed/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 10751,
@@ -595,7 +595,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/failed/04.png",
+          "file": "frames-final-storyboard-fullbody/failed/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 11628,
@@ -610,7 +610,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-stable-size/failed/05.png",
+          "file": "frames-final-storyboard-fullbody/failed/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13323,
@@ -625,7 +625,7 @@
         },
         {
           "index": 6,
-          "file": "frames-final-stable-size/failed/06.png",
+          "file": "frames-final-storyboard-fullbody/failed/06.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13136,
@@ -640,7 +640,7 @@
         },
         {
           "index": 7,
-          "file": "frames-final-stable-size/failed/07.png",
+          "file": "frames-final-storyboard-fullbody/failed/07.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13329,
@@ -666,7 +666,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/waiting/00.png",
+          "file": "frames-final-storyboard-fullbody/waiting/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13729,
@@ -681,7 +681,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/waiting/01.png",
+          "file": "frames-final-storyboard-fullbody/waiting/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13430,
@@ -696,7 +696,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/waiting/02.png",
+          "file": "frames-final-storyboard-fullbody/waiting/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12951,
@@ -711,7 +711,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/waiting/03.png",
+          "file": "frames-final-storyboard-fullbody/waiting/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13235,
@@ -726,7 +726,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/waiting/04.png",
+          "file": "frames-final-storyboard-fullbody/waiting/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12877,
@@ -741,7 +741,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-stable-size/waiting/05.png",
+          "file": "frames-final-storyboard-fullbody/waiting/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13195,
@@ -767,7 +767,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/running/00.png",
+          "file": "frames-final-storyboard-fullbody/running/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14880,
@@ -782,7 +782,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/running/01.png",
+          "file": "frames-final-storyboard-fullbody/running/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14526,
@@ -797,7 +797,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/running/02.png",
+          "file": "frames-final-storyboard-fullbody/running/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14374,
@@ -812,7 +812,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/running/03.png",
+          "file": "frames-final-storyboard-fullbody/running/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14110,
@@ -827,7 +827,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/running/04.png",
+          "file": "frames-final-storyboard-fullbody/running/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13859,
@@ -842,7 +842,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-stable-size/running/05.png",
+          "file": "frames-final-storyboard-fullbody/running/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 14282,
@@ -868,7 +868,7 @@
       "frames": [
         {
           "index": 0,
-          "file": "frames-final-stable-size/review/00.png",
+          "file": "frames-final-storyboard-fullbody/review/00.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13463,
@@ -883,7 +883,7 @@
         },
         {
           "index": 1,
-          "file": "frames-final-stable-size/review/01.png",
+          "file": "frames-final-storyboard-fullbody/review/01.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12757,
@@ -898,7 +898,7 @@
         },
         {
           "index": 2,
-          "file": "frames-final-stable-size/review/02.png",
+          "file": "frames-final-storyboard-fullbody/review/02.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12625,
@@ -913,7 +913,7 @@
         },
         {
           "index": 3,
-          "file": "frames-final-stable-size/review/03.png",
+          "file": "frames-final-storyboard-fullbody/review/03.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 13080,
@@ -928,7 +928,7 @@
         },
         {
           "index": 4,
-          "file": "frames-final-stable-size/review/04.png",
+          "file": "frames-final-storyboard-fullbody/review/04.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12742,
@@ -943,7 +943,7 @@
         },
         {
           "index": 5,
-          "file": "frames-final-stable-size/review/05.png",
+          "file": "frames-final-storyboard-fullbody/review/05.png",
           "width": 192,
           "height": 208,
           "nontransparent_pixels": 12822,

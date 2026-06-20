@@ -21,5 +21,5 @@
     "cell_edge_alpha": 0,
     "transparent_rgb_residue_pixels": 0
   },
-  "motion": "running-right/left use a cleaned stable-size gait composite: upper body stabilized, leg gait preserved, disconnected specks removed."
+  "motion": "running-right/left regenerated from a frame-planned full-body row; cleanup uses whole-sprite extraction only, with no upper/lower body compositing."
 }

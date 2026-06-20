@@ -120,15 +120,18 @@ The first regenerated gait still had two QA problems:
 - the body/upper silhouette changed size between frames
 - tiny disconnected alpha components remained around the character
 
-The accepted cleanup stabilizes the upper body while preserving the generated leg gait:
+An attempted cleanup stabilized the upper body by compositing it with lower-body motion from another pass. That approach was rejected because it made the sprite feel cut apart and increasingly unnatural.
 
-- keep only the largest connected alpha component in each frame
-- use a stable upper-body composite for head, torso, wings, backpack, pen, and tablet
-- blend in the generated lower-body/leg motion below the coat line
-- mirror the cleaned `running-right` into `running-left`
+The accepted correction is frame-planned full-body regeneration:
+
+- define the intended pose of all 8 frames before generation in `docs/running-motion-storyboard.md`
+- regenerate `running-right` as complete full-body frames
+- allow only whole-sprite extraction, whole-sprite uniform scaling, baseline alignment, despill, and connected-component debris removal
+- do not cut the body into upper/lower halves or freeze one part while changing another
+- mirror the accepted full-body `running-right` into `running-left`
 - require `non_main_area_total == 0` for directional running rows
 
-After cleanup, the running rows have no disconnected sprite debris and the upper-body width range is reduced to about 3 px.
+After cleanup, the running rows have no disconnected sprite debris. Any remaining body-size variation must come from the generated full-body pose itself, not from local body-part stitching.
 
 ## QA Performed
 

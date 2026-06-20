@@ -51,8 +51,11 @@ After accepting a regenerated gait, run an explicit size/debris pass on `running
 
 - connected components per cell must report one main component and zero non-main area
 - upper-body width should remain nearly stable across frames; a wide leg pose may change full bbox width, but head/torso scale must not pop
-- if the gait is good but body scale pops, stabilize the upper body and composite only the lower-body gait motion
+- if the gait is good but body scale pops, normalize the whole sprite with uniform scaling and translation only
 - mirror the final cleaned right row into the left row after cleanup, not before
+- do not cut the sprite into upper/lower halves or freeze one body part while changing another
+
+Before regenerating a running row, read `docs/running-motion-storyboard.md` and use the frame plan there as the authoritative pose sequence.
 
 ## Prompt Requirements For Row Regeneration
 
