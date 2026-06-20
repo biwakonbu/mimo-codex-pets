@@ -153,14 +153,15 @@ Conversation behavior:
   the secondary bubbles.
 - Production can show up to four fanned speech bubbles at once: one primary
   current-thread/status bubble plus up to three compact summaries from other
-  visible threads. Secondary thread bubbles stay white but use compact accent
-  markers and alternating left/right placement so concurrent thread status is
-  readable without becoming a feed panel. When a focused conversation line is
-  available, the primary bubble uses that Mimo-style thread report instead of a
-  generic status such as `Codex が作業中`; offline status keeps the generic
-  connection bubble. This keeps Codex Pets-like multi-thread awareness in the
-  production surface without rendering a console, transcript feed, or debug
-  panel.
+  visible threads. The primary bubble stays lowest, widest, and visually
+  attached to Mimo with the only speech tail. Secondary thread bubbles are
+  smaller context notes above it: they stay white, use compact accent markers,
+  and alternate left/right placement so concurrent thread status is readable
+  without becoming a feed panel. When a focused conversation line is available,
+  the primary bubble uses that Mimo-style thread report instead of a generic
+  status such as `Codex が作業中`; offline status keeps the generic connection
+  bubble. This keeps Codex Pets-like multi-thread awareness in the production
+  surface without rendering a console, transcript feed, or debug panel.
 - The primary production bubble is capped at 44 characters and secondary
   thread bubbles at 34 characters. Secondary bubbles render as one-line compact
   summaries so a four-bubble stack does not crowd or clip Mimo.
@@ -187,6 +188,19 @@ Run before accepting companion behavior changes:
 
 ```bash
 cd desktop/MimoDesktopPet
+./script/qa_all.sh
+```
+
+`./script/qa_all.sh` is the canonical local gate. It runs the unit suite,
+static syntax checks, generated app-server schema drift checks, live app-server
+read/presentation smoke checks, fake/offline/disconnect/state-matrix production
+E2E capture gates, and bundle verification. When a real Codex app-server is
+intentionally unavailable, run `./script/qa_all.sh fake-only` and then rerun full
+mode before accepting app-server integration changes.
+
+The full gate expands to:
+
+```bash
 swift test
 ./script/check_app_server_schema.sh
 ./script/live_app_server_smoke.py

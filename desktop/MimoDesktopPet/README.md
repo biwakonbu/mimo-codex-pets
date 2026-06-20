@@ -25,6 +25,7 @@ cd desktop/MimoDesktopPet
 Useful checks:
 
 ```bash
+./script/qa_all.sh
 swift test
 ./script/check_app_server_schema.sh
 ./script/live_app_server_smoke.py
@@ -36,9 +37,15 @@ swift test
 ./script/e2e_state_matrix.sh
 ```
 
-The script stages a local app bundle under `dist/MimoDesktopPet.app`, launches it
-with `/usr/bin/open -n`, and sets `MIMO_PET_PACKAGE_DIR` to this repository's
-`pets/mimo` package unless you override it.
+`./script/qa_all.sh` is the pre-acceptance gate for companion behavior changes.
+It runs unit tests, static checks, schema/live app-server smoke checks, and all
+production E2E capture gates. Use `./script/qa_all.sh fake-only` only when a
+real Codex app-server is intentionally unavailable.
+
+`./script/build_and_run.sh` stages a local app bundle under
+`dist/MimoDesktopPet.app`, launches it with `/usr/bin/open -n`, and sets
+`MIMO_PET_PACKAGE_DIR` to this repository's `pets/mimo` package unless you
+override it.
 
 Codex state sync tries `codex app-server daemon start` as a best-effort helper,
 then uses the JSON-RPC stdio transport via `codex app-server --stdio`. If the
@@ -89,12 +96,13 @@ visual inspection runs where Mimo must stay still.
 
 In production mode the panel stays transparent and shows only Mimo plus a short
 fan of white bubbles. When Codex conversation context is available, the primary
-bubble promotes the focused thread into a short Mimo-style report. Up to three
-secondary bubbles summarize other recent visible Codex threads with compact
-accent markers, without dumping raw model output, commands, or payload text.
-Threads can be summarized from sanitized item activity or from thread/turn
-status alone. The stack favors thread coverage, so each visible thread appears
-at most once.
+bubble sits closest to Mimo, keeps the speech tail, and promotes the focused
+thread into a short Mimo-style report. Up to three smaller secondary bubbles sit
+above it as compact context notes for other visible Codex threads, with accent
+markers and no tails. They do not dump raw model output, commands, or payload
+text. Threads can be summarized from sanitized item activity or from
+thread/turn status alone. The stack favors thread coverage, so each visible
+thread appears at most once.
 The debug overlay is opt-in only: production startup keeps it disabled unless
 `MIMO_DEBUG_OVERLAY=1` is set or the menu item is toggled manually.
 

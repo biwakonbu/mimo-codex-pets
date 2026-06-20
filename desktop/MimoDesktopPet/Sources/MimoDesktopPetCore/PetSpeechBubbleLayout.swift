@@ -7,6 +7,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
     public let horizontalOffset: Double
     public let verticalOffset: Double
     public let fillOpacity: Double
+    public let scale: Double
     public let zIndex: Double
 
     public init(
@@ -16,6 +17,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         horizontalOffset: Double,
         verticalOffset: Double,
         fillOpacity: Double,
+        scale: Double,
         zIndex: Double
     ) {
         self.index = index
@@ -24,6 +26,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         self.horizontalOffset = horizontalOffset
         self.verticalOffset = verticalOffset
         self.fillOpacity = fillOpacity
+        self.scale = scale
         self.zIndex = zIndex
     }
 }
@@ -69,22 +72,25 @@ public enum PetSpeechBubbleLayout {
         case 1:
             offsets = [(0, 0)]
         case 2:
-            offsets = [(0, -64), (-70, 0)]
+            offsets = [(0, 0), (-92, -68)]
         case 3:
-            offsets = [(0, -104), (-88, -52), (88, 0)]
+            offsets = [(0, 0), (-96, -66), (96, -118)]
         default:
-            offsets = [(0, -132), (-92, -86), (92, -43), (-46, 0)]
+            offsets = [(0, 0), (-98, -62), (98, -112), (-46, -158)]
         }
         let offset = offsets[normalizedIndex]
+        let isPrimary = normalizedIndex == 0
+        let isStatus = role == .status
 
         return PetSpeechBubblePlacement(
             index: normalizedIndex,
             role: role,
-            maxTextWidth: role == .status ? 318 : 232,
+            maxTextWidth: isStatus ? 318 : 216,
             horizontalOffset: offset.x,
             verticalOffset: offset.y,
-            fillOpacity: role == .status ? 0.96 : 0.9,
-            zIndex: Double(productionVisibleLimit - normalizedIndex)
+            fillOpacity: isStatus ? 0.96 : 0.84,
+            scale: isPrimary ? 1.0 : 0.94,
+            zIndex: isPrimary ? 10 : Double(productionVisibleLimit - normalizedIndex)
         )
     }
 }

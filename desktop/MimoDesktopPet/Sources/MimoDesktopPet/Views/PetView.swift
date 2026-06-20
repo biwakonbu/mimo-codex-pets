@@ -60,11 +60,12 @@ private struct ProductionBubbleStackView: View {
                 BubbleView(
                     text: bubble.text,
                     role: bubble.role,
-                    showsTail: index == visible.count - 1,
+                    showsTail: index == 0,
                     maxTextWidth: placement.maxTextWidth,
                     fillOpacity: placement.fillOpacity,
                     accentColor: BubbleAccentPalette.color(for: index, role: bubble.role)
                 )
+                .scaleEffect(CGFloat(placement.scale), anchor: .center)
                 .offset(
                     x: CGFloat(placement.horizontalOffset),
                     y: CGFloat(placement.verticalOffset)
