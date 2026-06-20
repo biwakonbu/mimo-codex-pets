@@ -72,16 +72,18 @@ wait_for_presentation() {
   local animation="$2"
   local required_text="$3"
   local require_four_bubbles="$4"
+  local required_tone="$5"
 
-  python3 - "$PRESENTATION_LOG" "$label" "$animation" "$required_text" "$require_four_bubbles" <<'PY'
+  python3 - "$PRESENTATION_LOG" "$label" "$animation" "$required_text" "$require_four_bubbles" "$required_tone" <<'PY'
 import json
 import os
 import sys
 import time
 
-log_path, label, animation, required_text, require_four_bubbles = sys.argv[1:]
+log_path, label, animation, required_text, require_four_bubbles, required_tone = sys.argv[1:]
 deadline = time.time() + 18
 last_rows = []
+valid_tones = {"neutral", "active", "waiting", "review", "failed", "overflow"}
 
 while time.time() < deadline:
     if not os.path.exists(log_path):
@@ -100,16 +102,24 @@ while time.time() < deadline:
             raise SystemExit(f"{label}: production state unexpectedly enabled debug overlay")
         bubbles = row.get("bubbleTexts", [])
         roles = row.get("bubbleRoles", [])
+        tones = row.get("bubbleTones", [])
         if not isinstance(bubbles, list):
             continue
         if len(bubbles) > 4:
             raise SystemExit(f"{label}: too many production bubbles: {bubbles}")
         if roles and len(roles) != len(bubbles):
             raise SystemExit(f"{label}: bubble roles did not match text count: roles={roles} bubbles={bubbles}")
+        if not isinstance(tones, list) or len(tones) != len(bubbles):
+            raise SystemExit(f"{label}: bubble tones did not match bubble text count: tones={tones} bubbles={bubbles}")
+        unknown_tones = [tone for tone in tones if tone not in valid_tones]
+        if unknown_tones:
+            raise SystemExit(f"{label}: bubble tones contained unknown values: {unknown_tones}")
         joined = " ".join(str(item) for item in bubbles)
         if row.get("animation") != animation:
             continue
         if required_text not in joined:
+            continue
+        if required_tone and required_tone not in tones:
             continue
         if require_four_bubbles == "1":
             if len(bubbles) != 4:
@@ -136,19 +146,19 @@ capture_and_inspect() {
   fi
 }
 
-wait_for_presentation "active" "running" "Mimo runtime QA" "0"
+wait_for_presentation "active" "running" "Mimo runtime QA" "0" "active"
 capture_and_inspect "active"
 
-wait_for_presentation "waiting" "waiting" "確認待ち" "0"
+wait_for_presentation "waiting" "waiting" "確認待ち" "0" "waiting"
 capture_and_inspect "waiting"
 
-wait_for_presentation "multi-thread" "waiting" "資料整理" "1"
+wait_for_presentation "multi-thread" "waiting" "資料整理" "1" "active"
 capture_and_inspect "multi-thread"
 
-wait_for_presentation "review" "review" "レビューできます" "0"
+wait_for_presentation "review" "review" "レビューできます" "0" "review"
 capture_and_inspect "review"
 
-wait_for_presentation "failed" "failed" "失敗" "0"
+wait_for_presentation "failed" "failed" "失敗" "0" "failed"
 capture_and_inspect "failed"
 
 kill -0 "$APP_PID" >/dev/null

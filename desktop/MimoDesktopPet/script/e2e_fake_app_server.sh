@@ -154,12 +154,18 @@ for row in rows:
         raise SystemExit("production presentation log unexpectedly enabled debug overlay")
     bubbles = row.get("bubbleTexts", [])
     roles = row.get("bubbleRoles", [])
+    tones = row.get("bubbleTones", [])
     if not isinstance(bubbles, list):
         continue
     if len(bubbles) > 4:
         raise SystemExit(f"production bubble stack showed too many bubbles: {len(bubbles)}")
     if roles and len(roles) != len(bubbles):
         raise SystemExit(f"production bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
+    if not isinstance(tones, list) or len(tones) != len(bubbles):
+        raise SystemExit(f"production bubble tones did not match bubble text count: tones={tones} bubbles={bubbles}")
+    unknown_tones = [tone for tone in tones if tone not in {"neutral", "active", "waiting", "review", "failed", "overflow"}]
+    if unknown_tones:
+        raise SystemExit(f"production bubble tones contained unknown values: {unknown_tones}")
     thread_titles = []
     for bubble in bubbles:
         match = re.search(r"「([^」]+)」", str(bubble))
@@ -195,6 +201,8 @@ for row in rows:
     ):
         if roles != ["focus", "conversation", "conversation", "conversation"]:
             raise SystemExit(f"three-thread bubble stack had unexpected roles: {roles}")
+        if "waiting" not in tones or "active" not in tones:
+            raise SystemExit(f"three-thread bubble stack did not expose mixed semantic tones: {tones}")
         break
 else:
     raise SystemExit("presentation log never showed three thread bubbles at once")

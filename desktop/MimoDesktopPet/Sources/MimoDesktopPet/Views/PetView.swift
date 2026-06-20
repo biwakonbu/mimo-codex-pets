@@ -73,10 +73,11 @@ private struct ProductionBubbleStackView: View {
                 BubbleView(
                     text: bubble.text,
                     role: bubble.role,
+                    tone: bubble.tone,
                     showsTail: index == 0,
                     maxTextWidth: placement.maxTextWidth,
                     fillOpacity: placement.fillOpacity,
-                    accentColor: BubbleAccentPalette.color(for: index, role: bubble.role)
+                    accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone)
                 )
                 .scaleEffect(CGFloat(placement.scale), anchor: .center)
                 .offset(
@@ -150,6 +151,7 @@ private struct DebugPetView: View {
 struct BubbleView: View {
     let text: String
     var role: PetSpeechBubbleRole = .status
+    var tone: PetSpeechBubbleTone = .neutral
     var showsTail = true
     var maxTextWidth: Double?
     var fillOpacity: Double?
@@ -159,31 +161,12 @@ struct BubbleView: View {
         let resolvedFillOpacity = fillOpacity ?? defaultFillOpacity
         let accent = accentColor ?? Color(red: 0.36, green: 0.58, blue: 0.86)
         let bubbleFill = Color.white
-        let borderColor = role == .status ? Color.black.opacity(0.1) : accent.opacity(borderOpacity)
+        let borderColor = role == .status && tone == .neutral ? Color.black.opacity(0.1) : accent.opacity(borderOpacity)
 
         VStack(spacing: 0) {
             HStack(spacing: leadingMarkerSpacing) {
-                switch role {
-                case .focus:
-                    Capsule(style: .continuous)
-                        .fill(accent.opacity(0.95))
-                        .frame(width: 5, height: 22)
-                case .conversation:
-                    Circle()
-                        .fill(accent.opacity(0.92))
-                        .frame(width: 7, height: 7)
-                case .overflow:
-                    ZStack {
-                        Capsule(style: .continuous)
-                            .fill(accent.opacity(0.9))
-                        Text("+")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.white)
-                            .offset(y: -0.5)
-                    }
-                    .frame(width: 18, height: 18)
-                case .status:
-                    EmptyView()
+                if showsStateMarker {
+                    BubbleStateMarker(role: role, tone: tone, accentColor: accent)
                 }
 
                 Text(text)
@@ -192,7 +175,7 @@ struct BubbleView: View {
                     .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
-                    .multilineTextAlignment(role == .status ? .center : .leading)
+                    .multilineTextAlignment(role == .status && tone == .neutral ? .center : .leading)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
@@ -242,9 +225,10 @@ struct BubbleView: View {
     }
 
     private var leadingMarkerSpacing: CGFloat {
+        guard showsStateMarker else { return 0 }
         switch role {
         case .status:
-            return 0
+            return 7
         case .focus:
             return 8
         case .conversation, .overflow:
@@ -315,10 +299,90 @@ struct BubbleView: View {
             return 176
         }
     }
+
+    private var showsStateMarker: Bool {
+        switch role {
+        case .status:
+            return tone != .neutral
+        case .focus, .conversation, .overflow:
+            return true
+        }
+    }
+}
+
+private struct BubbleStateMarker: View {
+    let role: PetSpeechBubbleRole
+    let tone: PetSpeechBubbleTone
+    let accentColor: Color
+
+    @ViewBuilder
+    var body: some View {
+        switch role {
+        case .focus:
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(accentColor.opacity(0.96))
+                .frame(width: 20, height: 24)
+                .overlay(markerImage.font(.system(size: 9.5, weight: .bold)))
+        case .status:
+            Circle()
+                .fill(accentColor.opacity(0.94))
+                .frame(width: 18, height: 18)
+                .overlay(markerImage.font(.system(size: 8.5, weight: .bold)))
+        case .conversation:
+            Circle()
+                .fill(accentColor.opacity(0.92))
+                .frame(width: 14, height: 14)
+                .overlay(markerImage.font(.system(size: 7.2, weight: .bold)))
+        case .overflow:
+            ZStack {
+                Capsule(style: .continuous)
+                    .fill(accentColor.opacity(0.9))
+                markerImage
+                    .font(.system(size: 8.8, weight: .bold))
+                    .offset(y: -0.5)
+            }
+            .frame(width: 18, height: 18)
+        }
+    }
+
+    private var markerImage: some View {
+        Image(systemName: symbolName)
+            .symbolRenderingMode(.monochrome)
+            .foregroundStyle(.white)
+    }
+
+    private var symbolName: String {
+        switch tone {
+        case .failed:
+            return "exclamationmark"
+        case .waiting:
+            return "hourglass"
+        case .review:
+            return "checkmark"
+        case .active:
+            return "ellipsis"
+        case .overflow:
+            return "plus"
+        case .neutral:
+            return "circle.fill"
+        }
+    }
 }
 
 private enum BubbleAccentPalette {
-    static func color(for index: Int, role: PetSpeechBubbleRole) -> Color? {
+    static func color(for index: Int, role: PetSpeechBubbleRole, tone: PetSpeechBubbleTone) -> Color? {
+        switch tone {
+        case .failed:
+            return Color(red: 0.78, green: 0.24, blue: 0.22)
+        case .waiting:
+            return Color(red: 0.82, green: 0.56, blue: 0.18)
+        case .review:
+            return Color(red: 0.16, green: 0.55, blue: 0.34)
+        case .overflow:
+            return Color(red: 0.42, green: 0.47, blue: 0.55)
+        case .active, .neutral:
+            break
+        }
         guard role != .status else { return nil }
         if role == .focus {
             return Color(red: 0.24, green: 0.49, blue: 0.86)

@@ -160,14 +160,22 @@ while time.time() < deadline:
             raise SystemExit("live app presentation unexpectedly enabled debug overlay")
         bubbles = row.get("bubbleTexts", [])
         roles = row.get("bubbleRoles", [])
+        tones = row.get("bubbleTones", [])
         if roles and not isinstance(roles, list):
             raise SystemExit(f"live app bubble roles were not a list: {roles!r}")
+        if tones and not isinstance(tones, list):
+            raise SystemExit(f"live app bubble tones were not a list: {tones!r}")
         visible_bubbles = bubbles if isinstance(bubbles, list) else []
         if isinstance(bubbles, list):
             if len(bubbles) > 4:
                 raise SystemExit(f"live app presentation showed too many bubbles: {bubbles}")
             if roles and len(roles) != len(bubbles):
                 raise SystemExit(f"live app bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
+            if tones and len(tones) != len(bubbles):
+                raise SystemExit(f"live app bubble tones did not match bubble text count: tones={tones} bubbles={bubbles}")
+            unknown_tones = [tone for tone in tones if tone not in {"neutral", "active", "waiting", "review", "failed", "overflow"}]
+            if unknown_tones:
+                raise SystemExit(f"live app bubble tones contained unknown values: {unknown_tones}")
             for index, bubble_text in enumerate(bubbles):
                 role = roles[index] if index < len(roles) else ("status" if index == 0 else "conversation")
                 limit = role_limits.get(role, 34)

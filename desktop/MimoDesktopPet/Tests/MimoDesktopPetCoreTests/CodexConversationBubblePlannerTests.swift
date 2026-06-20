@@ -119,6 +119,51 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }
 
+    func testProductionBubblesCarrySemanticTonesForThreadState() {
+        let lines = [
+            line(threadId: "failed", speaker: "codex", text: "実行に失敗しました。確認が必要です", isAssistant: true),
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "review", speaker: "codex", text: "レビューできる状態になりました", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: nil,
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
+        XCTAssertEqual(bubbles.map(\.tone), [.active, .failed, .waiting, .review])
+    }
+
+    func testProductionBubblesUseOverflowToneWhenMoreThreadsAreHidden() {
+        let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+        let lines = [
+            current,
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "review", speaker: "thread", text: "レビュー可能", isAssistant: true),
+            line(threadId: "docs", speaker: "codex", text: "資料作業を進めています", isAssistant: true),
+            line(threadId: "tests", speaker: "tool", text: "テストを実行中", isAssistant: true)
+        ]
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
+        XCTAssertEqual(bubbles.map(\.tone), [.active, .waiting, .review, .overflow])
+    }
+
     func testProductionBubblesRespectProductStackTextLimits() {
         let lines = [
             line(
