@@ -20,13 +20,21 @@ Then select or reload the custom pet in Codex.
 This repository also includes a SwiftPM-based macOS companion app at
 `desktop/MimoDesktopPet`. It reuses the same Mimo pet package, displays Mimo in a
 transparent floating desktop panel, and reads Codex state through the public
-`codex app-server` JSON-RPC interface.
+`codex app-server` JSON-RPC interface. Production mode shows short status and
+conversation updates in a speech bubble; the white conversation feed is a debug
+overlay.
 
 Run it with:
 
 ```bash
 cd desktop/MimoDesktopPet
 ./script/build_and_run.sh
+```
+
+Local E2E smoke test:
+
+```bash
+./script/e2e_fake_app_server.sh
 ```
 
 The v1 companion is read-only: it does not send prompts to Codex, speak audio,

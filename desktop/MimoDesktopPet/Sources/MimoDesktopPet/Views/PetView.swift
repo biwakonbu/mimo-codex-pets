@@ -1,12 +1,30 @@
 import SwiftUI
+import MimoDesktopPetCore
 
 struct PetView: View {
     @ObservedObject var viewModel: PetViewModel
     let frameProvider: AtlasFrameImageProvider?
 
     var body: some View {
-        VStack(spacing: 8) {
+        Group {
+            if viewModel.debugOverlay {
+                DebugPetView(viewModel: viewModel, frameProvider: frameProvider)
+            } else {
+                ProductionPetView(viewModel: viewModel, frameProvider: frameProvider)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct ProductionPetView: View {
+    @ObservedObject var viewModel: PetViewModel
+    let frameProvider: AtlasFrameImageProvider?
+
+    var body: some View {
+        VStack(spacing: 0) {
             BubbleView(text: viewModel.presentation.bubbleText)
+                .padding(.bottom, 2)
 
             AnimatedPetSpriteView(
                 animation: viewModel.presentation.animation,
@@ -14,28 +32,120 @@ struct PetView: View {
             )
             .frame(width: 192, height: 208)
         }
-        .frame(width: 250, height: 300)
-        .allowsHitTesting(false)
+        .frame(width: 270, height: 300, alignment: .top)
         .background(Color.clear)
     }
 }
 
-private struct BubbleView: View {
+private struct DebugPetView: View {
+    @ObservedObject var viewModel: PetViewModel
+    let frameProvider: AtlasFrameImageProvider?
+
+    var body: some View {
+        VStack(spacing: 10) {
+            BubbleView(text: viewModel.presentation.bubbleText)
+
+            AnimatedPetSpriteView(
+                animation: viewModel.presentation.animation,
+                frameProvider: frameProvider
+            )
+            .frame(width: 176, height: 190)
+
+            ConversationFeedView(lines: viewModel.conversationLines)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(width: 320, height: 430)
+        .background(Color.white, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+}
+
+struct BubbleView: View {
     let text: String
 
     var body: some View {
-        Text(text)
-            .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.primary)
-            .lineLimit(2)
-            .multilineTextAlignment(.center)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .frame(maxWidth: 220)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(.white.opacity(0.22), lineWidth: 1)
-            )
+        VStack(spacing: 0) {
+            Text(text)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .frame(maxWidth: 248)
+                .background(Color.white.opacity(0.92), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(Color.black.opacity(0.1), lineWidth: 1)
+                )
+                .shadow(color: Color.black.opacity(0.14), radius: 8, x: 0, y: 3)
+
+            BubbleTail()
+                .fill(Color.white.opacity(0.92))
+                .frame(width: 18, height: 9)
+                .offset(y: -1)
+                .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 2)
+        }
+    }
+}
+
+private struct BubbleTail: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.closeSubpath()
+        return path
+    }
+}
+
+private struct ConversationFeedView: View {
+    let lines: [CodexConversationLine]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            ForEach(Array(lines.suffix(4).enumerated()), id: \.offset) { _, line in
+                ConversationLineView(line: line)
+            }
+            if lines.isEmpty {
+                Text("Codex の会話を待っています")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .frame(width: 292, height: 126, alignment: .topLeading)
+        .padding(10)
+        .background(Color(red: 0.985, green: 0.985, blue: 0.99), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
+        )
+    }
+}
+
+private struct ConversationLineView: View {
+    let line: CodexConversationLine
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 6) {
+                Text(line.threadTitle)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Text(line.speaker)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(line.isAssistant ? Color.blue : Color.green)
+                    .lineLimit(1)
+            }
+
+            Text(line.text)
+                .font(.system(size: 11, weight: .regular))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

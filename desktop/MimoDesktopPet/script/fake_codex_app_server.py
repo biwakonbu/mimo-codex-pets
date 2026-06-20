@@ -7,7 +7,32 @@ import time
 LOG_PATH = "/tmp/mimo-fake-codex.log"
 STATE_LOCK = threading.Lock()
 CURRENT_STATUS = {"type": "idle"}
-CURRENT_TURNS = []
+CURRENT_TURNS = [
+    {
+        "id": "turn-idle",
+        "status": "completed",
+        "items": [
+            {"id": "u1", "type": "userMessage", "content": [{"type": "inputText", "text": "Mimo の動きを確認して"}]},
+            {"id": "a1", "type": "agentMessage", "content": [{"type": "outputText", "text": "待機中です。会話を監視しています"}]},
+        ],
+    }
+]
+SECOND_THREAD = {
+    "id": "fake-review",
+    "name": "別スレッドの確認",
+    "preview": "レビュー可能な結果があります",
+    "status": {"type": "idle"},
+    "turns": [
+        {
+            "id": "turn-other",
+            "status": "completed",
+            "items": [
+                {"id": "u2", "type": "userMessage", "content": [{"type": "inputText", "text": "QA 結果を見せて"}]},
+                {"id": "a2", "type": "agentMessage", "content": [{"type": "outputText", "text": "検証はすべて通っています"}]},
+            ],
+        }
+    ],
+}
 
 
 def log(message):
@@ -26,7 +51,17 @@ def state_sequence():
     time.sleep(2.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": []}
-        CURRENT_TURNS = []
+        CURRENT_TURNS = [
+            {
+                "id": "turn-active",
+                "status": "inProgress",
+                "items": [
+                    {"id": "u3", "type": "userMessage", "content": [{"type": "inputText", "text": "デスクトップ上を歩いて"}]},
+                    {"id": "c1", "type": "commandExecution", "command": ["swift", "test"]},
+                    {"id": "a3", "type": "agentMessage", "content": [{"type": "outputText", "text": "移動先を決めながら作業しています"}]},
+                ],
+            }
+        ]
     write_message(
         {
             "method": "thread/status/changed",
@@ -39,7 +74,16 @@ def state_sequence():
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}
-        CURRENT_TURNS = []
+        CURRENT_TURNS = [
+            {
+                "id": "turn-waiting",
+                "status": "inProgress",
+                "items": [
+                    {"id": "u4", "type": "userMessage", "content": [{"type": "inputText", "text": "確認待ちの時は止まって"}]},
+                    {"id": "a4", "type": "agentMessage", "content": [{"type": "outputText", "text": "入力を待ちながらメモを取っています"}]},
+                ],
+            }
+        ]
     write_message(
         {
             "method": "thread/status/changed",
@@ -52,7 +96,16 @@ def state_sequence():
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "idle"}
-        CURRENT_TURNS = [{"id": "turn-review", "status": "completed"}]
+        CURRENT_TURNS = [
+            {
+                "id": "turn-review",
+                "status": "completed",
+                "items": [
+                    {"id": "u5", "type": "userMessage", "content": [{"type": "inputText", "text": "結果をレビューして"}]},
+                    {"id": "a5", "type": "agentMessage", "content": [{"type": "outputText", "text": "レビューできる状態になりました"}]},
+                ],
+            }
+        ]
     write_message(
         {
             "method": "thread/status/changed",
@@ -74,7 +127,16 @@ def state_sequence():
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "idle"}
-        CURRENT_TURNS = [{"id": "turn-failed", "status": "failed"}]
+        CURRENT_TURNS = [
+            {
+                "id": "turn-failed",
+                "status": "failed",
+                "items": [
+                    {"id": "u6", "type": "userMessage", "content": [{"type": "inputText", "text": "失敗も表示して"}]},
+                    {"id": "a6", "type": "agentMessage", "content": [{"type": "outputText", "text": "実行に失敗しました。確認が必要です"}]},
+                ],
+            }
+        ]
     write_message(
         {
             "method": "turn/completed",
@@ -113,10 +175,10 @@ def run_stdio_server():
             write_message(
                 {
                     "id": request_id,
-                    "result": {"data": ["fake-thread"], "nextCursor": None},
+                    "result": {"data": ["fake-thread", "fake-review"], "nextCursor": None},
                 }
             )
-        elif method == "thread/read":
+        elif method == "thread/list":
             with STATE_LOCK:
                 status = dict(CURRENT_STATUS)
                 turns = [dict(turn) for turn in CURRENT_TURNS]
@@ -124,12 +186,39 @@ def run_stdio_server():
                 {
                     "id": request_id,
                     "result": {
-                        "thread": {
-                            "id": "fake-thread",
-                            "status": status,
-                            "turns": turns,
-                        }
+                        "data": [
+                            {
+                                "id": "fake-thread",
+                                "name": "Mimo runtime QA",
+                                "preview": "自律移動と会話表示を検証中",
+                                "status": status,
+                                "turns": turns,
+                            },
+                            SECOND_THREAD,
+                        ],
+                        "nextCursor": None,
                     },
+                }
+            )
+        elif method == "thread/read":
+            thread_id = request.get("params", {}).get("threadId", "fake-thread")
+            if thread_id == "fake-review":
+                thread = SECOND_THREAD
+            else:
+                with STATE_LOCK:
+                    status = dict(CURRENT_STATUS)
+                    turns = [dict(turn) for turn in CURRENT_TURNS]
+                thread = {
+                    "id": "fake-thread",
+                    "name": "Mimo runtime QA",
+                    "preview": "自律移動と会話表示を検証中",
+                    "status": status,
+                    "turns": turns,
+                }
+            write_message(
+                {
+                    "id": request_id,
+                    "result": {"thread": thread},
                 }
             )
             if not sequence_started:

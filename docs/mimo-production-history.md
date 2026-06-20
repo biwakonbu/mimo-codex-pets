@@ -183,6 +183,19 @@ Live Codex QA:
 - Live recordings were created locally and reviewed.
 - Live recordings were not committed because they show desktop/workspace context.
 
+## Desktop Companion Production Notes
+
+The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separate from the Codex pet package. It reuses the same public Mimo atlas, but production runtime behavior is app-side:
+
+- the default window is transparent and borderless
+- status and recent Codex activity are shown only as short speech-bubble text
+- the white conversation-feed panel is a `Debug Overlay` menu mode, not the production surface
+- Codex state is read through `codex app-server --stdio` JSON-RPC with `initialize.version = 1`
+- the app reads `thread/loaded/list`, `thread/list`, and `thread/read(includeTurns: true)` and sanitizes item text before display
+- autonomous wandering uses a test-covered planner that chooses visible-screen targets and moves without overshooting
+
+Local desktop captures from companion QA must stay out of the repository. Use `/tmp` for runtime screenshots. The local E2E smoke test is `desktop/MimoDesktopPet/script/e2e_fake_app_server.sh`; it verifies the fake app-server flow, production window size, transparent screenshot corners, and thread read calls.
+
 ## Public Repository Decision
 
 The public repository intentionally includes:

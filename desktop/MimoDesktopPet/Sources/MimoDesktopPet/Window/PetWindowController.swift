@@ -5,17 +5,26 @@ import MimoDesktopPetCore
 
 @MainActor
 final class PetWindowController: NSObject {
+    private static let productionSize = NSSize(width: 270, height: 300)
+    private static let debugSize = NSSize(width: 320, height: 430)
+
     private let panel: NSPanel
     private let viewModel: PetViewModel
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
     private var movementAnimationActive = false
+    private var manualDragActive = false
+    private var autonomousTarget: NSPoint?
+    private var autonomousBaseSpeed: CGFloat = 72
+    private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + 2.0
+    private var nextIdleMomentAt = Date.timeIntervalSinceReferenceDate + 4.0
+    private var lastAutonomousTick = Date.timeIntervalSinceReferenceDate
     private var cancellables: Set<AnyCancellable> = []
 
     init(viewModel: PetViewModel) {
         self.viewModel = viewModel
 
-        let size = NSSize(width: 250, height: 300)
+        let size = viewModel.debugOverlay ? Self.debugSize : Self.productionSize
         let visibleFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1_280, height: 800)
         let origin = NSPoint(
             x: visibleFrame.maxX - size.width - 32,
@@ -33,7 +42,7 @@ final class PetWindowController: NSObject {
         panel.title = "Mimo Desktop Pet"
         panel.backgroundColor = .clear
         panel.isOpaque = false
-        panel.hasShadow = false
+        panel.hasShadow = viewModel.debugOverlay
         panel.level = .floating
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.hidesOnDeactivate = false
@@ -59,11 +68,25 @@ final class PetWindowController: NSObject {
 
         let interactionView = PetInteractionView(
             hostedView: hostingView,
+            isDebugOverlay: { [weak viewModel] in
+                viewModel?.debugOverlay ?? false
+            },
+            onDragStarted: { [weak self] in
+                self?.manualDragActive = true
+                self?.autonomousTarget = nil
+            },
             onDragAnimationChanged: { [weak viewModel] animation in
                 viewModel?.beginDrag(animation: animation)
             },
-            onDragEnded: { [weak viewModel] in
+            onDragEnded: { [weak self, weak viewModel] in
+                self?.manualDragActive = false
+                self?.autonomousRestUntil = Date.timeIntervalSinceReferenceDate + Double.random(in: 2.0...5.0)
                 viewModel?.endDrag()
+            },
+            onClicked: { [weak self, weak viewModel] in
+                self?.manualDragActive = false
+                self?.autonomousRestUntil = Date.timeIntervalSinceReferenceDate + Double.random(in: 1.5...4.0)
+                viewModel?.playMoment(animation: .waving, bubbleText: "呼びましたか?", duration: 1.6)
             }
         )
         panel.contentView = interactionView
@@ -72,6 +95,14 @@ final class PetWindowController: NSObject {
             .receive(on: RunLoop.main)
             .sink { [weak panel] clickThrough in
                 panel?.ignoresMouseEvents = clickThrough
+            }
+            .store(in: &cancellables)
+
+        viewModel.$debugOverlay
+            .removeDuplicates()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] debugOverlay in
+                self?.updateWindowAppearance(debugOverlay: debugOverlay)
             }
             .store(in: &cancellables)
 
@@ -103,7 +134,18 @@ final class PetWindowController: NSObject {
         movementTimer = timer
     }
 
+    private func updateWindowAppearance(debugOverlay: Bool) {
+        let size = debugOverlay ? Self.debugSize : Self.productionSize
+        let frame = panel.frame
+        let nextOrigin = NSPoint(x: frame.minX, y: frame.maxY - size.height)
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = debugOverlay
+        panel.setFrame(NSRect(origin: nextOrigin, size: size), display: true, animate: false)
+    }
+
     @objc private func movementTimerFired() {
+        updateAutonomousMotion()
         updateMovementAnimation()
     }
 
@@ -123,7 +165,11 @@ final class PetWindowController: NSObject {
 
         if let animation = update.animation {
             movementAnimationActive = true
-            viewModel.beginDrag(animation: animation)
+            if manualDragActive {
+                viewModel.beginDrag(animation: animation)
+            } else {
+                viewModel.beginAmbientMovement(animation: animation)
+            }
         } else if movementAnimationActive, !update.isMoving {
             clearMovementAnimationIfNeeded()
         }
@@ -133,6 +179,83 @@ final class PetWindowController: NSObject {
         guard movementAnimationActive else { return }
         movementAnimationActive = false
         viewModel.endDrag()
+    }
+
+    private func updateAutonomousMotion() {
+        let now = Date.timeIntervalSinceReferenceDate
+        let deltaTime = min(max(now - lastAutonomousTick, 0), 0.2)
+        lastAutonomousTick = now
+
+        guard panel.isVisible, !manualDragActive else { return }
+
+        if now >= nextIdleMomentAt, autonomousTarget == nil {
+            playRandomRestingMoment()
+            nextIdleMomentAt = now + Double.random(in: 4.5...9.0)
+        }
+
+        if autonomousTarget == nil, now >= autonomousRestUntil {
+            if Double.random(in: 0...1) < 0.72 {
+                chooseNextAutonomousTarget()
+            } else {
+                autonomousRestUntil = now + Double.random(in: 2.0...5.0)
+                playRandomRestingMoment()
+            }
+        }
+
+        guard let target = autonomousTarget else { return }
+
+        var frame = panel.frame
+        let current = frame.origin
+        let wave = 0.82 + 0.24 * sin(now * 2.7)
+        let jitter = CGFloat.random(in: 0.84...1.18)
+        let step = PetAutonomousMotionPlanner.step(
+            current: PetWanderPoint(x: current.x, y: current.y),
+            target: PetWanderPoint(x: target.x, y: target.y),
+            baseSpeed: Double(autonomousBaseSpeed),
+            elapsed: deltaTime,
+            wave: wave,
+            jitter: Double(jitter)
+        )
+        guard !step.reachedTarget else {
+            autonomousTarget = nil
+            autonomousRestUntil = now + Double.random(in: 2.0...6.0)
+            return
+        }
+        frame.origin = NSPoint(x: CGFloat(step.origin.x), y: CGFloat(step.origin.y))
+        panel.setFrame(frame, display: true)
+
+        if Double.random(in: 0...1) < 0.002 {
+            chooseNextAutonomousTarget()
+        }
+    }
+
+    private func chooseNextAutonomousTarget() {
+        let screens = NSScreen.screens
+        let screen = screens.randomElement() ?? NSScreen.main
+        let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1_280, height: 800)
+        let target = PetAutonomousMotionPlanner.target(
+            visibleFrame: PetDragFrame(visibleFrame),
+            petWidth: panel.frame.width,
+            petHeight: panel.frame.height,
+            randomX: Double.random(in: 0...1),
+            randomY: Double.random(in: 0...1)
+        )
+        autonomousTarget = NSPoint(
+            x: CGFloat(target.x),
+            y: CGFloat(target.y)
+        )
+        autonomousBaseSpeed = CGFloat.random(in: 42...105)
+    }
+
+    private func playRandomRestingMoment() {
+        let options: [(PetAnimationState, String?)] = [
+            (.running, viewModel.conversationLines.isEmpty ? nil : "メモ中"),
+            (.waving, nil),
+            (.jumping, nil),
+            (.waiting, nil)
+        ]
+        guard let option = options.randomElement() else { return }
+        viewModel.playMoment(animation: option.0, bubbleText: option.1, duration: Double.random(in: 1.4...2.4))
     }
 
     private func currentOnScreenFrame() -> PetDragFrame {
@@ -164,17 +287,27 @@ private final class ClearHostingView<Content: View>: NSHostingView<Content> {
 private final class PetInteractionView: NSView {
     private var dragHandler = PetDragEventHandler()
     private var initialMouseLocation: NSPoint?
+    private var didMoveDuringDrag = false
 
+    private let isDebugOverlay: () -> Bool
+    private let onDragStarted: () -> Void
     private let onDragAnimationChanged: (PetAnimationState) -> Void
     private let onDragEnded: () -> Void
+    private let onClicked: () -> Void
 
     init(
         hostedView: NSView,
+        isDebugOverlay: @escaping () -> Bool,
+        onDragStarted: @escaping () -> Void,
         onDragAnimationChanged: @escaping (PetAnimationState) -> Void,
-        onDragEnded: @escaping () -> Void
+        onDragEnded: @escaping () -> Void,
+        onClicked: @escaping () -> Void
     ) {
+        self.isDebugOverlay = isDebugOverlay
+        self.onDragStarted = onDragStarted
         self.onDragAnimationChanged = onDragAnimationChanged
         self.onDragEnded = onDragEnded
+        self.onClicked = onClicked
         super.init(frame: .zero)
 
         wantsLayer = true
@@ -201,7 +334,11 @@ private final class PetInteractionView: NSView {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        bounds.contains(point) ? self : nil
+        PetInteractionHitRegion.contains(
+            point: PetWanderPoint(x: Double(point.x), y: Double(point.y)),
+            bounds: PetDragFrame(bounds),
+            debugOverlay: isDebugOverlay()
+        ) ? self : nil
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
@@ -211,7 +348,9 @@ private final class PetInteractionView: NSView {
     override func mouseDown(with event: NSEvent) {
         guard let window else { return }
         initialMouseLocation = NSEvent.mouseLocation
+        didMoveDuringDrag = false
         dragHandler.begin(frame: PetDragFrame(window.frame))
+        onDragStarted()
 
         let monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self, weak window] dragEvent in
             guard let self, let window else { return dragEvent }
@@ -234,6 +373,9 @@ private final class PetInteractionView: NSView {
             screenDeltaY: currentMouseLocation.y - initialMouseLocation.y,
             fallbackFrame: PetDragFrame(fallbackFrame)
         )
+        if abs(currentMouseLocation.x - initialMouseLocation.x) > 2 || abs(currentMouseLocation.y - initialMouseLocation.y) > 2 {
+            didMoveDuringDrag = true
+        }
         if let animation = update.animation {
             onDragAnimationChanged(animation)
         }
@@ -247,7 +389,11 @@ private final class PetInteractionView: NSView {
     private func finishDrag() {
         initialMouseLocation = nil
         dragHandler.end()
-        onDragEnded()
+        if didMoveDuringDrag {
+            onDragEnded()
+        } else {
+            onClicked()
+        }
     }
 }
 

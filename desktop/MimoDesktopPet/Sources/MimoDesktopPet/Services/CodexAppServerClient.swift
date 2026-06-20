@@ -10,7 +10,7 @@ final class CodexAppServerClient {
         case initialize
         case loadedList
         case threadList
-        case threadRead
+        case threadRead(threadId: String)
     }
 
     private enum DaemonStartResult {
@@ -40,6 +40,9 @@ final class CodexAppServerClient {
     private var latestThreadStatus: CodexThreadStatus?
     private var latestTurnStatus: CodexTurnStatus?
     private var hasRecentAssistantFinal = false
+    private var threadTitlesById: [String: String] = [:]
+    private var conversationByThread: [String: [CodexConversationLine]] = [:]
+    private var threadDisplayOrder: [String] = []
     private var offlineBubbleText: String?
     private var pollTimer: DispatchSourceTimer?
     private var handshakeTimer: DispatchSourceTimer?
@@ -177,6 +180,9 @@ final class CodexAppServerClient {
         latestThreadStatus = nil
         latestTurnStatus = nil
         hasRecentAssistantFinal = false
+        threadTitlesById.removeAll()
+        conversationByThread.removeAll()
+        threadDisplayOrder.removeAll()
     }
 
     private func startHandshakeTimeout() {
@@ -209,7 +215,11 @@ final class CodexAppServerClient {
 
     private func refreshCurrentThread() {
         if let selectedThreadId {
-            sendRequest(method: "thread/read", params: ["threadId": selectedThreadId, "includeTurns": true], kind: .threadRead)
+            sendRequest(
+                method: "thread/read",
+                params: ["threadId": selectedThreadId, "includeTurns": true],
+                kind: .threadRead(threadId: selectedThreadId)
+            )
         } else {
             sendRequest(method: "thread/loaded/list", params: ["limit": 10], kind: .loadedList)
         }
@@ -219,6 +229,7 @@ final class CodexAppServerClient {
         sendRequest(
             method: "initialize",
             params: [
+                "version": 1,
                 "clientInfo": [
                     "name": "mimo_desktop_pet",
                     "title": "Mimo Desktop Pet",
@@ -379,7 +390,7 @@ final class CodexAppServerClient {
         guard let id = object["id"] as? Int else { return }
         let kind = pendingRequests.removeValue(forKey: id)
         guard object["error"] == nil else {
-            if kind != .initialize {
+            if !isInitializeRequest(kind) {
                 emitSnapshot(connectionAvailable: false)
             }
             return
@@ -400,9 +411,16 @@ final class CodexAppServerClient {
             handleLoadedList(result)
         case .threadList:
             handleThreadList(result)
-        case .threadRead:
-            handleThreadRead(result)
+        case .threadRead(let threadId):
+            handleThreadRead(result, expectedThreadId: threadId)
         }
+    }
+
+    private func isInitializeRequest(_ kind: RequestKind?) -> Bool {
+        if case .initialize = kind {
+            return true
+        }
+        return false
     }
 
     private func handleLoadedList(_ result: Any?) {
@@ -411,12 +429,20 @@ final class CodexAppServerClient {
             let ids = dict["data"] as? [String],
             let first = ids.first
         else {
-            sendRequest(method: "thread/list", params: ["limit": 1, "archived": false], kind: .threadList)
+            sendRequest(method: "thread/list", params: ["limit": 4, "archived": false], kind: .threadList)
             return
         }
 
         selectedThreadId = first
-        sendRequest(method: "thread/read", params: ["threadId": first, "includeTurns": true], kind: .threadRead)
+        rememberThreadOrder(ids)
+        for id in ids.prefix(4) {
+            sendRequest(
+                method: "thread/read",
+                params: ["threadId": id, "includeTurns": true],
+                kind: .threadRead(threadId: id)
+            )
+        }
+        sendRequest(method: "thread/list", params: ["limit": 4, "archived": false], kind: .threadList)
     }
 
     private func handleThreadList(_ result: Any?) {
@@ -433,14 +459,33 @@ final class CodexAppServerClient {
             return
         }
 
-        selectedThreadId = threadId
-        if let snapshot = decodeThreadSnapshot(from: first) {
+        let visibleThreads = Array(threads.prefix(4))
+        rememberThreadOrder(visibleThreads.compactMap { $0["id"] as? String })
+
+        for thread in visibleThreads {
+            guard let id = thread["id"] as? String else { continue }
+            threadTitlesById[id] = threadTitle(from: thread)
+            let lines = CodexConversationExtractor.lines(from: thread)
+            if !lines.isEmpty {
+                conversationByThread[id] = lines
+            }
+        }
+
+        selectedThreadId = selectedThreadId ?? threadId
+        if selectedThreadId == threadId, let snapshot = decodeThreadSnapshot(from: first) {
             apply(snapshot: snapshot)
         }
-        sendRequest(method: "thread/read", params: ["threadId": threadId, "includeTurns": true], kind: .threadRead)
+        for thread in visibleThreads {
+            guard let id = thread["id"] as? String else { continue }
+            sendRequest(
+                method: "thread/read",
+                params: ["threadId": id, "includeTurns": true],
+                kind: .threadRead(threadId: id)
+            )
+        }
     }
 
-    private func handleThreadRead(_ result: Any?) {
+    private func handleThreadRead(_ result: Any?, expectedThreadId: String) {
         guard
             let dict = result as? [String: Any],
             let threadObject = dict["thread"] as? [String: Any],
@@ -450,8 +495,19 @@ final class CodexAppServerClient {
             return
         }
 
-        selectedThreadId = snapshot.id
-        apply(snapshot: snapshot)
+        threadTitlesById[snapshot.id] = threadTitle(from: threadObject)
+        rememberThreadOrder([snapshot.id])
+        let lines = CodexConversationExtractor.lines(from: threadObject)
+        if !lines.isEmpty {
+            conversationByThread[snapshot.id] = lines
+        }
+
+        if selectedThreadId == nil || selectedThreadId == expectedThreadId || selectedThreadId == snapshot.id {
+            selectedThreadId = snapshot.id
+            apply(snapshot: snapshot)
+        } else {
+            emitSnapshot(connectionAvailable: true)
+        }
     }
 
     private func handleNotification(method: String, params: Any?) {
@@ -494,7 +550,11 @@ final class CodexAppServerClient {
             if let dict = params as? [String: Any],
                let threadId = dict["threadId"] as? String {
                 selectedThreadId = selectedThreadId ?? threadId
-                guard selectedThreadId == threadId else { return }
+                appendConversationLine(from: dict["item"], threadId: threadId)
+                guard selectedThreadId == threadId else {
+                    emitSnapshot(connectionAvailable: true)
+                    return
+                }
                 if itemLooksLikeAssistantFinal(dict["item"]) {
                     hasRecentAssistantFinal = true
                 }
@@ -534,9 +594,48 @@ final class CodexAppServerClient {
                 latestTurnStatus: latestTurnStatus,
                 hasRecentAssistantFinal: hasRecentAssistantFinal,
                 connectionAvailable: connectionAvailable,
-                offlineBubbleText: connectionAvailable ? nil : offlineBubbleText
+                offlineBubbleText: connectionAvailable ? nil : offlineBubbleText,
+                conversationLines: connectionAvailable ? combinedConversationLines() : []
             )
         )
+    }
+
+    private func rememberThreadOrder(_ ids: [String]) {
+        for id in ids where !threadDisplayOrder.contains(id) {
+            threadDisplayOrder.append(id)
+        }
+        if threadDisplayOrder.count > 6 {
+            threadDisplayOrder = Array(threadDisplayOrder.prefix(6))
+        }
+    }
+
+    private func combinedConversationLines() -> [CodexConversationLine] {
+        let orderedLines = threadDisplayOrder.flatMap { conversationByThread[$0] ?? [] }
+        return Array(orderedLines.suffix(6))
+    }
+
+    private func appendConversationLine(from item: Any?, threadId: String) {
+        guard let item = item as? [String: Any] else { return }
+        let title = threadTitlesById[threadId] ?? "Codex Thread"
+        guard let line = CodexConversationExtractor.line(from: item, threadId: threadId, threadTitle: title) else { return }
+        var lines = conversationByThread[threadId] ?? []
+        lines.append(line)
+        conversationByThread[threadId] = Array(lines.suffix(6))
+        rememberThreadOrder([threadId])
+    }
+
+    private func threadTitle(from threadObject: [String: Any]) -> String {
+        for key in ["name", "preview"] {
+            if let text = threadObject[key] as? String, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let trimmed = text.replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
+                if trimmed.count <= 34 {
+                    return trimmed
+                }
+                let index = trimmed.index(trimmed.startIndex, offsetBy: 34)
+                return String(trimmed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
+            }
+        }
+        return "Codex Thread"
     }
 
     private func itemLooksLikeAssistantFinal(_ item: Any?) -> Bool {

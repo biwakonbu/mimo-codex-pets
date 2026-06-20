@@ -10,6 +10,7 @@ final class StatusItemController: NSObject {
     private let onReconnect: () -> Void
     private let onQuit: () -> Void
     private var clickThroughItem: NSMenuItem?
+    private var debugOverlayItem: NSMenuItem?
     private var cancellables: Set<AnyCancellable> = []
 
     init(
@@ -36,6 +37,13 @@ final class StatusItemController: NSObject {
                 self?.clickThroughItem?.state = clickThrough ? .on : .off
             }
             .store(in: &cancellables)
+
+        viewModel.$debugOverlay
+            .receive(on: RunLoop.main)
+            .sink { [weak self] debugOverlay in
+                self?.debugOverlayItem?.state = debugOverlay ? .on : .off
+            }
+            .store(in: &cancellables)
     }
 
     private func configureMenu() {
@@ -56,6 +64,12 @@ final class StatusItemController: NSObject {
         clickItem.state = viewModel.clickThrough ? .on : .off
         clickThroughItem = clickItem
         menu.addItem(clickItem)
+
+        let debugItem = NSMenuItem(title: "Debug Overlay", action: #selector(toggleDebugOverlay), keyEquivalent: "")
+        debugItem.target = self
+        debugItem.state = viewModel.debugOverlay ? .on : .off
+        debugOverlayItem = debugItem
+        menu.addItem(debugItem)
 
         let reconnectItem = NSMenuItem(title: "Reconnect Codex", action: #selector(reconnectCodex), keyEquivalent: "")
         reconnectItem.target = self
@@ -80,6 +94,10 @@ final class StatusItemController: NSObject {
 
     @objc private func toggleClickThrough() {
         viewModel.toggleClickThrough()
+    }
+
+    @objc private func toggleDebugOverlay() {
+        viewModel.toggleDebugOverlay()
     }
 
     @objc private func reconnectCodex() {
