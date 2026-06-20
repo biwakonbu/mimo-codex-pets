@@ -50,6 +50,28 @@ final class CodexNotificationTests: XCTestCase {
         XCTAssertEqual(notification.params.status, .active(activeFlags: [.waitingOnUserInput]))
     }
 
+    func testThreadStatusDecodeIgnoresUnknownActiveFlags() throws {
+        let data = Data("""
+        {
+          "method": "thread/status/changed",
+          "params": {
+            "threadId": "thread-1",
+            "status": {
+              "type": "active",
+              "activeFlags": ["waitingOnUserInput", "futureFlag"]
+            }
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadStatusChangedNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.params.status, .active(activeFlags: [.waitingOnUserInput]))
+    }
+
     func testTurnCompletedNotificationDecodes() throws {
         let data = Data("""
         {
@@ -71,6 +93,50 @@ final class CodexNotificationTests: XCTestCase {
 
         XCTAssertEqual(notification.method, "turn/completed")
         XCTAssertEqual(notification.params.turn.status, .completed)
+    }
+
+    func testTurnNotificationTreatsUnknownStatusAsInProgress() throws {
+        let data = Data("""
+        {
+          "method": "turn/completed",
+          "params": {
+            "threadId": "thread-1",
+            "turn": {
+              "id": "turn-1",
+              "status": "futureStatus"
+            }
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<TurnNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.params.turn.status, .inProgress)
+    }
+
+    func testThreadSnapshotDefaultsMissingStatusWithoutDroppingTurns() throws {
+        let data = Data("""
+        {
+          "id": "thread-1",
+          "turns": [
+            {
+              "id": "turn-1",
+              "status": "futureStatus"
+            },
+            {
+              "id": "turn-2"
+            }
+          ]
+        }
+        """.utf8)
+
+        let snapshot = try JSONDecoder().decode(CodexThreadSnapshot.self, from: data)
+
+        XCTAssertEqual(snapshot.status, .idle)
+        XCTAssertEqual(snapshot.turns.map(\.status), [.inProgress, .inProgress])
     }
 
     func testItemLifecycleNotificationDecodes() throws {

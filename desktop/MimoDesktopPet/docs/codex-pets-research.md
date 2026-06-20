@@ -55,6 +55,10 @@ Verified runtime behavior:
   JSON-RPC `jsonrpc` fields are tolerated but not required.
 - `codex app-server --stdio` returns a Codex Desktop user agent and can read local thread state.
 - App-server responses and notifications may interleave on stdout; the client must dispatch by `method` vs `id`.
+- App-server enum-like fields may grow over time. Unknown thread active flags
+  are ignored, unknown turn statuses are treated as in-progress, and missing
+  thread status defaults to idle so one protocol addition does not make Mimo
+  stop reporting every visible thread.
 - `thread/list` can return no interactive threads; the companion must stay open and remain idle/offline-safe.
 - When the local Codex command or app-server is unavailable, the companion must
   stay open in transparent production mode and show a short offline bubble

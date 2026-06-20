@@ -29,7 +29,8 @@ extension CodexThreadStatus: Decodable {
         case "systemError":
             self = .systemError
         case "active":
-            let flags = try container.decodeIfPresent([CodexThreadActiveFlag].self, forKey: .activeFlags) ?? []
+            let rawFlags = (try? container.decodeIfPresent([String].self, forKey: .activeFlags)) ?? []
+            let flags = rawFlags.compactMap(CodexThreadActiveFlag.init(rawValue:))
             self = .active(activeFlags: flags)
         default:
             self = .idle
@@ -44,9 +45,33 @@ public enum CodexTurnStatus: String, Codable, Equatable, Sendable {
     case inProgress
 }
 
+extension CodexTurnStatus {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = CodexTurnStatus(rawValue: rawValue) ?? .inProgress
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
 public struct CodexTurnSnapshot: Decodable, Equatable, Sendable {
     public let id: String
     public let status: CodexTurnStatus
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case status
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        status = try container.decodeIfPresent(CodexTurnStatus.self, forKey: .status) ?? .inProgress
+    }
 }
 
 public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
@@ -63,7 +88,7 @@ public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
-        status = try container.decode(CodexThreadStatus.self, forKey: .status)
+        status = try container.decodeIfPresent(CodexThreadStatus.self, forKey: .status) ?? .idle
         turns = try container.decodeIfPresent([CodexTurnSnapshot].self, forKey: .turns) ?? []
     }
 }
