@@ -17,6 +17,7 @@ final class PetWindowController: NSObject {
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
     private var movementAnimationActive = false
+    private var movementAnimationWasManual = false
     private var manualDragActive = false
     private var autonomousMotion: PetAutonomousMotionTween?
     private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + 2.0
@@ -192,6 +193,7 @@ final class PetWindowController: NSObject {
 
         if let animation = update.animation {
             movementAnimationActive = true
+            movementAnimationWasManual = manualDragActive
             if manualDragActive {
                 viewModel.beginDrag(animation: animation)
             } else {
@@ -204,8 +206,14 @@ final class PetWindowController: NSObject {
 
     private func clearMovementAnimationIfNeeded() {
         guard movementAnimationActive else { return }
+        let wasManual = movementAnimationWasManual
         movementAnimationActive = false
-        viewModel.endDrag()
+        movementAnimationWasManual = false
+        if wasManual {
+            viewModel.endDrag()
+        } else {
+            viewModel.endAmbientMovement()
+        }
     }
 
     private func updateAutonomousMotion() {

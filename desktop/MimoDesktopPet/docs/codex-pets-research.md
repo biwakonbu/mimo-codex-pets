@@ -72,6 +72,9 @@ Conversation behavior:
 - Production bubbles do not quote Codex speaker labels directly. They combine
   the thread title and the latest progress-like line into a short Mimo report to
   the user, such as `ご主人、「<title>」は作業を進めています`.
+- The production bubble queue deduplicates by thread, speaker, and sanitized
+  text, then rotates the latest short report from each visible thread instead of
+  pinning only one focused thread forever.
 - Tool activity should be summarized, not dumped.
 - Machine payload-looking text is suppressed and replaced with a generic short phrase.
 - Bubble text is transient; durable feed display belongs only in `Debug Overlay`.
@@ -99,7 +102,7 @@ Manual or visual checks:
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
   production bubble text is a Mimo-style summary of the active thread title and
-  latest progress/tool activity.
+  latest progress/tool activity, including a second visible thread.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.

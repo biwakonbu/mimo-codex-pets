@@ -11,7 +11,9 @@ final class PetViewModel: ObservableObject {
     private let presentationLogURL: URL?
     private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
     private var momentToken = UUID()
-    private var lastConversationSignature: String?
+    private var shownConversationSignatures: Set<String> = []
+    private var pendingConversationLines: [CodexConversationLine] = []
+    private var conversationBubbleActive = false
 
     init(debugOverlay: Bool = ProcessInfo.processInfo.environment["MIMO_DEBUG_OVERLAY"] == "1") {
         self.debugOverlay = debugOverlay
@@ -27,7 +29,6 @@ final class PetViewModel: ObservableObject {
     }
 
     func apply(snapshot: CodexStateSnapshot) {
-        momentToken = UUID()
         let next = CodexPetStateMapper.presentation(
             threadStatus: snapshot.threadStatus,
             latestTurnStatus: snapshot.latestTurnStatus,
@@ -45,24 +46,90 @@ final class PetViewModel: ObservableObject {
             presentationState = next
         }
         lastCodexPresentation = presentationState
-        conversationLines = Array(snapshot.conversationLines.suffix(5))
-        if let line = snapshot.focusedConversationLine ?? conversationLines.last,
-           shouldShowConversation(line) {
-            showTemporaryPresentation(
-                PetPresentationState(
-                    animation: presentationState.animation,
-                    bubbleText: CodexBubbleFormatter.bubbleText(for: line),
-                    isOffline: presentationState.isOffline
-                ),
-                duration: 4.0
+        conversationLines = Array(snapshot.conversationLines.suffix(8))
+
+        if snapshot.connectionAvailable {
+            enqueueConversationLines(
+                snapshot.conversationLines,
+                preferredThreadId: snapshot.focusedConversationLine?.threadId
             )
         } else {
-            setPresentation(presentationState)
+            clearConversationQueue()
         }
+
+        if !conversationBubbleActive {
+            if !pendingConversationLines.isEmpty {
+                showNextConversationBubble()
+            } else {
+                momentToken = UUID()
+                setPresentation(presentationState)
+            }
+        }
+    }
+
+    private func enqueueConversationLines(_ lines: [CodexConversationLine], preferredThreadId: String?) {
+        let candidates = CodexConversationBubblePlanner.orderedThreadUpdates(
+            from: lines,
+            preferredThreadId: preferredThreadId
+        )
+        let pendingSignatures = Set(pendingConversationLines.map(CodexConversationBubblePlanner.signature(for:)))
+
+        for line in candidates {
+            let signature = CodexConversationBubblePlanner.signature(for: line)
+            guard !shownConversationSignatures.contains(signature), !pendingSignatures.contains(signature) else {
+                continue
+            }
+            shownConversationSignatures.insert(signature)
+            pendingConversationLines.append(line)
+        }
+    }
+
+    private func showNextConversationBubble() {
+        guard !pendingConversationLines.isEmpty else {
+            conversationBubbleActive = false
+            setPresentation(lastCodexPresentation)
+            return
+        }
+
+        let line = pendingConversationLines.removeFirst()
+        let token = UUID()
+        momentToken = token
+        conversationBubbleActive = true
+        setPresentation(
+            PetPresentationState(
+                animation: CodexConversationBubblePlanner.animation(
+                    for: line,
+                    fallback: lastCodexPresentation.animation
+                ),
+                bubbleText: CodexBubbleFormatter.bubbleText(for: line),
+                isOffline: lastCodexPresentation.isOffline
+            )
+        )
+
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 3_400_000_000)
+            self?.finishConversationBubble(token: token)
+        }
+    }
+
+    private func finishConversationBubble(token: UUID) {
+        guard momentToken == token else { return }
+        if pendingConversationLines.isEmpty {
+            conversationBubbleActive = false
+            setPresentation(lastCodexPresentation)
+        } else {
+            showNextConversationBubble()
+        }
+    }
+
+    private func clearConversationQueue() {
+        pendingConversationLines.removeAll()
+        conversationBubbleActive = false
     }
 
     func setConnectionAvailable(_ available: Bool) {
         guard !available else { return }
+        clearConversationQueue()
         momentToken = UUID()
         let offline = CodexPetStateMapper.presentation(
             threadStatus: nil,
@@ -75,11 +142,13 @@ final class PetViewModel: ObservableObject {
     }
 
     func beginDrag(deltaX: CGFloat) {
+        clearConversationQueue()
         momentToken = UUID()
         setPresentation(CodexPetStateMapper.dragPresentation(deltaX: Double(deltaX)))
     }
 
     func beginDrag(animation: PetAnimationState) {
+        clearConversationQueue()
         momentToken = UUID()
         let next = PetPresentationState(animation: animation, bubbleText: "移動中")
         guard presentation != next else { return }
@@ -97,11 +166,18 @@ final class PetViewModel: ObservableObject {
     }
 
     func endDrag() {
+        clearConversationQueue()
         momentToken = UUID()
         setPresentation(lastCodexPresentation)
     }
 
+    func endAmbientMovement() {
+        guard !conversationBubbleActive else { return }
+        setPresentation(lastCodexPresentation)
+    }
+
     func playMoment(animation: PetAnimationState, bubbleText: String? = nil, duration: TimeInterval = 1.8) {
+        clearConversationQueue()
         let token = UUID()
         momentToken = token
         showTemporaryPresentation(
@@ -121,13 +197,6 @@ final class PetViewModel: ObservableObject {
 
     func toggleDebugOverlay() {
         debugOverlay.toggle()
-    }
-
-    private func shouldShowConversation(_ line: CodexConversationLine) -> Bool {
-        let signature = "\(line.threadId)|\(line.speaker)|\(line.text)"
-        guard signature != lastConversationSignature else { return false }
-        lastConversationSignature = signature
-        return true
     }
 
     private func showTemporaryPresentation(

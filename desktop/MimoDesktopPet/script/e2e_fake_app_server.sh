@@ -117,6 +117,7 @@ kill -0 "$APP_PID" >/dev/null
 
 grep -Fq 'ご主人、「Mimo runtime QA」は作業を進めています' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 
 screencapture -x -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 
@@ -156,4 +157,4 @@ grep -Eq '"method":"thread\\?/read"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
 
-echo "E2E passed: fake Codex app-server, Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."
+echo "E2E passed: fake Codex app-server, per-thread Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."
