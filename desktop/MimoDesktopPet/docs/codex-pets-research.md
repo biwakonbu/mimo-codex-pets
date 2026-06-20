@@ -213,8 +213,9 @@ Manual or visual checks:
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI.
 - Live app presentation smoke launches the actual app process with a temporary
-  presentation log and verifies that the UI state leaves offline/connection
-  presentation after a real app-server connection.
+  presentation log, verifies that the UI state leaves offline/connection
+  presentation after a real app-server connection, then captures the exact
+  production window and runs `inspect_production_capture.swift` against it.
 - Disconnect E2E launches against a fake app-server that reaches a connected
   thread-summary state and then exits. Mimo must stay alive, keep the production
   surface transparent, and show `Codex 接続切れ` instead of leaving stale
