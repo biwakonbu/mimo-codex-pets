@@ -44,6 +44,9 @@ local Codex app-server cannot be launched, the companion stays open and shows an
 offline/waiting status instead of crashing.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
+`./script/check_app_server_schema.sh` verifies the generated app-server schema
+and cross-checks that the Swift notification enum and active flags remain
+schema-backed.
 `./script/live_app_presentation_smoke.sh` launches the real app process with a
 temporary presentation log and verifies that it leaves the offline/connection
 state after connecting.

@@ -11,6 +11,10 @@ Verified public protocol surface:
   - `thread/loaded/list`
   - `thread/list`
   - `thread/read`
+- `script/check_app_server_schema.sh` regenerates this schema and verifies that
+  the Swift `CodexNotificationMethod` and `CodexThreadActiveFlag` cases are
+  still present in the schema, so client-side protocol coverage cannot silently
+  drift from the public app-server surface.
 - The same schema exposes the server notifications used by the companion:
   - `thread/status/changed`
   - `thread/name/updated`

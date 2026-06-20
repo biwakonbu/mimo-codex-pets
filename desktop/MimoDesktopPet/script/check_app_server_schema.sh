@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CODEX_PROTOCOL_SWIFT="$ROOT_DIR/Sources/MimoDesktopPetCore/CodexProtocol.swift"
 TMP_DIR="$(mktemp -d /tmp/mimo-app-server-schema.XXXXXX)"
 cleanup() {
   rm -rf "$TMP_DIR"
@@ -66,4 +68,54 @@ require_pattern "v2/ThreadReadResponse.json" '"webSearch"'
 require_pattern "v2/ThreadReadResponse.json" '"imageGeneration"'
 require_pattern "v2/ThreadReadResponse.json" '"contextCompaction"'
 
-echo "Schema check passed: required app-server methods and thread item types are present."
+python3 - "$TMP_DIR" "$CODEX_PROTOCOL_SWIFT" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+schema_dir = Path(sys.argv[1])
+swift_path = Path(sys.argv[2])
+swift = swift_path.read_text(encoding="utf-8")
+server_notification = (schema_dir / "ServerNotification.json").read_text(encoding="utf-8")
+thread_status_changed = (schema_dir / "v2" / "ThreadStatusChangedNotification.json").read_text(encoding="utf-8")
+
+
+def enum_body(name):
+    match = re.search(rf"enum\s+{re.escape(name)}[^{{]*\{{(?P<body>.*?)\n\}}", swift, re.S)
+    if not match:
+        raise SystemExit(f"Swift enum {name} not found in {swift_path}")
+    return match.group("body")
+
+
+def raw_string_cases(name):
+    body = enum_body(name)
+    cases = re.findall(r'case\s+\w+\s*=\s*"([^"]+)"', body)
+    if not cases:
+        raise SystemExit(f"Swift enum {name} had no raw string cases")
+    return cases
+
+
+def implicit_string_cases(name):
+    body = enum_body(name)
+    cases = re.findall(r"case\s+([A-Za-z_][A-Za-z0-9_]*)", body)
+    if not cases:
+        raise SystemExit(f"Swift enum {name} had no cases")
+    return cases
+
+
+def require_schema_text(schema_text, value, label):
+    if value not in schema_text:
+        raise SystemExit(f"schema missing Swift {label}: {value}")
+
+
+for method in raw_string_cases("CodexNotificationMethod"):
+    require_schema_text(server_notification, f'"{method}"', "CodexNotificationMethod")
+
+for flag in implicit_string_cases("CodexThreadActiveFlag"):
+    require_schema_text(thread_status_changed, f'"{flag}"', "CodexThreadActiveFlag")
+
+print("Schema-to-client check passed: Swift notification methods and active flags are present.")
+PY
+
+echo "Schema check passed: required app-server methods, client notification cases, and thread item types are present."
