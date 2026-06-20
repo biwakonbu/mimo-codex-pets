@@ -57,6 +57,53 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ])
     }
 
+    func testProductionBubblesIncludeMultipleThreadSummaries() {
+        let lines = [
+            line(threadId: "current", speaker: "tool", text: "ツールで確認中", isAssistant: true),
+            line(threadId: "other", speaker: "codex", text: "レビューできる状態になりました", isAssistant: true),
+            line(threadId: "third", speaker: "codex", text: "移動先を調整しています", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: "current",
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "Codex が作業中",
+            "ご主人、「current」はツールで確認中です",
+            "ご主人、「third」は作業を進めています",
+            "ご主人、「other」はレビューできます"
+        ])
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
+    }
+
+    func testProductionBubblesDeduplicatePrimaryConversationText() {
+        let current = line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true)
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: CodexBubbleFormatter.bubbleText(for: current),
+            conversationLines: [current],
+            preferredThreadId: "current",
+            limit: 3
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "ご主人、「current」は応答をまとめています"
+        ])
+    }
+
+    func testProductionBubblesFallbackToIdleWhenEmpty() {
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "",
+            conversationLines: [],
+            preferredThreadId: nil
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), ["待機中"])
+    }
+
     func testConversationAnimationUsesNonWalkingMotionWhenIdle() {
         let assistant = line(threadId: "a", speaker: "codex", text: "完了", isAssistant: true)
         let user = line(threadId: "a", speaker: "you", text: "お願い", isAssistant: false)

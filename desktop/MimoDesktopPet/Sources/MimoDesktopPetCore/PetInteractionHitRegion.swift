@@ -13,17 +13,17 @@ public enum PetInteractionHitRegion {
             return true
         }
 
-        let bubbleHeight = min(62.0, bounds.height)
+        let bubbleHeight = min(150.0, bounds.height)
         let bubbleRect = HitRect(
-            x: 4,
+            x: max(0, (bounds.width - 344) / 2),
             y: max(0, bounds.height - bubbleHeight),
-            width: max(0, bounds.width - 8),
+            width: min(344, bounds.width),
             height: bubbleHeight
         )
         let spriteRect = HitRect(
-            x: max(0, (bounds.width - 220) / 2),
+            x: max(0, (bounds.width - 230) / 2),
             y: 18,
-            width: min(220, bounds.width),
+            width: min(230, bounds.width),
             height: min(226, max(0, bounds.height - bubbleHeight + 18))
         )
 

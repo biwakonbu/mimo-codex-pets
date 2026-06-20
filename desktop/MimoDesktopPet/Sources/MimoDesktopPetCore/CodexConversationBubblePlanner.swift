@@ -35,6 +35,43 @@ public enum CodexConversationBubblePlanner {
         "\(line.threadId)|\(line.speaker)|\(line.text)"
     }
 
+    public static func productionBubbles(
+        primaryText: String,
+        conversationLines: [CodexConversationLine],
+        preferredThreadId: String?,
+        limit: Int = 3
+    ) -> [PetSpeechBubble] {
+        let visibleLimit = max(1, limit)
+        var texts: [String] = []
+        let primary = CodexBubbleFormatter.compact(primaryText, limit: 46)
+        if !primary.isEmpty {
+            texts.append(primary)
+        }
+
+        let conversationTexts = orderedThreadUpdates(
+            from: conversationLines,
+            preferredThreadId: preferredThreadId
+        ).map { CodexBubbleFormatter.bubbleText(for: $0) }
+
+        for text in conversationTexts where texts.count < visibleLimit {
+            let compacted = CodexBubbleFormatter.compact(text, limit: 46)
+            guard !compacted.isEmpty, !texts.contains(compacted) else { continue }
+            texts.append(compacted)
+        }
+
+        if texts.isEmpty {
+            texts.append("待機中")
+        }
+
+        return texts.prefix(visibleLimit).enumerated().map { index, text in
+            PetSpeechBubble(
+                id: "\(index)-\(text)",
+                text: text,
+                role: index == 0 ? .status : .conversation
+            )
+        }
+    }
+
     public static func insertionIndex(
         for line: CodexConversationLine,
         preferredThreadId: String?,

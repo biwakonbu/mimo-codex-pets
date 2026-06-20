@@ -83,6 +83,10 @@ Conversation behavior:
 - The production bubble queue deduplicates by thread, speaker, and sanitized
   text, then rotates the latest short report from each visible thread instead of
   pinning only one focused thread forever.
+- Production can show up to three stacked speech bubbles at once: one primary
+  status/current-thread bubble plus compact summaries from other visible
+  threads. This keeps Codex Pets-like multi-thread awareness in the production
+  surface without rendering a console, transcript feed, or debug panel.
 - `item/started` enqueues sanitized progress immediately, especially for tool
   and command activity.
 - Delta notifications enqueue generic Mimo reports such as response drafting,
@@ -116,7 +120,8 @@ Manual or visual checks:
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
   production bubble text is a Mimo-style summary of the active thread title and
   latest progress/tool activity, including notification-driven tool activity and
-  streaming delta activity, plus a second visible thread.
+  streaming delta activity, plus simultaneous stacked bubbles for a second
+  visible thread.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.

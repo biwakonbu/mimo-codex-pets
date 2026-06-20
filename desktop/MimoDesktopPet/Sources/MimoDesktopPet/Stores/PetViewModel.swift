@@ -4,6 +4,9 @@ import MimoDesktopPetCore
 @MainActor
 final class PetViewModel: ObservableObject {
     @Published private(set) var presentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
+    @Published private(set) var visibleBubbles: [PetSpeechBubble] = [
+        PetSpeechBubble(id: "0-待機中", text: "待機中", role: .status)
+    ]
     @Published private(set) var conversationLines: [CodexConversationLine] = []
     @Published var clickThrough = false
     @Published var debugOverlay: Bool
@@ -18,6 +21,7 @@ final class PetViewModel: ObservableObject {
     private var shownConversationSignatures: Set<String> = []
     private var pendingConversationLines: [CodexConversationLine] = []
     private var conversationBubbleActive = false
+    private var focusedThreadId: String?
 
     init(debugOverlay: Bool = ProcessInfo.processInfo.environment["MIMO_DEBUG_OVERLAY"] == "1") {
         self.debugOverlay = debugOverlay
@@ -52,11 +56,12 @@ final class PetViewModel: ObservableObject {
         }
         lastCodexPresentation = presentationState
         conversationLines = Array(snapshot.conversationLines.suffix(8))
+        focusedThreadId = snapshot.focusedConversationLine?.threadId
 
         if snapshot.connectionAvailable {
             enqueueConversationLines(
                 snapshot.conversationLines,
-                preferredThreadId: snapshot.focusedConversationLine?.threadId
+                preferredThreadId: focusedThreadId
             )
         } else {
             clearConversationQueue()
@@ -143,6 +148,8 @@ final class PetViewModel: ObservableObject {
     func setConnectionAvailable(_ available: Bool) {
         guard !available else { return }
         clearConversationQueue()
+        conversationLines.removeAll()
+        focusedThreadId = nil
         momentToken = UUID()
         let offline = CodexPetStateMapper.presentation(
             threadStatus: nil,
@@ -233,6 +240,11 @@ final class PetViewModel: ObservableObject {
 
     private func setPresentation(_ state: PetPresentationState) {
         presentation = state
+        visibleBubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: state.bubbleText,
+            conversationLines: conversationLines,
+            preferredThreadId: focusedThreadId
+        )
         appendPresentationLog(state)
     }
 
@@ -241,6 +253,7 @@ final class PetViewModel: ObservableObject {
         let object: [String: Any] = [
             "animation": state.animation.rawValue,
             "bubbleText": state.bubbleText,
+            "bubbleTexts": visibleBubbles.map(\.text),
             "isOffline": state.isOffline
         ]
         guard

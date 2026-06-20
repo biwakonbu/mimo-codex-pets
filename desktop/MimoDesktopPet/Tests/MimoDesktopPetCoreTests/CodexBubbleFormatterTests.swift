@@ -70,6 +70,18 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「デスクトップペット品質改善」は作業を進めています")
     }
 
+    func testGenericThreadTitleIsPresentedAsCodex() {
+        let line = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Codex Thread",
+            speaker: "codex",
+            text: "応答を作成中",
+            isAssistant: true
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「Codex」は応答をまとめています")
+    }
+
     func testCompactsLongBubbleText() {
         let line = CodexConversationLine(
             threadId: "thread",

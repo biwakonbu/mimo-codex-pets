@@ -123,6 +123,31 @@ grep -Fq 'ご主人、「Mimo runtime QA」はコマンドを実行中です' "$
 grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 
+python3 - "$PRESENTATION_LOG" <<'PY'
+import json
+import sys
+
+log_path = sys.argv[1]
+rows = []
+with open(log_path, "r", encoding="utf-8") as handle:
+    for line in handle:
+        if line.strip():
+            rows.append(json.loads(line))
+
+for row in rows:
+    bubbles = row.get("bubbleTexts", [])
+    if not isinstance(bubbles, list):
+        continue
+    if (
+        len(bubbles) >= 2
+        and any("Mimo runtime QA" in str(text) for text in bubbles)
+        and any("別スレッドの確認" in str(text) for text in bubbles)
+    ):
+        sys.exit(0)
+
+raise SystemExit("presentation log never showed multiple thread bubbles at once")
+PY
+
 screencapture -x -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 
 swift - "$SCREENSHOT_PATH" <<'SWIFT'
@@ -137,7 +162,7 @@ guard let image = NSImage(contentsOfFile: path),
     exit(1)
 }
 
-guard bitmap.pixelsWide <= 280, bitmap.pixelsHigh <= 310 else {
+guard bitmap.pixelsWide <= 380, bitmap.pixelsHigh <= 370 else {
     fputs("unexpected production window size \(bitmap.pixelsWide)x\(bitmap.pixelsHigh)\n", stderr)
     exit(1)
 }
@@ -161,4 +186,4 @@ grep -Eq '"method":"thread\\?/read"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
 
-echo "E2E passed: fake Codex app-server, notification-driven per-thread Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."
+echo "E2E passed: fake Codex app-server, notification-driven multi-thread Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."

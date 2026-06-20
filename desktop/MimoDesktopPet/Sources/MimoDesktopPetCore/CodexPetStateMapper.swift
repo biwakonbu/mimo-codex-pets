@@ -12,6 +12,23 @@ public struct PetPresentationState: Equatable, Sendable {
     }
 }
 
+public enum PetSpeechBubbleRole: String, Equatable, Sendable {
+    case status
+    case conversation
+}
+
+public struct PetSpeechBubble: Equatable, Identifiable, Sendable {
+    public let id: String
+    public let text: String
+    public let role: PetSpeechBubbleRole
+
+    public init(id: String, text: String, role: PetSpeechBubbleRole) {
+        self.id = id
+        self.text = text
+        self.role = role
+    }
+}
+
 public enum CodexPetStateMapper {
     public static func presentation(
         threadStatus: CodexThreadStatus?,
