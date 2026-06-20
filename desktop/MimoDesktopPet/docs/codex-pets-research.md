@@ -245,6 +245,7 @@ swift test
 ./script/e2e_unavailable_app_server.sh
 ./script/e2e_disconnect_app_server.sh
 ./script/e2e_reconnect_app_server.sh
+./script/e2e_single_instance.sh
 ./script/e2e_state_matrix.sh
 ./script/build_and_run.sh --verify
 ```
@@ -309,6 +310,12 @@ Manual or visual checks:
   restart and show the recovered thread summary. Production defaults to a
   4-second reconnect delay; tests can shorten this with
   `MIMO_APP_SERVER_RECONNECT_DELAY`.
+- Single-instance E2E launches a connected Mimo process and then starts a
+  second process with the same lock path. The second process must exit before
+  creating a presentation log or a second screen-saver-level CGWindow, leaving
+  the first transparent desktop pet alive. Tests use
+  `MIMO_SINGLE_INSTANCE_LOCK_PATH` so the lock is isolated from any normal user
+  launch.
 - State-matrix E2E launches against the fake app-server with autonomous motion
   disabled, waits for active, waiting, simultaneous multi-thread, review, and
   failed presentation states, captures the exact production window for each

@@ -1,11 +1,20 @@
 import AppKit
 import Darwin
 import Foundation
+import MimoDesktopPetCore
 
 @main
 enum MimoDesktopPetMain {
+    private static var singleInstanceLock: ProcessSingleInstanceLock?
+
     @MainActor
     static func main() {
+        guard let lock = ProcessSingleInstanceLock.acquire(identifier: "com.biwakonbu.MimoDesktopPet") else {
+            fputs("MimoDesktopPet is already running.\n", stderr)
+            return
+        }
+        singleInstanceLock = lock
+
         let appDelegate = AppDelegate()
         let app = NSApplication.shared
 
@@ -16,5 +25,6 @@ enum MimoDesktopPetMain {
         app.run()
 
         _ = appDelegate
+        _ = singleInstanceLock
     }
 }

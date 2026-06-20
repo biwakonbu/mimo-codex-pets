@@ -71,6 +71,7 @@ run_from_repo "shell syntax checks" bash -n \
   desktop/MimoDesktopPet/script/e2e_unavailable_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_disconnect_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_reconnect_app_server.sh \
+  desktop/MimoDesktopPet/script/e2e_single_instance.sh \
   desktop/MimoDesktopPet/script/e2e_state_matrix.sh
 run_from_repo "python syntax checks" python3 -m py_compile \
   desktop/MimoDesktopPet/script/fake_codex_app_server.py \
@@ -98,6 +99,7 @@ run_from_root "thread-read timeout production E2E" ./script/e2e_thread_read_time
 run_from_root "unavailable app-server production E2E" ./script/e2e_unavailable_app_server.sh
 run_from_root "disconnect production E2E" ./script/e2e_disconnect_app_server.sh
 run_from_root "reconnect production E2E" ./script/e2e_reconnect_app_server.sh
+run_from_root "single-instance production E2E" ./script/e2e_single_instance.sh
 run_from_root "production state matrix E2E" ./script/e2e_state_matrix.sh
 run_from_root "bundle verify" ./script/build_and_run.sh --verify
 
