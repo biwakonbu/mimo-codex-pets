@@ -41,6 +41,14 @@ Atlas contract:
 
 Live Codex screen recordings are intentionally excluded from this public repository because they include local desktop and workspace context.
 
+## Regeneration Docs
+
+- `AGENTS.md` — repository rules for future agents
+- `docs/mimo-production-history.md` — session-derived brief, decisions, repairs, and QA history
+- `docs/transparency-and-edge-pipeline.md` — chroma-key, 3px edge, edge-removal, and validation workflow
+- `docs/regeneration-runbook.md` — practical repair/regeneration checklist
+- `docs/generation-controls.md` — prompt controls for future Mimo row generation
+
 ## Validation Summary
 
 - `review.json`: errors `0`, warnings `0`
