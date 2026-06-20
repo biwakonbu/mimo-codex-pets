@@ -110,7 +110,7 @@ public enum CodexBubbleFormatter {
         if text.contains("待機") {
             return "少し待機しています"
         }
-        if text.contains("swift test") || text.contains("test") {
+        if text.contains("テスト") || text.contains("検証") || text.contains("swift test") || text.contains("test") {
             return "テストを実行中です"
         }
         if text.contains("ツール") {

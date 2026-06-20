@@ -38,6 +38,26 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「Mimo runtime QA」はテストを実行中です")
     }
 
+    func testSummarizesSanitizedCommandActivityWithoutRawCommandText() {
+        let testLine = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Mimo runtime QA",
+            speaker: "tool",
+            text: "テストを実行中",
+            isAssistant: true
+        )
+        let commandLine = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Mimo runtime QA",
+            speaker: "tool",
+            text: "コマンドを実行中",
+            isAssistant: true
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: testLine), "ご主人、「Mimo runtime QA」はテストを実行中です")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: commandLine), "ご主人、「Mimo runtime QA」はコマンドを実行中です")
+    }
+
     func testSummarizesStreamingProgressWithoutQuotingDelta() {
         let agent = CodexConversationLine(
             threadId: "thread",

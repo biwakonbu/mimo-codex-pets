@@ -174,6 +174,11 @@ Conversation behavior:
   plan updates, reasoning summary updates, command output review, file-change
   review, or tool progress. Do not display raw delta strings in production
   bubbles.
+- Command and tool-call items are sanitized before bubble planning. Command
+  executions are reduced to `テストを実行中` or `コマンドを実行中`, and MCP or
+  dynamic tool calls are reduced to `ツールを使用中`, so debug/feed state and
+  production bubbles do not carry raw commands, tool names, paths, or
+  arguments.
 - Tool activity should be summarized, not dumped.
 - Browser, file, image, skill, and mention activity should be reported as short
   generic activity such as page review, file review, image review, or skill
@@ -239,6 +244,9 @@ Manual or visual checks:
   streaming delta activity, plus simultaneous stacked bubbles for a second
   visible thread and a later secondary-thread update discovered immediately
   from notification-triggered thread reads.
+- Fake app-server E2E also injects raw command/tool/delta strings such as
+  `swift test`, `get_app_state`, and raw streaming text, then rejects any
+  production bubble log that leaks those fragments.
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, and
   `bubbleRoles`; stacked bubble-only updates should be logged for deterministic
   E2E evidence. Fake production E2E also enforces the four-bubble visible

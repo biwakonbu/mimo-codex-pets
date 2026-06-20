@@ -43,7 +43,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(lines[1].speaker, "codex")
         XCTAssertTrue(lines[1].isAssistant)
         XCTAssertEqual(lines[2].speaker, "tool")
-        XCTAssertEqual(lines[2].text, "実行: swift test")
+        XCTAssertEqual(lines[2].text, "テストを実行中")
     }
 
     func testFallsBackToThreadPreviewWhenTurnsHaveNoItems() {
@@ -86,8 +86,8 @@ final class CodexConversationExtractorTests: XCTestCase {
 
         XCTAssertEqual(lines.map(\.text), [
             "実データの text を表示",
-            "実行: swift test",
-            "ツール: get_app_state"
+            "テストを実行中",
+            "ツールを使用中"
         ])
     }
 
@@ -124,7 +124,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(lines.map(\.text), [
             "計画: UI 表示を確認してから E2E を通す",
             "表示制約を整理",
-            "ツール: use_figma",
+            "ツールを使用中",
             "Web 検索中",
             "画像を生成中",
             "文脈を整理中",
@@ -132,6 +132,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         ])
         XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("secret"))
         XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("private query"))
+        XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("use_figma"))
     }
 
     func testExtractsBrowserFileImageSkillItemsWithoutDumpingArguments() {
@@ -175,6 +176,61 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertFalse(joined.contains("secret search term"))
         XCTAssertFalse(joined.contains("private-skill-name"))
         XCTAssertFalse(joined.contains("private-thread"))
+    }
+
+    func testCommandAndToolItemsAreSanitizedBeforeBubblePlanning() {
+        let thread: [String: Any] = [
+            "id": "thread-sensitive-tools",
+            "name": "sensitive-tools",
+            "turns": [
+                [
+                    "id": "turn-1",
+                    "status": "inProgress",
+                    "items": [
+                        [
+                            "id": "command",
+                            "type": "commandExecution",
+                            "command": "cat /Users/example/private/project/.env && curl https://example.com/token"
+                        ],
+                        [
+                            "id": "test-command",
+                            "type": "commandExecution",
+                            "command": ["swift", "test", "--filter", "SecretSuite"]
+                        ],
+                        [
+                            "id": "mcp",
+                            "type": "mcpToolCall",
+                            "tool": "read_secret_workspace_file",
+                            "arguments": #"{"path":"/Users/example/private/project/file.swift"}"#
+                        ],
+                        [
+                            "id": "dynamic",
+                            "type": "dynamicToolCall",
+                            "namespace": "private_connector",
+                            "tool": "secret_operation"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        let lines = CodexConversationExtractor.lines(from: thread, maxLines: 20)
+
+        XCTAssertEqual(lines.map(\.text), [
+            "コマンドを実行中",
+            "テストを実行中",
+            "ツールを使用中",
+            "ツールを使用中"
+        ])
+
+        let joined = lines.map(\.text).joined(separator: " ")
+        XCTAssertFalse(joined.contains("/Users/example"))
+        XCTAssertFalse(joined.contains(".env"))
+        XCTAssertFalse(joined.contains("example.com/token"))
+        XCTAssertFalse(joined.contains("SecretSuite"))
+        XCTAssertFalse(joined.contains("read_secret_workspace_file"))
+        XCTAssertFalse(joined.contains("private_connector"))
+        XCTAssertFalse(joined.contains("secret_operation"))
     }
 
     func testBuildsGenericProgressLinesForDeltaNotifications() {

@@ -101,13 +101,12 @@ public enum CodexConversationExtractor {
                     text: "コマンド実行に失敗"
                 )
             }
-            let commandText = compactText(from: item["command"], limit: 56)
             return makeLine(
                 threadId: threadId,
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
-                text: commandText.map { "実行: \($0)" } ?? "コマンドを実行中"
+                text: commandActivityText(from: item["command"])
             )
         case "fileChange":
             return makeLine(
@@ -127,13 +126,12 @@ public enum CodexConversationExtractor {
                     text: "ツール実行に失敗"
                 )
             }
-            let toolName = compactText(from: firstNonEmptyValue(item["tool"], item["toolName"], item["name"]), limit: 40)
             return makeLine(
                 threadId: threadId,
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
-                text: toolName.map { "ツール: \($0)" } ?? "ツールを使用中"
+                text: "ツールを使用中"
             )
         case "dynamicToolCall":
             if itemFailed(item) {
@@ -145,13 +143,12 @@ public enum CodexConversationExtractor {
                     text: "ツール実行に失敗"
                 )
             }
-            let toolName = compactText(from: firstNonEmptyValue(item["tool"], item["namespace"]), limit: 40)
             return makeLine(
                 threadId: threadId,
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
-                text: toolName.map { "ツール: \($0)" } ?? "ツールを使用中"
+                text: "ツールを使用中"
             )
         case "collabAgentToolCall", "subAgentActivity":
             return makeLine(
@@ -435,6 +432,18 @@ public enum CodexConversationExtractor {
         }
         let index = collapsed.index(collapsed.startIndex, offsetBy: limit)
         return String(collapsed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
+    }
+
+    private static func commandActivityText(from command: Any?) -> String {
+        let raw = rawText(from: command)?.lowercased() ?? ""
+        if raw.contains(" test") ||
+            raw.hasSuffix("test") ||
+            raw.contains("xctest") ||
+            raw.contains("pytest") ||
+            raw.contains("テスト") {
+            return "テストを実行中"
+        }
+        return "コマンドを実行中"
     }
 
     private static func rawText(from value: Any?) -> String? {

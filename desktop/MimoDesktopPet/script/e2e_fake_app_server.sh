@@ -172,6 +172,17 @@ for row in rows:
     for bubble in bubbles[1:]:
         if len(str(bubble)) > 34:
             raise SystemExit(f"secondary production bubble is too long: {bubble}")
+    all_visible_text = " ".join([str(row.get("bubbleText", ""))] + [str(bubble) for bubble in bubbles])
+    forbidden_fragments = (
+        "swift test",
+        "get_app_state",
+        "raw assistant text",
+        "secret-looking command output",
+        "raw reasoning",
+    )
+    for fragment in forbidden_fragments:
+        if fragment in all_visible_text:
+            raise SystemExit(f"production bubble leaked raw Codex activity text: {fragment!r} in {all_visible_text!r}")
     if (
         len(bubbles) >= 4
         and any("Mimo runtime QA" in str(text) for text in bubbles)
