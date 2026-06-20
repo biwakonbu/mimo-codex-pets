@@ -100,6 +100,10 @@ State behavior:
   rather than per-frame random speed changes.
 - autonomous movement caps production speed at `52 pt/s`, limits each hop distance, and
   intentionally inserts rest/idle moments between hops.
+- Deterministic QA can pin the initial panel origin with
+  `MIMO_WINDOW_ORIGIN=x,y`. Visual inspection runs may set
+  `MIMO_AUTONOMOUS_DISABLED=1` to keep the pet stationary without changing the
+  production default.
 
 Conversation behavior:
 
@@ -118,10 +122,12 @@ Conversation behavior:
   already speaking for a conversation thread, that same thread is skipped in
   the secondary bubbles.
 - Production can show up to four stacked speech bubbles at once: one primary
-  status/current-thread bubble plus up to three compact summaries from other
-  visible threads. This keeps Codex Pets-like multi-thread awareness in the
-  production surface without rendering a console, transcript feed, or debug
-  panel.
+  current-thread/status bubble plus up to three compact summaries from other
+  visible threads. When a focused conversation line is available, the primary
+  bubble uses that Mimo-style thread report instead of a generic status such as
+  `Codex が作業中`; offline status keeps the generic connection bubble. This
+  keeps Codex Pets-like multi-thread awareness in the production surface without
+  rendering a console, transcript feed, or debug panel.
 - The primary production bubble is capped at 44 characters and secondary
   thread bubbles at 34 characters. Secondary bubbles render as one-line compact
   summaries so a four-bubble stack does not crowd or clip Mimo.

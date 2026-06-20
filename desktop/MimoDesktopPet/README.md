@@ -68,12 +68,17 @@ position with a 60Hz time-based tween capped at `52 pt/s`. Mimo moves in short
 hops, rests between them, and plays idle, waiting, note-taking, waving, or
 jumping moments instead of walking endlessly.
 
+For deterministic QA, set `MIMO_WINDOW_ORIGIN=x,y` to pin the initial panel
+origin inside the main visible screen. Set `MIMO_AUTONOMOUS_DISABLED=1` only for
+visual inspection runs where Mimo must stay still.
+
 In production mode the panel stays transparent and shows only Mimo plus a short
-stack of white bubbles. The primary bubble carries the current Codex status, and
-up to three secondary bubbles summarize recent visible Codex threads without
+stack of white bubbles. When Codex conversation context is available, the
+primary bubble promotes the focused thread into a short Mimo-style report. Up to
+three secondary bubbles summarize other recent visible Codex threads without
 dumping raw model output, commands, or payload text. Threads can be summarized
 from sanitized item activity or from thread/turn status alone. The stack favors
-thread coverage, so secondary bubbles show at most one summary per thread.
+thread coverage, so each visible thread appears at most once.
 
 The production panel is intentionally always on top. Use Hide or Quit from the
 menu bar item when Mimo should leave the screen.

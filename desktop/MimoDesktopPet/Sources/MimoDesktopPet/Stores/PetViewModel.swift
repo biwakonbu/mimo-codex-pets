@@ -274,11 +274,18 @@ final class PetViewModel: ObservableObject {
 
     @discardableResult
     private func refreshVisibleBubbles() -> Bool {
-        let nextBubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: presentation.bubbleText,
+        let primaryBubble = CodexConversationBubblePlanner.primaryBubble(
+            statusText: presentation.bubbleText,
             conversationLines: conversationLines,
             preferredThreadId: focusedThreadId,
-            primaryThreadId: conversationBubbleActive ? currentConversationThreadId : nil
+            activeConversationThreadId: conversationBubbleActive ? currentConversationThreadId : nil,
+            isOffline: presentation.isOffline
+        )
+        let nextBubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primaryBubble.text,
+            conversationLines: conversationLines,
+            preferredThreadId: focusedThreadId,
+            primaryThreadId: primaryBubble.threadId
         )
         guard nextBubbles != visibleBubbles else { return false }
         visibleBubbles = nextBubbles

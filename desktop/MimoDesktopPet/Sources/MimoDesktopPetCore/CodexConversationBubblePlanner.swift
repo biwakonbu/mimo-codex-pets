@@ -1,6 +1,16 @@
 import Foundation
 
 public enum CodexConversationBubblePlanner {
+    public struct PrimaryBubble: Equatable, Sendable {
+        public let text: String
+        public let threadId: String?
+
+        public init(text: String, threadId: String?) {
+            self.text = text
+            self.threadId = threadId
+        }
+    }
+
     public static func orderedThreadUpdates(
         from lines: [CodexConversationLine],
         preferredThreadId: String?
@@ -33,6 +43,31 @@ public enum CodexConversationBubblePlanner {
 
     public static func signature(for line: CodexConversationLine) -> String {
         "\(line.threadId)|\(line.speaker)|\(line.text)"
+    }
+
+    public static func primaryBubble(
+        statusText: String,
+        conversationLines: [CodexConversationLine],
+        preferredThreadId: String?,
+        activeConversationThreadId: String? = nil,
+        isOffline: Bool = false
+    ) -> PrimaryBubble {
+        if let activeConversationThreadId {
+            return PrimaryBubble(text: statusText, threadId: activeConversationThreadId)
+        }
+
+        if !isOffline,
+           let focusedLine = CodexConversationFocus.select(
+            from: conversationLines,
+            preferredThreadId: preferredThreadId
+           ) {
+            return PrimaryBubble(
+                text: CodexBubbleFormatter.bubbleText(for: focusedLine),
+                threadId: focusedLine.threadId
+            )
+        }
+
+        return PrimaryBubble(text: statusText, threadId: nil)
     }
 
     public static func productionBubbles(

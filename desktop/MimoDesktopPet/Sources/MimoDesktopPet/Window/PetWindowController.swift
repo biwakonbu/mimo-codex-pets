@@ -17,6 +17,7 @@ final class PetWindowController: NSObject {
     private let viewModel: PetViewModel
     private let zOrderPolicy = PetWindowZOrderPolicy.alwaysOnTopCompanion
     private let autonomousTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1"
+    private let autonomousDisabled = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_DISABLED"] == "1"
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
     private var movementAnimationActive = false
@@ -33,13 +34,15 @@ final class PetWindowController: NSObject {
 
         let size = viewModel.debugOverlay ? Self.debugSize : Self.productionSize
         let visibleFrame = NSScreen.main?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1_280, height: 800)
-        let origin = NSPoint(
-            x: visibleFrame.maxX - size.width - 32,
-            y: visibleFrame.minY + 80
+        let origin = PetWindowPlacement.origin(
+            visibleFrame: PetDragFrame(visibleFrame),
+            petWidth: size.width,
+            petHeight: size.height,
+            override: ProcessInfo.processInfo.environment["MIMO_WINDOW_ORIGIN"]
         )
 
         panel = NSPanel(
-            contentRect: NSRect(origin: origin, size: size),
+            contentRect: NSRect(origin: NSPoint(x: CGFloat(origin.x), y: CGFloat(origin.y)), size: size),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -222,7 +225,7 @@ final class PetWindowController: NSObject {
     private func updateAutonomousMotion() {
         let now = Date.timeIntervalSinceReferenceDate
 
-        guard panel.isVisible, !manualDragActive else { return }
+        guard panel.isVisible, !manualDragActive, !autonomousDisabled else { return }
 
         if now >= nextIdleMomentAt, autonomousMotion == nil {
             playRandomRestingMoment()

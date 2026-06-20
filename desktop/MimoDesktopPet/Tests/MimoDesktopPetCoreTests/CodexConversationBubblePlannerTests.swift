@@ -180,6 +180,48 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ])
     }
 
+    func testPrimaryBubblePromotesFocusedThreadSummaryAndSkipsDuplicateThread() {
+        let current = line(threadId: "current", speaker: "codex", text: "実行に失敗しました。確認が必要です", isAssistant: true)
+        let lines = [
+            current,
+            line(threadId: "docs", speaker: "codex", text: "資料作業を進めています", isAssistant: true),
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true)
+        ]
+
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: "実行に失敗しました",
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            limit: 4
+        )
+
+        XCTAssertEqual(primary.threadId, "current")
+        XCTAssertEqual(bubbles.map(\.text), [
+            "ご主人、「current」は失敗を確認しました",
+            "ご主人、「waiting」は確認待ちです",
+            "ご主人、「docs」は作業を進めています"
+        ])
+    }
+
+    func testPrimaryBubbleKeepsOfflineStatusText() {
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: "Codex 接続待ち",
+            conversationLines: [
+                line(threadId: "current", speaker: "codex", text: "作業を進めています", isAssistant: true)
+            ],
+            preferredThreadId: "current",
+            isOffline: true
+        )
+
+        XCTAssertEqual(primary, CodexConversationBubblePlanner.PrimaryBubble(text: "Codex 接続待ち", threadId: nil))
+    }
+
     func testProductionBubblesFallbackToIdleWhenEmpty() {
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
             primaryText: "",
