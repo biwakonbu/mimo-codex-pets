@@ -241,8 +241,44 @@ public enum CodexConversationExtractor {
         CodexConversationLine(
             threadId: threadId,
             threadTitle: threadTitle,
-            speaker: kind == "agentMessageDelta" || kind == "planDelta" ? "codex" : "tool",
+            speaker: ["agentMessageDelta", "planDelta", "turnPlanUpdated"].contains(kind) ? "codex" : "tool",
             text: progressText(for: kind),
+            isAssistant: true
+        )
+    }
+
+    public static func statusLine(
+        threadId: String,
+        threadTitle: String,
+        threadStatus: CodexThreadStatus?,
+        latestTurnStatus: CodexTurnStatus?,
+        hasRecentAssistantFinal: Bool
+    ) -> CodexConversationLine? {
+        let text: String?
+        if case .systemError = threadStatus {
+            text = "失敗を確認"
+        } else if latestTurnStatus == .failed {
+            text = "失敗を確認"
+        } else if case let .active(flags) = threadStatus {
+            if flags.contains(.waitingOnApproval) || flags.contains(.waitingOnUserInput) {
+                text = "確認待ち"
+            } else {
+                text = "作業中"
+            }
+        } else if latestTurnStatus == .inProgress {
+            text = "作業中"
+        } else if latestTurnStatus == .completed && hasRecentAssistantFinal {
+            text = "レビュー可能"
+        } else {
+            text = nil
+        }
+
+        guard let text else { return nil }
+        return CodexConversationLine(
+            threadId: threadId,
+            threadTitle: threadTitle,
+            speaker: "thread",
+            text: text,
             isAssistant: true
         )
     }

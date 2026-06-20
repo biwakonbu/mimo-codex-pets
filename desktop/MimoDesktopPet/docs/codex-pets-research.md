@@ -58,6 +58,9 @@ Verified runtime behavior:
 - Thread, turn, and item notifications should also trigger an immediate
   `thread/read(includeTurns: true)` for the affected thread, so secondary
   thread bubbles do not wait for the next periodic poll.
+- Thread status alone is useful user-visible activity. A visible thread with no
+  new item text should still be able to produce a short title + state report
+  such as active work, confirmation waiting, review available, or failure.
 - Thread name updates should retitle already visible conversation summaries.
   Thread archived, closed, or deleted notifications must remove that thread's
   cached title and bubble text immediately so stale bubbles do not linger.
@@ -98,6 +101,9 @@ State behavior:
 Conversation behavior:
 
 - Prefer a fresh `agentMessage` or `userMessage` when available.
+- Also synthesize short per-thread activity lines from `thread/status/changed`,
+  `turn/started`, `turn/completed`, `thread/list`, and `thread/read` state so a
+  thread can be reported even when recent item text is absent.
 - Production bubbles do not quote Codex speaker labels directly. They combine
   the thread title and the latest progress-like line into a short Mimo report to
   the user, such as `ご主人、「<title>」は作業を進めています`.

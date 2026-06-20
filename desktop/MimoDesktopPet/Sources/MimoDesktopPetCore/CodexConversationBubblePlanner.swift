@@ -119,7 +119,8 @@ public enum CodexConversationBubblePlanner {
         }
         return [
             "応答を作成中",
-            "計画を整理中"
+            "計画を整理中",
+            "計画を更新中"
         ].contains(line.text)
     }
 }

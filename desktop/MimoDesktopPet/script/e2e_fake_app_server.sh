@@ -126,6 +126,7 @@ grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」は作業を進めています' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「更新された別スレッド」は作業を進めています' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「状態だけのスレッド」は確認待ちです' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -275,6 +276,19 @@ close_index = next(
 )
 if close_index is None:
     raise SystemExit("fake-review close notification was not emitted")
+
+status_only_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events)
+        if direction == "out"
+        and message.get("method") == "thread/status/changed"
+        and message.get("params", {}).get("threadId") == "fake-status-only"
+    ),
+    None,
+)
+if status_only_index is None:
+    raise SystemExit("status-only thread notification was not emitted")
 PY
 
 echo "E2E passed: fake Codex app-server, notification-driven multi-thread Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."

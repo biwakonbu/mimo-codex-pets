@@ -30,6 +30,8 @@ SECOND_THREAD_TURNS = [
         ],
     }
 ]
+STATUS_ONLY_THREAD_STATUS = {"type": "idle"}
+STATUS_ONLY_THREAD_TURNS = []
 
 
 def log(message):
@@ -53,8 +55,18 @@ def second_thread_snapshot():
     }
 
 
+def status_only_thread_snapshot():
+    return {
+        "id": "fake-status-only",
+        "name": "状態だけのスレッド",
+        "preview": "ステータスだけで進捗を伝える検証",
+        "status": dict(STATUS_ONLY_THREAD_STATUS),
+        "turns": [dict(turn) for turn in STATUS_ONLY_THREAD_TURNS],
+    }
+
+
 def state_sequence():
-    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS
+    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS, STATUS_ONLY_THREAD_STATUS
     time.sleep(2.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": []}
@@ -219,6 +231,18 @@ def state_sequence():
             },
         }
     )
+    time.sleep(0.7)
+    with STATE_LOCK:
+        STATUS_ONLY_THREAD_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}
+    write_message(
+        {
+            "method": "thread/status/changed",
+            "params": {
+                "threadId": "fake-status-only",
+                "status": {"type": "active", "activeFlags": ["waitingOnUserInput"]},
+            },
+        }
+    )
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "idle"}
@@ -300,7 +324,7 @@ def run_stdio_server():
         elif method == "thread/loaded/list":
             with STATE_LOCK:
                 closed = SECOND_THREAD_CLOSED
-            ids = ["fake-thread"] if closed else ["fake-thread", "fake-review"]
+            ids = ["fake-thread", "fake-status-only"] if closed else ["fake-thread", "fake-review", "fake-status-only"]
             write_message(
                 {
                     "id": request_id,
@@ -313,6 +337,7 @@ def run_stdio_server():
                 turns = [dict(turn) for turn in CURRENT_TURNS]
                 closed = SECOND_THREAD_CLOSED
                 second_thread = second_thread_snapshot()
+                status_only_thread = status_only_thread_snapshot()
             threads = [
                 {
                     "id": "fake-thread",
@@ -324,6 +349,7 @@ def run_stdio_server():
             ]
             if not closed:
                 threads.append(second_thread)
+            threads.append(status_only_thread)
             write_message(
                 {
                     "id": request_id,
@@ -338,6 +364,9 @@ def run_stdio_server():
             if thread_id == "fake-review":
                 with STATE_LOCK:
                     thread = second_thread_snapshot()
+            elif thread_id == "fake-status-only":
+                with STATE_LOCK:
+                    thread = status_only_thread_snapshot()
             else:
                 with STATE_LOCK:
                     status = dict(CURRENT_STATUS)

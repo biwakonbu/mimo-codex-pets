@@ -119,6 +119,45 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「デスクトップペット品質改善」は作業を進めています")
     }
 
+    func testSummarizesThreadStatusLines() {
+        let cases: [(CodexConversationLine, String)] = [
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "状態だけのスレッド",
+                    speaker: "thread",
+                    text: "作業中",
+                    isAssistant: true
+                ),
+                "ご主人、「状態だけのスレッド」は作業を進めています"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "承認待ち",
+                    speaker: "thread",
+                    text: "確認待ち",
+                    isAssistant: true
+                ),
+                "ご主人、「承認待ち」は確認待ちです"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "レビュー",
+                    speaker: "thread",
+                    text: "レビュー可能",
+                    isAssistant: true
+                ),
+                "ご主人、「レビュー」はレビューできます"
+            )
+        ]
+
+        for (line, expected) in cases {
+            XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), expected)
+        }
+    }
+
     func testGenericThreadTitleIsPresentedAsCodex() {
         let line = CodexConversationLine(
             threadId: "thread",

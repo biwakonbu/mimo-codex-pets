@@ -41,6 +41,10 @@ final class CodexAppServerClient {
     private var hasRecentAssistantFinal = false
     private var threadTitlesById: [String: String] = [:]
     private var conversationByThread: [String: [CodexConversationLine]] = [:]
+    private var threadActivityById: [String: CodexConversationLine] = [:]
+    private var threadStatusesById: [String: CodexThreadStatus] = [:]
+    private var threadTurnStatusesById: [String: CodexTurnStatus] = [:]
+    private var threadAssistantFinalById: [String: Bool] = [:]
     private var threadDisplayOrder: [String] = []
     private var loadedThreadIds: [String] = []
     private var listedThreadIds: [String] = []
@@ -177,6 +181,10 @@ final class CodexAppServerClient {
         hasRecentAssistantFinal = false
         threadTitlesById.removeAll()
         conversationByThread.removeAll()
+        threadActivityById.removeAll()
+        threadStatusesById.removeAll()
+        threadTurnStatusesById.removeAll()
+        threadAssistantFinalById.removeAll()
         threadDisplayOrder.removeAll()
         loadedThreadIds.removeAll()
         listedThreadIds.removeAll()
@@ -456,10 +464,20 @@ final class CodexAppServerClient {
 
         for thread in visibleThreads {
             guard let id = thread["id"] as? String else { continue }
-            threadTitlesById[id] = threadTitle(from: thread)
+            let title = threadTitle(from: thread)
+            threadTitlesById[id] = title
             let lines = CodexConversationExtractor.lines(from: thread)
             if !lines.isEmpty {
                 conversationByThread[id] = lines
+            }
+            if let snapshot = decodeThreadSnapshot(from: thread) {
+                updateThreadActivity(
+                    threadId: snapshot.id,
+                    title: title,
+                    threadStatus: snapshot.status,
+                    latestTurnStatus: snapshot.turns.last?.status,
+                    hasRecentAssistantFinal: snapshot.turns.last?.status == .completed
+                )
             }
         }
 
@@ -489,12 +507,20 @@ final class CodexAppServerClient {
             return
         }
 
-        threadTitlesById[snapshot.id] = threadTitle(from: threadObject)
+        let title = threadTitle(from: threadObject)
+        threadTitlesById[snapshot.id] = title
         rememberThreadOrder([snapshot.id])
         let lines = CodexConversationExtractor.lines(from: threadObject)
         if !lines.isEmpty {
             conversationByThread[snapshot.id] = lines
         }
+        updateThreadActivity(
+            threadId: snapshot.id,
+            title: title,
+            threadStatus: snapshot.status,
+            latestTurnStatus: snapshot.turns.last?.status,
+            hasRecentAssistantFinal: snapshot.turns.last?.status == .completed
+        )
 
         if selectedThreadId == nil {
             selectedThreadId = snapshot.id
@@ -522,8 +548,15 @@ final class CodexAppServerClient {
                         latestTurnStatus = .failed
                         hasRecentAssistantFinal = false
                     }
-                    emitSnapshot(connectionAvailable: true)
                 }
+                updateThreadActivity(
+                    threadId: payload.threadId,
+                    title: threadTitlesById[payload.threadId] ?? "Codex Thread",
+                    threadStatus: payload.status,
+                    latestTurnStatus: threadTurnStatusesById[payload.threadId],
+                    hasRecentAssistantFinal: threadAssistantFinalById[payload.threadId] ?? false
+                )
+                emitSnapshot(connectionAvailable: true)
             }
         case .threadNameUpdated:
             if let payload = decodeNotificationParams(ThreadNameUpdatedNotification.self, from: params) {
@@ -551,6 +584,13 @@ final class CodexAppServerClient {
                 rememberThreadOrder([payload.threadId])
                 latestTurnStatus = .inProgress
                 hasRecentAssistantFinal = false
+                updateThreadActivity(
+                    threadId: payload.threadId,
+                    title: threadTitlesById[payload.threadId] ?? "Codex Thread",
+                    threadStatus: threadStatusesById[payload.threadId] ?? .active(activeFlags: []),
+                    latestTurnStatus: .inProgress,
+                    hasRecentAssistantFinal: false
+                )
                 sendThreadRead(threadId: payload.threadId)
                 emitSnapshot(connectionAvailable: true)
             }
@@ -561,6 +601,13 @@ final class CodexAppServerClient {
                 rememberThreadOrder([payload.threadId])
                 latestTurnStatus = payload.turn.status
                 hasRecentAssistantFinal = payload.turn.status == .completed
+                updateThreadActivity(
+                    threadId: payload.threadId,
+                    title: threadTitlesById[payload.threadId] ?? "Codex Thread",
+                    threadStatus: threadStatusesById[payload.threadId],
+                    latestTurnStatus: payload.turn.status,
+                    hasRecentAssistantFinal: payload.turn.status == .completed
+                )
                 sendThreadRead(threadId: payload.threadId)
                 emitSnapshot(connectionAvailable: true)
             }
@@ -643,6 +690,36 @@ final class CodexAppServerClient {
         emitSnapshot(connectionAvailable: true)
     }
 
+    private func updateThreadActivity(
+        threadId: String,
+        title: String,
+        threadStatus: CodexThreadStatus?,
+        latestTurnStatus: CodexTurnStatus?,
+        hasRecentAssistantFinal: Bool
+    ) {
+        if let threadStatus {
+            threadStatusesById[threadId] = threadStatus
+        }
+        if let latestTurnStatus {
+            threadTurnStatusesById[threadId] = latestTurnStatus
+        } else {
+            threadTurnStatusesById.removeValue(forKey: threadId)
+        }
+        threadAssistantFinalById[threadId] = hasRecentAssistantFinal
+
+        if let line = CodexConversationExtractor.statusLine(
+            threadId: threadId,
+            threadTitle: title,
+            threadStatus: threadStatus,
+            latestTurnStatus: latestTurnStatus,
+            hasRecentAssistantFinal: hasRecentAssistantFinal
+        ) {
+            threadActivityById[threadId] = line
+        } else {
+            threadActivityById.removeValue(forKey: threadId)
+        }
+    }
+
     private func emitSnapshot(connectionAvailable: Bool) {
         cancelHandshakeTimeout()
         onStateSnapshot?(
@@ -677,6 +754,10 @@ final class CodexAppServerClient {
         guard !ids.isEmpty else {
             threadTitlesById.removeAll()
             conversationByThread.removeAll()
+            threadActivityById.removeAll()
+            threadStatusesById.removeAll()
+            threadTurnStatusesById.removeAll()
+            threadAssistantFinalById.removeAll()
             threadDisplayOrder.removeAll()
             selectedThreadId = nil
             latestThreadStatus = nil
@@ -687,6 +768,10 @@ final class CodexAppServerClient {
 
         threadTitlesById = threadTitlesById.filter { ids.contains($0.key) }
         conversationByThread = conversationByThread.filter { ids.contains($0.key) }
+        threadActivityById = threadActivityById.filter { ids.contains($0.key) }
+        threadStatusesById = threadStatusesById.filter { ids.contains($0.key) }
+        threadTurnStatusesById = threadTurnStatusesById.filter { ids.contains($0.key) }
+        threadAssistantFinalById = threadAssistantFinalById.filter { ids.contains($0.key) }
         threadDisplayOrder = threadDisplayOrder.filter { ids.contains($0) }
         if let selectedThreadId, !ids.contains(selectedThreadId) {
             self.selectedThreadId = threadDisplayOrder.last ?? ids.first
@@ -704,6 +789,10 @@ final class CodexAppServerClient {
         listedThreadIds.removeAll { $0 == threadId }
         threadTitlesById.removeValue(forKey: threadId)
         conversationByThread.removeValue(forKey: threadId)
+        threadActivityById.removeValue(forKey: threadId)
+        threadStatusesById.removeValue(forKey: threadId)
+        threadTurnStatusesById.removeValue(forKey: threadId)
+        threadAssistantFinalById.removeValue(forKey: threadId)
         threadDisplayOrder.removeAll { $0 == threadId }
         if selectedThreadId == threadId {
             selectedThreadId = threadDisplayOrder.last
@@ -715,21 +804,35 @@ final class CodexAppServerClient {
 
     private func retitleThread(threadId: String, title: String) {
         threadTitlesById[threadId] = title
-        guard let lines = conversationByThread[threadId] else { return }
-        conversationByThread[threadId] = lines.map { line in
-            CodexConversationLine(
-                threadId: line.threadId,
+        if let lines = conversationByThread[threadId] {
+            conversationByThread[threadId] = lines.map { line in
+                CodexConversationLine(
+                    threadId: line.threadId,
+                    threadTitle: title,
+                    speaker: line.speaker,
+                    text: line.text,
+                    isAssistant: line.isAssistant
+                )
+            }
+        }
+        if let activity = threadActivityById[threadId] {
+            threadActivityById[threadId] = CodexConversationLine(
+                threadId: activity.threadId,
                 threadTitle: title,
-                speaker: line.speaker,
-                text: line.text,
-                isAssistant: line.isAssistant
+                speaker: activity.speaker,
+                text: activity.text,
+                isAssistant: activity.isAssistant
             )
         }
     }
 
     private func combinedConversationLines() -> [CodexConversationLine] {
         let orderedLines = threadDisplayOrder.flatMap { threadId in
-            Array((conversationByThread[threadId] ?? []).suffix(3))
+            var lines = Array((conversationByThread[threadId] ?? []).suffix(3))
+            if let activity = threadActivityById[threadId] {
+                lines.append(activity)
+            }
+            return lines
         }
         return Array(orderedLines.suffix(12))
     }
@@ -749,6 +852,13 @@ final class CodexAppServerClient {
         lines.append(line)
         conversationByThread[threadId] = Array(lines.suffix(6))
         rememberThreadOrder([threadId])
+        updateThreadActivity(
+            threadId: threadId,
+            title: title,
+            threadStatus: threadStatusesById[threadId] ?? .active(activeFlags: []),
+            latestTurnStatus: .inProgress,
+            hasRecentAssistantFinal: false
+        )
     }
 
     private func appendProgressLine(from params: Any?, kind: String) {
@@ -769,6 +879,13 @@ final class CodexAppServerClient {
         rememberThreadOrder([threadId])
         latestTurnStatus = .inProgress
         hasRecentAssistantFinal = false
+        updateThreadActivity(
+            threadId: threadId,
+            title: title,
+            threadStatus: threadStatusesById[threadId] ?? .active(activeFlags: []),
+            latestTurnStatus: .inProgress,
+            hasRecentAssistantFinal: false
+        )
         emitSnapshot(connectionAvailable: true)
     }
 

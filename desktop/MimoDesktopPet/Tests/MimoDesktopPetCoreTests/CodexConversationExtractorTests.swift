@@ -162,8 +162,46 @@ final class CodexConversationExtractorTests: XCTestCase {
             kind: "reasoningDelta"
         )
 
+        XCTAssertEqual(plan.speaker, "codex")
         XCTAssertEqual(plan.text, "計画を更新中")
         XCTAssertEqual(reasoning.text, "文脈を整理中")
+    }
+
+    func testBuildsStatusLinesFromThreadState() {
+        let active = CodexConversationExtractor.statusLine(
+            threadId: "thread-active",
+            threadTitle: "実装",
+            threadStatus: .active(activeFlags: []),
+            latestTurnStatus: .inProgress,
+            hasRecentAssistantFinal: false
+        )
+        let waiting = CodexConversationExtractor.statusLine(
+            threadId: "thread-waiting",
+            threadTitle: "確認",
+            threadStatus: .active(activeFlags: [.waitingOnUserInput]),
+            latestTurnStatus: .inProgress,
+            hasRecentAssistantFinal: false
+        )
+        let review = CodexConversationExtractor.statusLine(
+            threadId: "thread-review",
+            threadTitle: "レビュー",
+            threadStatus: .idle,
+            latestTurnStatus: .completed,
+            hasRecentAssistantFinal: true
+        )
+        let idle = CodexConversationExtractor.statusLine(
+            threadId: "thread-idle",
+            threadTitle: "待機",
+            threadStatus: .idle,
+            latestTurnStatus: nil,
+            hasRecentAssistantFinal: false
+        )
+
+        XCTAssertEqual(active?.speaker, "thread")
+        XCTAssertEqual(active?.text, "作業中")
+        XCTAssertEqual(waiting?.text, "確認待ち")
+        XCTAssertEqual(review?.text, "レビュー可能")
+        XCTAssertNil(idle)
     }
 
     func testSuppressesMachinePayloadText() {

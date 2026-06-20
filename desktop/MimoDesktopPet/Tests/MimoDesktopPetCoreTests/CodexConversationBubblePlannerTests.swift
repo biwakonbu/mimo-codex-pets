@@ -38,6 +38,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         let lines = [
             line(threadId: "current", speaker: "tool", text: "ツールで確認中", isAssistant: true),
             line(threadId: "current", speaker: "codex", text: "応答を作成中", isAssistant: true),
+            line(threadId: "current", speaker: "codex", text: "計画を更新中", isAssistant: true),
             line(threadId: "current", speaker: "tool", text: "コマンド出力を確認中", isAssistant: true),
             line(threadId: "current", speaker: "codex", text: "最後の通常応答", isAssistant: true),
             line(threadId: "other", speaker: "codex", text: "別スレッド", isAssistant: true)
@@ -51,6 +52,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(planned.map(\.text), [
             "ツールで確認中",
             "応答を作成中",
+            "計画を更新中",
             "コマンド出力を確認中",
             "最後の通常応答",
             "別スレッド"
