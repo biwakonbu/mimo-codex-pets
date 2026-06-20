@@ -56,6 +56,9 @@ loaded-list, thread-list, and thread-read calls against the local app-server.
 `./script/check_app_server_schema.sh` verifies the generated app-server schema
 and cross-checks that the Swift notification enum and active flags remain
 schema-backed.
+`./script/check_title_sanitizer_parity.py` verifies that the live smoke helper
+and Swift production formatter keep the same ambient title sanitization behavior
+for safe, unsafe, instruction-looking, nested, and fallback thread titles.
 `./script/live_app_presentation_smoke.sh` launches the real app process with a
 temporary presentation log and verifies that it leaves the offline/connection
 state after connecting. When the live app-server exposes readable threads, the

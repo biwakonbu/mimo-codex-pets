@@ -159,6 +159,11 @@ Conversation behavior:
   token-like strings, and credential/secret markers are skipped; if another
   safe title or preview exists it is used, otherwise the bubble falls back to
   `Codex`.
+- The live app presentation smoke uses Python to preflight expected sanitized
+  title candidates. `check_title_sanitizer_parity.py` and
+  `title_sanitizer_fixtures.json` keep that helper aligned with the Swift
+  production formatter so live-smoke expectations do not drift from production
+  bubble behavior.
 - The production bubble queue deduplicates by thread and final Mimo report text,
   so multiple raw Codex events that summarize to the same short bubble do not
   make Mimo repeat itself. It then rotates the latest short report from each

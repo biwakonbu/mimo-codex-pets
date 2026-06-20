@@ -166,32 +166,13 @@ if requiresMultiBubbleHierarchy {
         fail("primary bubble is not separated below the secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
 
-    let primaryTailCandidates = components.filter { component in
-        isBubbleTail(component) &&
-            component.minY > primary.maxY &&
-            component.maxY <= primary.maxY + 32 &&
-            component.minX >= primary.minX &&
-            component.maxX <= primary.maxX
-    }
-    guard primaryTailCandidates.count == 1, let primaryTail = primaryTailCandidates.first else {
-        fail("multi-thread capture should show exactly one primary bubble tail, found \(primaryTailCandidates.count): \(describe(primaryTailCandidates))")
-    }
-    let primaryCenterX = (primary.minX + primary.maxX) / 2
-    let tailCenterX = (primaryTail.minX + primaryTail.maxX) / 2
-    guard abs(tailCenterX - primaryCenterX) <= primary.width / 5 else {
-        fail("primary bubble tail is not centered under the primary bubble: primary=\(describe(primary)), tail=\(describe(primaryTail))")
+    guard hasCenteredTailTaper(mask: whiteMask, width: width, component: primary) else {
+        fail("primary bubble does not have a centered speech-tail taper: primary=\(describe(primary))")
     }
 
     for secondary in secondaryComponents {
-        let secondaryTailCandidates = components.filter { component in
-            isBubbleTail(component) &&
-                component.minY > secondary.maxY &&
-                component.maxY <= secondary.maxY + 32 &&
-                component.minX >= secondary.minX &&
-                component.maxX <= secondary.maxX
-        }
-        guard secondaryTailCandidates.isEmpty else {
-            fail("secondary context chip unexpectedly has a speech tail: secondary=\(describe(secondary)), tails=\(describe(secondaryTailCandidates))")
+        guard !hasCenteredTailTaper(mask: whiteMask, width: width, component: secondary) else {
+            fail("secondary context chip unexpectedly has a speech-tail taper: secondary=\(describe(secondary))")
         }
     }
 
@@ -267,11 +248,39 @@ func describe(_ components: [WhiteComponent]) -> String {
     "[" + components.map(describe).joined(separator: "; ") + "]"
 }
 
-func isBubbleTail(_ component: WhiteComponent) -> Bool {
-    component.area >= 45 &&
-        component.area <= 260 &&
-        component.width >= 14 &&
-        component.width <= 54 &&
-        component.height >= 6 &&
-        component.height <= 22
+func hasCenteredTailTaper(mask: [Bool], width: Int, component: WhiteComponent) -> Bool {
+    let centerX = (component.minX + component.maxX) / 2
+    let startY = max(component.minY, component.maxY - 6)
+    let endY = component.maxY
+    var centeredNarrowRows = 0
+    var previousSpanWidth: Int?
+
+    for y in startY...endY {
+        guard let span = whiteSpan(mask: mask, width: width, y: y, minX: component.minX, maxX: component.maxX) else {
+            continue
+        }
+        let spanWidth = span.maxX - span.minX + 1
+        let spanCenterX = (span.minX + span.maxX) / 2
+        guard spanWidth >= 2, spanWidth <= 18, abs(spanCenterX - centerX) <= 8 else {
+            continue
+        }
+        if let previousSpanWidth, spanWidth > previousSpanWidth + 8 {
+            continue
+        }
+        centeredNarrowRows += 1
+        previousSpanWidth = spanWidth
+    }
+
+    return centeredNarrowRows >= 3
+}
+
+func whiteSpan(mask: [Bool], width: Int, y: Int, minX: Int, maxX: Int) -> (minX: Int, maxX: Int)? {
+    var first: Int?
+    var last: Int?
+    for x in minX...maxX where mask[y * width + x] {
+        first = first ?? x
+        last = x
+    }
+    guard let first, let last else { return nil }
+    return (first, last)
 }

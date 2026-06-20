@@ -81,7 +81,9 @@ run_from_repo "python syntax checks" python3 -m py_compile \
   desktop/MimoDesktopPet/script/fake_hanging_read_codex_app_server.py \
   desktop/MimoDesktopPet/script/fake_overflow_codex_app_server.py \
   desktop/MimoDesktopPet/script/fake_recovering_codex_app_server.py \
+  desktop/MimoDesktopPet/script/check_title_sanitizer_parity.py \
   desktop/MimoDesktopPet/script/live_app_server_smoke.py
+run_from_root "title sanitizer smoke parity check" ./script/check_title_sanitizer_parity.py
 run_from_repo "git whitespace check" git diff --check
 
 if [[ "$RUN_LIVE" == "1" ]]; then

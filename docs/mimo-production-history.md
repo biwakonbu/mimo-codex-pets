@@ -225,6 +225,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   aligned `initialize.clientInfo` and `capabilities.experimentalApi`
 - the app reads `thread/loaded/list`, `thread/list(limit: 6)`, and
   `thread/read(includeTurns: true)` and sanitizes item text before display
+- live presentation smoke title expectations are checked against the same
+  shared fixture cases as the Swift production title formatter, preventing the
+  Python preflight helper from drifting away from production bubble behavior
 - periodic refresh uses `thread/loaded/list` to re-read visible threads, so
   secondary thread bubbles can update after initial load
 - refresh-cycle reads are coalesced across `thread/loaded/list` and

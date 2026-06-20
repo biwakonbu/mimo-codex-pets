@@ -1,0 +1,55 @@
+[
+  {
+    "name": "short safe title",
+    "candidates": ["実装"],
+    "expectedLimit16": "実装",
+    "expectedLimit12": "実装"
+  },
+  {
+    "name": "long safe title truncates by character limit",
+    "candidates": ["Mimo desktop production bubbles"],
+    "expectedLimit16": "Mimo desktop pro...",
+    "expectedLimit12": "Mimo desktop..."
+  },
+  {
+    "name": "unsafe path falls back to next safe preview",
+    "candidates": [
+      "/Users/example/private/project/.env",
+      {
+        "preview": "Mimo QA"
+      }
+    ],
+    "expectedLimit16": "Mimo QA",
+    "expectedLimit12": "Mimo QA"
+  },
+  {
+    "name": "instruction-looking titles fall back to Codex",
+    "candidates": [
+      "You are selected text from an instruction block",
+      "<codex_internal_context source=\"goal\">Continue working",
+      "Codex Thread"
+    ],
+    "expectedLimit16": "Codex",
+    "expectedLimit12": "Codex"
+  },
+  {
+    "name": "nested content collapses whitespace",
+    "candidates": [
+      {
+        "content": ["Mimo", "  title   sanitizer"]
+      }
+    ],
+    "expectedLimit16": "Mimo title sanit...",
+    "expectedLimit12": "Mimo title s..."
+  },
+  {
+    "name": "only sensitive titles fall back to Codex",
+    "candidates": [
+      "secret token 0123456789abcdef0123456789abcdef",
+      "user@example.com settings",
+      "Codex Thread"
+    ],
+    "expectedLimit16": "Codex",
+    "expectedLimit12": "Codex"
+  }
+]
