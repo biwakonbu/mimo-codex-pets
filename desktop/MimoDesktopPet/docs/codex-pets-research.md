@@ -300,9 +300,9 @@ Manual or visual checks:
   presentation log, verifies that the UI state leaves offline/connection
   presentation after a real app-server connection, and when the same live
   app-server exposes readable threads, requires a production `focus` or
-  `conversation` bubble sourced from that live thread context. It then captures
-  the exact production window and runs `inspect_production_capture.swift`
-  against it.
+  `conversation` bubble whose title matches a sanitized title candidate from
+  that live thread context. It then captures the exact production window and
+  runs `inspect_production_capture.swift` against it.
 - Disconnect E2E launches against a fake app-server that reaches a connected
   thread-summary state and then exits. Mimo must stay alive, keep the production
   surface transparent, and show `Codex 接続切れ` instead of leaving stale

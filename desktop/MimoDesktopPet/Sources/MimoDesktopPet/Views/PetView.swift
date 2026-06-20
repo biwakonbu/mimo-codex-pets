@@ -169,9 +169,9 @@ struct BubbleView: View {
                         .fill(accent.opacity(0.95))
                         .frame(width: 5, height: 22)
                 case .conversation:
-                    Capsule(style: .continuous)
+                    Circle()
                         .fill(accent.opacity(0.92))
-                        .frame(width: 4, height: 18)
+                        .frame(width: 7, height: 7)
                 case .overflow:
                     ZStack {
                         Capsule(style: .continuous)
@@ -265,10 +265,8 @@ struct BubbleView: View {
 
     private var fontWeight: Font.Weight {
         switch role {
-        case .status, .focus, .overflow:
+        case .status, .focus, .conversation, .overflow:
             return .medium
-        case .conversation:
-            return .regular
         }
     }
 

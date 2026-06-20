@@ -78,11 +78,11 @@ public enum PetSpeechBubbleLayout {
         case 1:
             offsets = [(0, 0)]
         case 2:
-            offsets = [(0, 0), (-92, -78)]
+            offsets = [(0, 0), (-100, -76)]
         case 3:
-            offsets = [(0, 0), (-96, -78), (96, -134)]
+            offsets = [(0, 0), (-106, -78), (104, -132)]
         default:
-            offsets = [(0, 0), (-98, -72), (98, -124), (-46, -176)]
+            offsets = [(0, 0), (-106, -70), (104, -122), (-54, -174)]
         }
         let offset = offsets[normalizedIndex]
         let isPrimary = normalizedIndex == 0
@@ -104,7 +104,7 @@ public enum PetSpeechBubbleLayout {
         case .status, .focus:
             return 318
         case .conversation:
-            return 216
+            return 204
         case .overflow:
             return 176
         }
@@ -115,7 +115,7 @@ public enum PetSpeechBubbleLayout {
         case .status, .focus:
             return 0.96
         case .conversation:
-            return 0.84
+            return 0.88
         case .overflow:
             return 0.88
         }
@@ -126,7 +126,7 @@ public enum PetSpeechBubbleLayout {
         case .status, .focus:
             return isPrimary ? 1.0 : 0.94
         case .conversation:
-            return 0.94
+            return 0.9
         case .overflow:
             return 0.9
         }

@@ -47,7 +47,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .focus), 2)
     }
 
-    func testThreeBubbleStackKeepsPrimaryBubbleAttachedToMimo() {
+    func testThreeBubbleStackKeepsPrimaryBubbleAttachedToMimoWithCompactThreadChips() {
         let status = PetSpeechBubbleLayout.placement(
             for: 0,
             role: .status,
@@ -66,18 +66,18 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(status.verticalOffset, 0)
         XCTAssertEqual(firstThread.verticalOffset, -78)
-        XCTAssertEqual(secondThread.verticalOffset, -134)
+        XCTAssertEqual(secondThread.verticalOffset, -132)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
-        XCTAssertEqual(firstThread.maxTextWidth, 216)
-        XCTAssertEqual(secondThread.maxTextWidth, 216)
-        XCTAssertEqual(firstThread.scale, 0.94)
-        XCTAssertEqual(secondThread.scale, 0.94)
+        XCTAssertEqual(firstThread.maxTextWidth, 204)
+        XCTAssertEqual(secondThread.maxTextWidth, 204)
+        XCTAssertEqual(firstThread.scale, 0.9)
+        XCTAssertEqual(secondThread.scale, 0.9)
         XCTAssertGreaterThan(status.zIndex, firstThread.zIndex)
         XCTAssertGreaterThan(firstThread.zIndex, secondThread.zIndex)
     }
 
-    func testFourBubbleStackShowsThreeThreadSummariesAsCompactContext() {
+    func testFourBubbleStackFansOutCompactThreadChipsAroundPrimaryBubble() {
         let status = PetSpeechBubbleLayout.placement(
             for: 0,
             role: .status,
@@ -100,19 +100,20 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(status.verticalOffset, 0)
-        XCTAssertEqual(firstThread.verticalOffset, -72)
-        XCTAssertEqual(secondThread.verticalOffset, -124)
-        XCTAssertEqual(thirdThread.verticalOffset, -176)
+        XCTAssertEqual(firstThread.verticalOffset, -70)
+        XCTAssertEqual(secondThread.verticalOffset, -122)
+        XCTAssertEqual(thirdThread.verticalOffset, -174)
         XCTAssertLessThan(firstThread.horizontalOffset, 0)
         XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
         XCTAssertLessThan(thirdThread.horizontalOffset, secondThread.horizontalOffset)
-        XCTAssertEqual(firstThread.maxTextWidth, 216)
-        XCTAssertEqual(secondThread.maxTextWidth, 216)
-        XCTAssertEqual(thirdThread.maxTextWidth, 216)
+        XCTAssertEqual(firstThread.maxTextWidth, 204)
+        XCTAssertEqual(secondThread.maxTextWidth, 204)
+        XCTAssertEqual(thirdThread.maxTextWidth, 204)
         XCTAssertEqual(status.scale, 1)
-        XCTAssertEqual(firstThread.scale, 0.94)
-        XCTAssertEqual(secondThread.scale, 0.94)
-        XCTAssertEqual(thirdThread.scale, 0.94)
+        XCTAssertEqual(firstThread.scale, 0.9)
+        XCTAssertEqual(secondThread.scale, 0.9)
+        XCTAssertEqual(thirdThread.scale, 0.9)
+        XCTAssertLessThan(firstThread.maxTextWidth, status.maxTextWidth - 100)
     }
 
     func testOverflowBubbleUsesCounterTreatmentInLastContextSlot() {
@@ -122,8 +123,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: 4
         )
 
-        XCTAssertEqual(overflow.verticalOffset, -176)
-        XCTAssertEqual(overflow.horizontalOffset, -46)
+        XCTAssertEqual(overflow.verticalOffset, -174)
+        XCTAssertEqual(overflow.horizontalOffset, -54)
         XCTAssertEqual(overflow.maxTextWidth, 176)
         XCTAssertEqual(overflow.fillOpacity, 0.88)
         XCTAssertEqual(overflow.scale, 0.9)
@@ -139,8 +140,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
-        XCTAssertEqual(placement.verticalOffset, -176)
-        XCTAssertEqual(placement.horizontalOffset, -46)
+        XCTAssertEqual(placement.verticalOffset, -174)
+        XCTAssertEqual(placement.horizontalOffset, -54)
     }
 
     func testFourBubbleFanFitsInsideProductionStackWidth() {
@@ -176,5 +177,27 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.scale < primary.scale })
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.maxTextWidth < primary.maxTextWidth })
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.zIndex < primary.zIndex })
+    }
+
+    func testSecondaryThreadChipsStayVisuallySubordinateToFocusedPrimaryBubble() {
+        let primary = PetSpeechBubbleLayout.placement(
+            for: 0,
+            role: .focus,
+            visibleCount: 4
+        )
+        let secondary = (1..<PetSpeechBubbleLayout.productionVisibleLimit).map { index in
+            PetSpeechBubbleLayout.placement(
+                for: index,
+                role: index == 3 ? .overflow : .conversation,
+                visibleCount: 4
+            )
+        }
+
+        XCTAssertEqual(primary.scale, 1)
+        XCTAssertEqual(primary.fillOpacity, 0.96)
+        XCTAssertEqual(primary.maxTextWidth, 318)
+        XCTAssertTrue(secondary.allSatisfy { $0.scale <= 0.9 })
+        XCTAssertTrue(secondary.allSatisfy { $0.fillOpacity < primary.fillOpacity })
+        XCTAssertTrue(secondary.allSatisfy { $0.maxTextWidth <= 204 || $0.role == .overflow })
     }
 }
