@@ -129,7 +129,11 @@ capture_and_inspect() {
   local label="$1"
   local path="$CAPTURE_DIR/$label.png"
   screencapture -x -o -l "$WINDOW_ID" "$path"
-  swift ./script/inspect_production_capture.swift "$path"
+  if [[ "$label" == "multi-thread" ]]; then
+    swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$path"
+  else
+    swift ./script/inspect_production_capture.swift "$path"
+  fi
 }
 
 wait_for_presentation "active" "running" "Mimo runtime QA" "0"

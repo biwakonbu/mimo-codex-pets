@@ -216,13 +216,21 @@ Manual or visual checks:
 
 - Computer Use should be attempted when available, but current production-window
   evidence comes from CGWindow discovery and `screencapture -l` because
-  Computer Use may not attach to `LSUIElement` screen-saver-level panels.
+  Computer Use may not attach to `LSUIElement` screen-saver-level panels. On
+  2026-06-21, Computer Use returned only `remoteConnection` for
+  `MimoDesktopPet`, and refused `com.openai.codex` for safety reasons, so
+  current visual evidence remains CGWindow capture plus pixel inspection.
 - Window capture corner alpha is transparent.
 - Window capture reports the Mimo window at screen-saver layer.
 - `script/inspect_production_capture.swift` verifies that the captured
   production window is neither blank nor a debug-style opaque panel: it must
   contain transparent background, white speech-bubble pixels, and Mimo sprite
   color pixels.
+- Multi-thread state captures additionally run
+  `inspect_production_capture.swift --multi-bubble-hierarchy`, which segments
+  white bubble components and verifies exactly four bubble surfaces: the
+  primary Mimo report must be widest, visually largest, and separated below the
+  three secondary context bubbles.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
@@ -250,7 +258,8 @@ Manual or visual checks:
 - State-matrix E2E launches against the fake app-server with autonomous motion
   disabled, waits for active, waiting, simultaneous multi-thread, review, and
   failed presentation states, captures the exact production window for each
-  state, and runs `inspect_production_capture.swift` against every image.
+  state, runs `inspect_production_capture.swift` against every image, and
+  applies the hierarchy check to the simultaneous multi-thread image.
 - `Debug Overlay` can be toggled from the menu and is not enabled by default.
 - Temporary screenshots and logs stay under `/tmp` and are not committed.
 

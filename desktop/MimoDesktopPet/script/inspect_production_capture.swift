@@ -16,16 +16,30 @@ struct CaptureStats {
     var opaqueRatio: Double { Double(opaquePixels) / Double(totalPixels) }
 }
 
+struct WhiteComponent {
+    let area: Int
+    let minX: Int
+    let minY: Int
+    let maxX: Int
+    let maxY: Int
+
+    var width: Int { maxX - minX + 1 }
+    var height: Int { maxY - minY + 1 }
+}
+
 func fail(_ message: String) -> Never {
     fputs("\(message)\n", stderr)
     exit(1)
 }
 
-guard CommandLine.arguments.count == 2 else {
-    fail("usage: swift script/inspect_production_capture.swift <window-capture.png>")
+let requiresMultiBubbleHierarchy = CommandLine.arguments.contains("--multi-bubble-hierarchy")
+let positionalArguments = CommandLine.arguments.dropFirst().filter { !$0.hasPrefix("--") }
+
+guard positionalArguments.count == 1 else {
+    fail("usage: swift script/inspect_production_capture.swift [--multi-bubble-hierarchy] <window-capture.png>")
 }
 
-let path = CommandLine.arguments[1]
+let path = positionalArguments[0]
 guard let image = NSImage(contentsOfFile: path),
       let tiff = image.tiffRepresentation,
       let bitmap = NSBitmapImageRep(data: tiff)
@@ -51,6 +65,7 @@ var opaquePixels = 0
 var whiteBubblePixels = 0
 var spriteColorPixels = 0
 var darkOpaquePixels = 0
+var whiteMask = [Bool](repeating: false, count: width * height)
 
 for y in 0..<height {
     for x in 0..<width {
@@ -68,6 +83,7 @@ for y in 0..<height {
         }
         if alpha > 0.7, red > 0.88, green > 0.88, blue > 0.88 {
             whiteBubblePixels += 1
+            whiteMask[y * width + x] = true
         }
         if alpha > 0.5,
            !(red > 0.88 && green > 0.88 && blue > 0.88),
@@ -117,6 +133,42 @@ guard stats.darkOpaquePixels <= 1_500 else {
     fail("production capture has too much opaque dark fill for a transparent panel: \(stats.darkOpaquePixels)")
 }
 
+if requiresMultiBubbleHierarchy {
+    let components = whiteComponents(mask: whiteMask, width: width, height: height)
+    let bubbleComponents = components.filter { component in
+        component.area >= 3_000 &&
+            component.width >= 150 &&
+            component.height >= 22 &&
+            component.maxY <= 245
+    }
+
+    guard bubbleComponents.count == 4 else {
+        fail("multi-thread capture should show exactly four white bubble components, found \(bubbleComponents.count): \(describe(bubbleComponents))")
+    }
+
+    guard let primary = bubbleComponents.max(by: { $0.maxY < $1.maxY }) else {
+        fail("multi-thread capture had no primary bubble candidate")
+    }
+    let secondaryComponents = bubbleComponents.filter {
+        $0.minX != primary.minX || $0.minY != primary.minY || $0.maxX != primary.maxX || $0.maxY != primary.maxY
+    }
+    let maxSecondaryWidth = secondaryComponents.map(\.width).max() ?? 0
+    let maxSecondaryArea = secondaryComponents.map(\.area).max() ?? 0
+    let lowestSecondaryBottom = secondaryComponents.map(\.maxY).max() ?? 0
+
+    guard primary.width >= maxSecondaryWidth + 50 else {
+        fail("primary bubble is not visibly wider than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    }
+    guard primary.area >= Int(Double(maxSecondaryArea) * 1.35) else {
+        fail("primary bubble is not visibly more prominent than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    }
+    guard primary.minY >= lowestSecondaryBottom + 12 else {
+        fail("primary bubble is not separated below the secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    }
+
+    print("Multi-bubble hierarchy inspection passed: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+}
+
 print(
     "Production capture inspection passed: " +
     "size=\(stats.width)x\(stats.height), " +
@@ -124,3 +176,64 @@ print(
     "whiteBubblePixels=\(stats.whiteBubblePixels), " +
     "spriteColorPixels=\(stats.spriteColorPixels)"
 )
+
+func whiteComponents(mask: [Bool], width: Int, height: Int) -> [WhiteComponent] {
+    var visited = [Bool](repeating: false, count: mask.count)
+    var components: [WhiteComponent] = []
+
+    for startIndex in mask.indices {
+        guard mask[startIndex], !visited[startIndex] else { continue }
+
+        var queue = [startIndex]
+        var cursor = 0
+        visited[startIndex] = true
+
+        let startX = startIndex % width
+        let startY = startIndex / width
+        var area = 0
+        var minX = startX
+        var maxX = startX
+        var minY = startY
+        var maxY = startY
+
+        while cursor < queue.count {
+            let index = queue[cursor]
+            cursor += 1
+
+            let x = index % width
+            let y = index / width
+            area += 1
+            minX = min(minX, x)
+            maxX = max(maxX, x)
+            minY = min(minY, y)
+            maxY = max(maxY, y)
+
+            let neighbors = [
+                x > 0 ? index - 1 : nil,
+                x + 1 < width ? index + 1 : nil,
+                y > 0 ? index - width : nil,
+                y + 1 < height ? index + width : nil
+            ]
+
+            for optionalNeighbor in neighbors {
+                guard let neighbor = optionalNeighbor, mask[neighbor], !visited[neighbor] else {
+                    continue
+                }
+                visited[neighbor] = true
+                queue.append(neighbor)
+            }
+        }
+
+        components.append(WhiteComponent(area: area, minX: minX, minY: minY, maxX: maxX, maxY: maxY))
+    }
+
+    return components
+}
+
+func describe(_ component: WhiteComponent) -> String {
+    "area=\(component.area),x=\(component.minX)-\(component.maxX),y=\(component.minY)-\(component.maxY),size=\(component.width)x\(component.height)"
+}
+
+func describe(_ components: [WhiteComponent]) -> String {
+    "[" + components.map(describe).joined(separator: "; ") + "]"
+}
