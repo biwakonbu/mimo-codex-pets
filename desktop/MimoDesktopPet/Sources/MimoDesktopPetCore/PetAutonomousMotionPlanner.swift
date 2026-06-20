@@ -20,7 +20,37 @@ public struct PetAutonomousStep: Equatable, Sendable {
     }
 }
 
+public struct PetAutonomousMovementBounds: Equatable, Sendable {
+    public var minX: Double
+    public var maxX: Double
+    public var minY: Double
+    public var maxY: Double
+
+    public init(minX: Double, maxX: Double, minY: Double, maxY: Double) {
+        self.minX = minX
+        self.maxX = maxX
+        self.minY = minY
+        self.maxY = maxY
+    }
+}
+
 public enum PetAutonomousMotionPlanner {
+    public static func movementBounds(
+        visibleFrame: PetDragFrame,
+        petWidth: Double,
+        petHeight: Double,
+        margin: Double = 24
+    ) -> PetAutonomousMovementBounds {
+        let minX = visibleFrame.x + margin
+        let minY = visibleFrame.y + margin
+        return PetAutonomousMovementBounds(
+            minX: minX,
+            maxX: max(minX, visibleFrame.x + visibleFrame.width - petWidth - margin),
+            minY: minY,
+            maxY: max(minY, visibleFrame.y + visibleFrame.height - petHeight - margin)
+        )
+    }
+
     public static func target(
         visibleFrame: PetDragFrame,
         petWidth: Double,
@@ -29,13 +59,31 @@ public enum PetAutonomousMotionPlanner {
         randomX: Double,
         randomY: Double
     ) -> PetWanderPoint {
-        let minX = visibleFrame.x + margin
-        let minY = visibleFrame.y + margin
-        let maxX = max(minX, visibleFrame.x + visibleFrame.width - petWidth - margin)
-        let maxY = max(minY, visibleFrame.y + visibleFrame.height - petHeight - margin)
+        let bounds = movementBounds(
+            visibleFrame: visibleFrame,
+            petWidth: petWidth,
+            petHeight: petHeight,
+            margin: margin
+        )
         return PetWanderPoint(
-            x: interpolate(from: minX, to: maxX, unit: randomX),
-            y: interpolate(from: minY, to: maxY, unit: randomY)
+            x: interpolate(from: bounds.minX, to: bounds.maxX, unit: randomX),
+            y: interpolate(from: bounds.minY, to: bounds.maxY, unit: randomY)
+        )
+    }
+
+    public static func limitedTarget(
+        start: PetWanderPoint,
+        rawTarget: PetWanderPoint,
+        maximumDistance: Double
+    ) -> PetWanderPoint {
+        let deltaX = rawTarget.x - start.x
+        let deltaY = rawTarget.y - start.y
+        let distance = hypot(deltaX, deltaY)
+        let limit = max(maximumDistance, 0)
+        guard limit > 0, distance > limit else { return rawTarget }
+        return PetWanderPoint(
+            x: start.x + deltaX / distance * limit,
+            y: start.y + deltaY / distance * limit
         )
     }
 

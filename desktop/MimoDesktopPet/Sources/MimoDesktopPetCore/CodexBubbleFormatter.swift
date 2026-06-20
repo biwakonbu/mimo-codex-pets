@@ -1,9 +1,10 @@
 import Foundation
 
 public enum CodexBubbleFormatter {
-    public static func bubbleText(for line: CodexConversationLine, limit: Int = 42) -> String {
-        let speaker = speakerLabel(for: line)
-        return compact("\(speaker): \(line.text)", limit: limit)
+    public static func bubbleText(for line: CodexConversationLine, limit: Int = 46) -> String {
+        let title = compactTitle(line.threadTitle)
+        let summary = mimoSummary(for: line)
+        return compact("ご主人、「\(title)」は\(summary)", limit: limit)
     }
 
     public static func compact(_ text: String, limit: Int = 42) -> String {
@@ -16,18 +17,54 @@ public enum CodexBubbleFormatter {
         return String(collapsed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
     }
 
-    private static func speakerLabel(for line: CodexConversationLine) -> String {
-        switch line.speaker {
-        case "you":
-            return "あなた"
-        case "codex":
-            return "Codex"
-        case "tool":
-            return "作業"
-        case "thread":
-            return "スレッド"
-        default:
-            return line.isAssistant ? "Codex" : "更新"
+    private static func compactTitle(_ title: String, limit: Int = 16) -> String {
+        let compacted = compact(title, limit: limit)
+        return compacted.isEmpty ? "Codex" : compacted
+    }
+
+    private static func mimoSummary(for line: CodexConversationLine) -> String {
+        let text = line.text.lowercased()
+
+        if text.contains("失敗") || text.contains("エラー") || text.contains("failed") || text.contains("systemerror") {
+            return "失敗を確認しました"
         }
+        if text.contains("レビュー") || text.contains("完了") || text.contains("通っています") || text.contains("できる状態") {
+            return "レビューできます"
+        }
+        if line.speaker == "tool" {
+            return toolSummary(for: text)
+        }
+        if line.speaker == "you" {
+            return "依頼を確認しました"
+        }
+        if text.contains("待ち") || text.contains("待って") || text.contains("入力") || text.contains("確認が必要") {
+            return "確認待ちです"
+        }
+        if text.contains("テスト") || text.contains("検証") || text.contains("qa") {
+            return "検証中です"
+        }
+        if text.contains("実装") || text.contains("修正") || text.contains("作業") || text.contains("調整") || text.contains("移動") {
+            return "作業を進めています"
+        }
+        if line.isAssistant {
+            return "進捗を確認しました"
+        }
+        return "更新を確認しました"
+    }
+
+    private static func toolSummary(for text: String) -> String {
+        if text.contains("swift test") || text.contains("test") {
+            return "テストを実行中です"
+        }
+        if text.contains("ツール") {
+            return "ツールで確認中です"
+        }
+        if text.contains("ファイル") || text.contains("変更") {
+            return "変更を反映中です"
+        }
+        if text.contains("実行") || text.contains("command") {
+            return "コマンドを実行中です"
+        }
+        return "作業中です"
     }
 }

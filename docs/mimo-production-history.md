@@ -188,13 +188,21 @@ Live Codex QA:
 The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separate from the Codex pet package. It reuses the same public Mimo atlas, but production runtime behavior is app-side:
 
 - the default window is transparent and borderless
+- the window uses macOS screen-saver level plus all-Spaces/fullscreen auxiliary
+  behavior so Mimo stays above normal apps
 - status and recent Codex activity are shown only as short speech-bubble text
+- production speech bubbles summarize the current thread title and latest
+  progress-like line as Mimo's report to the user instead of dumping speaker
+  labels or tool output
 - the white conversation-feed panel is a `Debug Overlay` menu mode, not the production surface
-- Codex state is read through `codex app-server --stdio` JSON-RPC with `initialize.version = 1`
+- Codex state is read through `codex app-server --stdio` JSON-RPC with schema
+  aligned `initialize.clientInfo` and `capabilities.experimentalApi`
 - the app reads `thread/loaded/list`, `thread/list`, and `thread/read(includeTurns: true)` and sanitizes item text before display
-- autonomous wandering uses a test-covered planner that chooses visible-screen targets and moves without overshooting
+- autonomous wandering uses a test-covered planner that chooses visible-screen
+  targets, caps production speed at `52 pt/s`, limits each hop distance, and uses a 60Hz
+  time-based tween that moves smoothly without overshooting
 
-Local desktop captures from companion QA must stay out of the repository. Use `/tmp` for runtime screenshots. The local E2E smoke test is `desktop/MimoDesktopPet/script/e2e_fake_app_server.sh`; it verifies the fake app-server flow, production window size, transparent screenshot corners, and thread read calls.
+Local desktop captures from companion QA must stay out of the repository. Use `/tmp` for runtime screenshots. The local E2E smoke test is `desktop/MimoDesktopPet/script/e2e_fake_app_server.sh`; it verifies the fake app-server flow, Mimo-style production bubble summaries, production window size, screen-saver window layer, smooth movement, transparent screenshot corners, and thread read calls. The live read-only app-server smoke test is `desktop/MimoDesktopPet/script/live_app_server_smoke.py`. The live app presentation smoke test is `desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh`; it launches the real app with a temporary `/tmp` presentation log and verifies that the visible presentation leaves the offline/connection state after a real app-server connection.
 
 ## Public Repository Decision
 

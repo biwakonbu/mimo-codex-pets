@@ -8,12 +8,22 @@ final class PetViewModel: ObservableObject {
     @Published var clickThrough = false
     @Published var debugOverlay: Bool
 
+    private let presentationLogURL: URL?
     private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
     private var momentToken = UUID()
     private var lastConversationSignature: String?
 
     init(debugOverlay: Bool = ProcessInfo.processInfo.environment["MIMO_DEBUG_OVERLAY"] == "1") {
         self.debugOverlay = debugOverlay
+        if let path = ProcessInfo.processInfo.environment["MIMO_PRESENTATION_LOG"], !path.isEmpty {
+            let url = URL(fileURLWithPath: path)
+            presentationLogURL = url
+            try? FileManager.default.removeItem(at: url)
+            FileManager.default.createFile(atPath: path, contents: nil)
+            appendPresentationLog(presentation)
+        } else {
+            presentationLogURL = nil
+        }
     }
 
     func apply(snapshot: CodexStateSnapshot) {
@@ -36,7 +46,8 @@ final class PetViewModel: ObservableObject {
         }
         lastCodexPresentation = presentationState
         conversationLines = Array(snapshot.conversationLines.suffix(5))
-        if let line = conversationLines.last, shouldShowConversation(line) {
+        if let line = snapshot.focusedConversationLine ?? conversationLines.last,
+           shouldShowConversation(line) {
             showTemporaryPresentation(
                 PetPresentationState(
                     animation: presentationState.animation,
@@ -46,7 +57,7 @@ final class PetViewModel: ObservableObject {
                 duration: 4.0
             )
         } else {
-            presentation = presentationState
+            setPresentation(presentationState)
         }
     }
 
@@ -60,19 +71,19 @@ final class PetViewModel: ObservableObject {
             connectionAvailable: false
         )
         lastCodexPresentation = offline
-        presentation = offline
+        setPresentation(offline)
     }
 
     func beginDrag(deltaX: CGFloat) {
         momentToken = UUID()
-        presentation = CodexPetStateMapper.dragPresentation(deltaX: Double(deltaX))
+        setPresentation(CodexPetStateMapper.dragPresentation(deltaX: Double(deltaX)))
     }
 
     func beginDrag(animation: PetAnimationState) {
         momentToken = UUID()
         let next = PetPresentationState(animation: animation, bubbleText: "移動中")
         guard presentation != next else { return }
-        presentation = next
+        setPresentation(next)
     }
 
     func beginAmbientMovement(animation: PetAnimationState) {
@@ -82,12 +93,12 @@ final class PetViewModel: ObservableObject {
             isOffline: presentation.isOffline
         )
         guard presentation != next else { return }
-        presentation = next
+        setPresentation(next)
     }
 
     func endDrag() {
         momentToken = UUID()
-        presentation = lastCodexPresentation
+        setPresentation(lastCodexPresentation)
     }
 
     func playMoment(animation: PetAnimationState, bubbleText: String? = nil, duration: TimeInterval = 1.8) {
@@ -125,16 +136,45 @@ final class PetViewModel: ObservableObject {
         duration: TimeInterval
     ) {
         momentToken = token
-        presentation = state
+        setPresentation(state)
 
         Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
             guard let self, self.momentToken == token else { return }
-            self.presentation = PetPresentationState(
+            self.setPresentation(PetPresentationState(
                 animation: self.lastCodexPresentation.animation,
                 bubbleText: self.lastCodexPresentation.bubbleText,
                 isOffline: self.lastCodexPresentation.isOffline
-            )
+            ))
+        }
+    }
+
+    private func setPresentation(_ state: PetPresentationState) {
+        presentation = state
+        appendPresentationLog(state)
+    }
+
+    private func appendPresentationLog(_ state: PetPresentationState) {
+        guard let presentationLogURL else { return }
+        let object: [String: Any] = [
+            "animation": state.animation.rawValue,
+            "bubbleText": state.bubbleText,
+            "isOffline": state.isOffline
+        ]
+        guard
+            let data = try? JSONSerialization.data(withJSONObject: object),
+            let newline = "\n".data(using: .utf8)
+        else { return }
+
+        if let handle = try? FileHandle(forWritingTo: presentationLogURL) {
+            _ = try? handle.seekToEnd()
+            _ = try? handle.write(contentsOf: data)
+            _ = try? handle.write(contentsOf: newline)
+            _ = try? handle.close()
+        } else {
+            var line = data
+            line.append(newline)
+            try? line.write(to: presentationLogURL)
         }
     }
 }

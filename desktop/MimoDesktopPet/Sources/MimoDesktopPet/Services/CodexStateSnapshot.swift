@@ -8,6 +8,7 @@ struct CodexStateSnapshot: Equatable {
     var connectionAvailable: Bool
     var offlineBubbleText: String?
     var conversationLines: [CodexConversationLine] = []
+    var focusedConversationLine: CodexConversationLine?
 
     static let offline = CodexStateSnapshot(
         threadStatus: nil,
@@ -15,6 +16,7 @@ struct CodexStateSnapshot: Equatable {
         hasRecentAssistantFinal: false,
         connectionAvailable: false,
         offlineBubbleText: nil,
-        conversationLines: []
+        conversationLines: [],
+        focusedConversationLine: nil
     )
 }

@@ -233,7 +233,7 @@ def main():
     log("argv " + json.dumps(args))
     if args == ["app-server", "daemon", "start"]:
         return 0
-    if len(args) >= 2 and args[0] == "app-server" and args[1] == "--stdio":
+    if len(args) >= 2 and args[0] == "app-server" and args[1] in ("--stdio", "proxy"):
         run_stdio_server()
         return 0
     return 2

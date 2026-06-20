@@ -2,7 +2,7 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class CodexBubbleFormatterTests: XCTestCase {
-    func testFormatsAssistantLineForBubble() {
+    func testSummarizesAssistantLineAsMimoReport() {
         let line = CodexConversationLine(
             threadId: "thread",
             threadTitle: "実装",
@@ -11,10 +11,10 @@ final class CodexBubbleFormatterTests: XCTestCase {
             isAssistant: true
         )
 
-        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "Codex: レビューできる状態になりました")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「実装」はレビューできます")
     }
 
-    func testFormatsUserLineForBubble() {
+    func testSummarizesUserLineAsAcknowledgement() {
         let line = CodexConversationLine(
             threadId: "thread",
             threadTitle: "実装",
@@ -23,21 +23,45 @@ final class CodexBubbleFormatterTests: XCTestCase {
             isAssistant: false
         )
 
-        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "あなた: 透明な表示にして")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「実装」は依頼を確認しました")
+    }
+
+    func testSummarizesToolLineWithoutDumpingCommand() {
+        let line = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Mimo runtime QA",
+            speaker: "tool",
+            text: "実行: swift test --verbose",
+            isAssistant: true
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「Mimo runtime QA」はテストを実行中です")
+    }
+
+    func testSummarizesActiveWorkFromProgressMessage() {
+        let line = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "デスクトップペット品質改善",
+            speaker: "codex",
+            text: "移動先を決めながら作業しています",
+            isAssistant: true
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「デスクトップペット品質改善」は作業を進めています")
     }
 
     func testCompactsLongBubbleText() {
         let line = CodexConversationLine(
             threadId: "thread",
-            threadTitle: "実装",
+            threadTitle: String(repeating: "長いタイトル", count: 10),
             speaker: "codex",
             text: String(repeating: "長い本文", count: 20),
             isAssistant: true
         )
 
-        let bubble = CodexBubbleFormatter.bubbleText(for: line)
+        let bubble = CodexBubbleFormatter.bubbleText(for: line, limit: 24)
 
-        XCTAssertLessThanOrEqual(bubble.count, 42)
+        XCTAssertLessThanOrEqual(bubble.count, 24)
         XCTAssertTrue(bubble.hasSuffix("..."))
     }
 }

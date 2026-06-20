@@ -7,18 +7,21 @@ import MimoDesktopPetCore
 final class PetWindowController: NSObject {
     private static let productionSize = NSSize(width: 270, height: 300)
     private static let debugSize = NSSize(width: 320, height: 430)
+    private static let maximumProductionSpeed = 52.0
+    private static let maximumProductionStepDistance = 170.0
 
     private let panel: NSPanel
     private let viewModel: PetViewModel
+    private let zOrderPolicy = PetWindowZOrderPolicy.alwaysOnTopCompanion
+    private let autonomousTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1"
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
     private var movementAnimationActive = false
     private var manualDragActive = false
-    private var autonomousTarget: NSPoint?
-    private var autonomousBaseSpeed: CGFloat = 72
+    private var autonomousMotion: PetAutonomousMotionTween?
     private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + 2.0
+    private var nextAutonomousRetargetAt = Date.timeIntervalSinceReferenceDate + 10.0
     private var nextIdleMomentAt = Date.timeIntervalSinceReferenceDate + 4.0
-    private var lastAutonomousTick = Date.timeIntervalSinceReferenceDate
     private var cancellables: Set<AnyCancellable> = []
 
     init(viewModel: PetViewModel) {
@@ -39,13 +42,18 @@ final class PetWindowController: NSObject {
         )
         super.init()
 
+        if autonomousTestMode {
+            let now = Date.timeIntervalSinceReferenceDate
+            autonomousRestUntil = now
+            nextAutonomousRetargetAt = now + 60
+            nextIdleMomentAt = .greatestFiniteMagnitude
+        }
+
         panel.title = "Mimo Desktop Pet"
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = viewModel.debugOverlay
-        panel.level = .floating
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.hidesOnDeactivate = false
+        applyWindowZOrderPolicy()
         panel.isMovableByWindowBackground = true
 
         let frameProvider: AtlasFrameImageProvider?
@@ -73,7 +81,7 @@ final class PetWindowController: NSObject {
             },
             onDragStarted: { [weak self] in
                 self?.manualDragActive = true
-                self?.autonomousTarget = nil
+                self?.autonomousMotion = nil
             },
             onDragAnimationChanged: { [weak viewModel] animation in
                 viewModel?.beginDrag(animation: animation)
@@ -114,6 +122,7 @@ final class PetWindowController: NSObject {
     }
 
     func show() {
+        applyWindowZOrderPolicy()
         panel.orderFrontRegardless()
     }
 
@@ -124,7 +133,7 @@ final class PetWindowController: NSObject {
     private func startMovementTracking() {
         movementTimer?.invalidate()
         let timer = Timer(
-            timeInterval: 1.0 / 15.0,
+            timeInterval: 1.0 / 60.0,
             target: self,
             selector: #selector(movementTimerFired),
             userInfo: nil,
@@ -141,7 +150,25 @@ final class PetWindowController: NSObject {
         panel.backgroundColor = .clear
         panel.isOpaque = false
         panel.hasShadow = debugOverlay
+        applyWindowZOrderPolicy()
         panel.setFrame(NSRect(origin: nextOrigin, size: size), display: true, animate: false)
+    }
+
+    private func applyWindowZOrderPolicy() {
+        panel.level = zOrderPolicy.levelKind.nsWindowLevel
+
+        var behavior: NSWindow.CollectionBehavior = []
+        if zOrderPolicy.joinsAllSpaces {
+            behavior.insert(.canJoinAllSpaces)
+        }
+        if zOrderPolicy.joinsFullscreenSpaces {
+            behavior.insert(.fullScreenAuxiliary)
+        }
+        if zOrderPolicy.staysOutOfWindowCycle {
+            behavior.insert(.ignoresCycle)
+        }
+        panel.collectionBehavior = behavior
+        panel.hidesOnDeactivate = !zOrderPolicy.staysVisibleWhenInactive
     }
 
     @objc private func movementTimerFired() {
@@ -183,75 +210,105 @@ final class PetWindowController: NSObject {
 
     private func updateAutonomousMotion() {
         let now = Date.timeIntervalSinceReferenceDate
-        let deltaTime = min(max(now - lastAutonomousTick, 0), 0.2)
-        lastAutonomousTick = now
 
         guard panel.isVisible, !manualDragActive else { return }
 
-        if now >= nextIdleMomentAt, autonomousTarget == nil {
+        if now >= nextIdleMomentAt, autonomousMotion == nil {
             playRandomRestingMoment()
-            nextIdleMomentAt = now + Double.random(in: 4.5...9.0)
+            nextIdleMomentAt = now + Double.random(in: 3.0...6.5)
         }
 
-        if autonomousTarget == nil, now >= autonomousRestUntil {
-            if Double.random(in: 0...1) < 0.72 {
-                chooseNextAutonomousTarget()
+        if autonomousMotion == nil, now >= autonomousRestUntil {
+            if autonomousTestMode || Double.random(in: 0...1) < 0.52 {
+                chooseNextAutonomousMotion(now: now)
             } else {
-                autonomousRestUntil = now + Double.random(in: 2.0...5.0)
+                autonomousRestUntil = now + Double.random(in: 3.5...8.0)
                 playRandomRestingMoment()
             }
         }
 
-        guard let target = autonomousTarget else { return }
+        guard let motion = autonomousMotion else { return }
 
-        var frame = panel.frame
-        let current = frame.origin
-        let wave = 0.82 + 0.24 * sin(now * 2.7)
-        let jitter = CGFloat.random(in: 0.84...1.18)
-        let step = PetAutonomousMotionPlanner.step(
-            current: PetWanderPoint(x: current.x, y: current.y),
-            target: PetWanderPoint(x: target.x, y: target.y),
-            baseSpeed: Double(autonomousBaseSpeed),
-            elapsed: deltaTime,
-            wave: wave,
-            jitter: Double(jitter)
-        )
-        guard !step.reachedTarget else {
-            autonomousTarget = nil
-            autonomousRestUntil = now + Double.random(in: 2.0...6.0)
+        let position = motion.position(at: now)
+        panel.setFrameOrigin(NSPoint(x: position.origin.x, y: position.origin.y))
+
+        if position.isComplete {
+            autonomousMotion = nil
+            autonomousRestUntil = now + Double.random(in: 3.5...8.5)
+            playRandomRestingMoment()
             return
         }
-        frame.origin = NSPoint(x: CGFloat(step.origin.x), y: CGFloat(step.origin.y))
-        panel.setFrame(frame, display: true)
 
-        if Double.random(in: 0...1) < 0.002 {
-            chooseNextAutonomousTarget()
+        if now >= nextAutonomousRetargetAt {
+            chooseNextAutonomousMotion(now: now)
         }
     }
 
-    private func chooseNextAutonomousTarget() {
+    private func chooseNextAutonomousMotion(now: TimeInterval) {
         let screens = NSScreen.screens
         let screen = screens.randomElement() ?? NSScreen.main
         let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1_280, height: 800)
-        let target = PetAutonomousMotionPlanner.target(
-            visibleFrame: PetDragFrame(visibleFrame),
-            petWidth: panel.frame.width,
-            petHeight: panel.frame.height,
-            randomX: Double.random(in: 0...1),
-            randomY: Double.random(in: 0...1)
+        let start = PetWanderPoint(x: panel.frame.minX, y: panel.frame.minY)
+        let target: PetWanderPoint
+        let baseSpeed: Double
+        let speedWaveAmplitude: Double
+        let speedWaveCycles: Double
+        let speedWavePhase: Double
+        if autonomousTestMode {
+            let bounds = PetAutonomousMotionPlanner.movementBounds(
+                visibleFrame: PetDragFrame(visibleFrame),
+                petWidth: panel.frame.width,
+                petHeight: panel.frame.height
+            )
+            let targetX = start.x - 240 >= bounds.minX
+                ? start.x - 240
+                : min(bounds.maxX, start.x + 240)
+            target = PetWanderPoint(
+                x: targetX,
+                y: min(max(start.y + 36, bounds.minY), bounds.maxY)
+            )
+            baseSpeed = 66
+            speedWaveAmplitude = 0.12
+            speedWaveCycles = 1.5
+            speedWavePhase = 0
+        } else {
+            let rawTarget = PetAutonomousMotionPlanner.target(
+                visibleFrame: PetDragFrame(visibleFrame),
+                petWidth: panel.frame.width,
+                petHeight: panel.frame.height,
+                randomX: Double.random(in: 0...1),
+                randomY: Double.random(in: 0...1)
+            )
+            target = PetAutonomousMotionPlanner.limitedTarget(
+                start: start,
+                rawTarget: rawTarget,
+                maximumDistance: Self.maximumProductionStepDistance
+            )
+            baseSpeed = Double.random(in: 30...Self.maximumProductionSpeed)
+            speedWaveAmplitude = Double.random(in: 0.08...0.18)
+            speedWaveCycles = Double.random(in: 1.0...2.4)
+            speedWavePhase = Double.random(in: 0...(2 * Double.pi))
+        }
+        autonomousMotion = PetAutonomousMotionTween.make(
+            start: start,
+            target: target,
+            startTime: now,
+            baseSpeed: baseSpeed,
+            maximumSpeed: Self.maximumProductionSpeed,
+            speedWaveAmplitude: speedWaveAmplitude,
+            speedWaveCycles: speedWaveCycles,
+            speedWavePhase: speedWavePhase
         )
-        autonomousTarget = NSPoint(
-            x: CGFloat(target.x),
-            y: CGFloat(target.y)
-        )
-        autonomousBaseSpeed = CGFloat.random(in: 42...105)
+        nextAutonomousRetargetAt = now + (autonomousTestMode ? 60 : Double.random(in: 10.0...22.0))
     }
 
     private func playRandomRestingMoment() {
         let options: [(PetAnimationState, String?)] = [
-            (.running, viewModel.conversationLines.isEmpty ? nil : "メモ中"),
+            (.idle, nil),
+            (.review, viewModel.conversationLines.isEmpty ? nil : "メモ中"),
             (.waving, nil),
             (.jumping, nil),
+            (.waiting, nil),
             (.waiting, nil)
         ]
         guard let option = options.randomElement() else { return }
@@ -416,5 +473,14 @@ private extension NSRect {
             width: frame.width,
             height: frame.height
         )
+    }
+}
+
+private extension PetWindowLevelKind {
+    var nsWindowLevel: NSWindow.Level {
+        switch self {
+        case .screenSaver:
+            return .screenSaver
+        }
     }
 }

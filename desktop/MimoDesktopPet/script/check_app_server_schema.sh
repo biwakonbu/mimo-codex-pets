@@ -19,6 +19,8 @@ require_pattern() {
 }
 
 require_pattern "ClientRequest.json" '"initialize"'
+require_pattern "v1/InitializeParams.json" '"clientInfo"'
+require_pattern "v1/InitializeParams.json" '"experimentalApi"'
 require_pattern "ClientRequest.json" '"thread/loaded/list"'
 require_pattern "ClientRequest.json" '"thread/list"'
 require_pattern "ClientRequest.json" '"thread/read"'

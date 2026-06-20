@@ -15,7 +15,6 @@ final class CodexAppServerClient {
 
     private enum DaemonStartResult {
         case available
-        case standaloneMissing
         case unavailable
     }
 
@@ -55,8 +54,6 @@ final class CodexAppServerClient {
             switch self.startDaemonBestEffort() {
             case .available:
                 self.startAppServerStdio()
-            case .standaloneMissing:
-                self.transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: "Codex app-server 未設定")
             case .unavailable:
                 self.startAppServerStdio()
             }
@@ -83,11 +80,6 @@ final class CodexAppServerClient {
             process.waitUntilExit()
             if process.terminationStatus == 0 {
                 return .available
-            }
-            let errorData = stderr.fileHandleForReading.readDataToEndOfFile()
-            let errorText = String(data: errorData, encoding: .utf8) ?? ""
-            if errorText.contains("managed standalone Codex install not found") {
-                return .standaloneMissing
             }
             return .unavailable
         } catch {
@@ -229,7 +221,6 @@ final class CodexAppServerClient {
         sendRequest(
             method: "initialize",
             params: [
-                "version": 1,
                 "clientInfo": [
                     "name": "mimo_desktop_pet",
                     "title": "Mimo Desktop Pet",
@@ -595,7 +586,8 @@ final class CodexAppServerClient {
                 hasRecentAssistantFinal: hasRecentAssistantFinal,
                 connectionAvailable: connectionAvailable,
                 offlineBubbleText: connectionAvailable ? nil : offlineBubbleText,
-                conversationLines: connectionAvailable ? combinedConversationLines() : []
+                conversationLines: connectionAvailable ? combinedConversationLines() : [],
+                focusedConversationLine: connectionAvailable ? focusedConversationLine() : nil
             )
         )
     }
@@ -612,6 +604,13 @@ final class CodexAppServerClient {
     private func combinedConversationLines() -> [CodexConversationLine] {
         let orderedLines = threadDisplayOrder.flatMap { conversationByThread[$0] ?? [] }
         return Array(orderedLines.suffix(6))
+    }
+
+    private func focusedConversationLine() -> CodexConversationLine? {
+        CodexConversationFocus.select(
+            from: combinedConversationLines(),
+            preferredThreadId: selectedThreadId
+        )
     }
 
     private func appendConversationLine(from item: Any?, threadId: String) {
