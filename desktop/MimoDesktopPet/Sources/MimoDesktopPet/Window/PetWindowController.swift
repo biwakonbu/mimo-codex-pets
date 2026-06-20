@@ -5,7 +5,10 @@ import MimoDesktopPetCore
 
 @MainActor
 final class PetWindowController: NSObject {
-    private static let productionSize = NSSize(width: 360, height: 350)
+    private static let productionSize = NSSize(
+        width: CGFloat(PetSpeechBubbleLayout.productionWindowWidth),
+        height: CGFloat(PetSpeechBubbleLayout.productionWindowHeight)
+    )
     private static let debugSize = NSSize(width: 320, height: 430)
     private static let maximumProductionSpeed = 52.0
     private static let maximumProductionStepDistance = 170.0

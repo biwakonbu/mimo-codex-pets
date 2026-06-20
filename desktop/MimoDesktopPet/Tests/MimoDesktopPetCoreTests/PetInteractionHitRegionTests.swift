@@ -3,11 +3,11 @@ import XCTest
 
 final class PetInteractionHitRegionTests: XCTestCase {
     func testProductionHitRegionIncludesBubbleAndSprite() {
-        let bounds = PetDragFrame(x: 0, y: 0, width: 360, height: 350)
+        let bounds = productionBounds()
 
         XCTAssertTrue(
             PetInteractionHitRegion.contains(
-                point: PetWanderPoint(x: 180, y: 316),
+                point: PetWanderPoint(x: 180, y: 326),
                 bounds: bounds,
                 debugOverlay: false
             )
@@ -22,7 +22,7 @@ final class PetInteractionHitRegionTests: XCTestCase {
     }
 
     func testProductionHitRegionRejectsTransparentCorners() {
-        let bounds = PetDragFrame(x: 0, y: 0, width: 360, height: 350)
+        let bounds = productionBounds()
 
         XCTAssertFalse(
             PetInteractionHitRegion.contains(
@@ -33,7 +33,7 @@ final class PetInteractionHitRegionTests: XCTestCase {
         )
         XCTAssertFalse(
             PetInteractionHitRegion.contains(
-                point: PetWanderPoint(x: 358, y: 80),
+                point: PetWanderPoint(x: PetSpeechBubbleLayout.productionWindowWidth - 2, y: 80),
                 bounds: bounds,
                 debugOverlay: false
             )
@@ -49,6 +49,15 @@ final class PetInteractionHitRegionTests: XCTestCase {
                 bounds: bounds,
                 debugOverlay: true
             )
+        )
+    }
+
+    private func productionBounds() -> PetDragFrame {
+        PetDragFrame(
+            x: 0,
+            y: 0,
+            width: PetSpeechBubbleLayout.productionWindowWidth,
+            height: PetSpeechBubbleLayout.productionWindowHeight
         )
     }
 }

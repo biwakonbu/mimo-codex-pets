@@ -10,7 +10,8 @@ The v1 app is read-only:
 - it keeps the panel at macOS screen-saver window level so Mimo stays above
   other apps, across Spaces and fullscreen apps
 - it maps Codex app-server thread state to Mimo animation states
-- it shows short status and sanitized conversation updates in a speech bubble
+- it shows short status and sanitized multi-thread conversation updates in
+  speech bubbles
 - it does not send prompts, speak audio, inspect the screen, or read Codex
   session JSONL files
 
@@ -62,6 +63,11 @@ When not being dragged, Mimo periodically wanders to a random visible-screen
 position with a 60Hz time-based tween capped at `52 pt/s`. Mimo moves in short
 hops, rests between them, and plays idle, waiting, note-taking, waving, or
 jumping moments instead of walking endlessly.
+
+In production mode the panel stays transparent and shows only Mimo plus a short
+stack of white bubbles. The primary bubble carries the current Codex status, and
+up to two secondary bubbles summarize recent visible Codex threads without
+dumping raw model output, commands, or payload text.
 
 The production panel is intentionally always on top. Use Hide or Quit from the
 menu bar item when Mimo should leave the screen.

@@ -30,9 +30,16 @@ private struct ProductionPetView: View {
                 animation: viewModel.presentation.animation,
                 frameProvider: frameProvider
             )
-            .frame(width: 192, height: 208)
+            .frame(
+                width: CGFloat(PetSpeechBubbleLayout.productionSpriteWidth),
+                height: CGFloat(PetSpeechBubbleLayout.productionSpriteHeight)
+            )
         }
-        .frame(width: 360, height: 350, alignment: .top)
+        .frame(
+            width: CGFloat(PetSpeechBubbleLayout.productionWindowWidth),
+            height: CGFloat(PetSpeechBubbleLayout.productionWindowHeight),
+            alignment: .top
+        )
         .background(Color.clear)
     }
 }
@@ -41,29 +48,34 @@ private struct ProductionBubbleStackView: View {
     let bubbles: [PetSpeechBubble]
 
     var body: some View {
-        VStack(spacing: -1) {
-            ForEach(Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit).enumerated()), id: \.element.id) { index, bubble in
+        let visible = Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit))
+
+        ZStack(alignment: .bottom) {
+            ForEach(Array(visible.enumerated()), id: \.element.id) { index, bubble in
+                let placement = PetSpeechBubbleLayout.placement(
+                    for: index,
+                    role: bubble.role,
+                    visibleCount: visible.count
+                )
                 BubbleView(
                     text: bubble.text,
                     role: bubble.role,
-                    showsTail: index == min(bubbles.count, PetSpeechBubbleLayout.productionVisibleLimit) - 1
+                    showsTail: index == visible.count - 1,
+                    maxTextWidth: placement.maxTextWidth,
+                    fillOpacity: placement.fillOpacity
                 )
-                .offset(x: horizontalOffset(for: index))
-                .zIndex(Double(3 - index))
+                .offset(
+                    x: CGFloat(placement.horizontalOffset),
+                    y: CGFloat(placement.verticalOffset)
+                )
+                .zIndex(placement.zIndex)
             }
         }
-        .frame(width: 344, height: 136, alignment: .bottom)
-    }
-
-    private func horizontalOffset(for index: Int) -> CGFloat {
-        switch index {
-        case 0:
-            return 0
-        case 1:
-            return -18
-        default:
-            return 16
-        }
+        .frame(
+            width: CGFloat(PetSpeechBubbleLayout.productionStackWidth),
+            height: CGFloat(PetSpeechBubbleLayout.productionStackHeight),
+            alignment: .bottom
+        )
     }
 }
 
@@ -94,29 +106,41 @@ struct BubbleView: View {
     let text: String
     var role: PetSpeechBubbleRole = .status
     var showsTail = true
+    var maxTextWidth: Double?
+    var fillOpacity: Double?
 
     var body: some View {
+        let resolvedFillOpacity = fillOpacity ?? (role == .status ? 0.94 : 0.88)
+
         VStack(spacing: 0) {
-            Text(text)
-                .font(.system(size: role == .status ? 13 : 12, weight: role == .status ? .medium : .regular))
-                .foregroundStyle(.primary)
-                .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
-                .minimumScaleFactor(role == .status ? 0.9 : 0.82)
-                .truncationMode(.tail)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, role == .status ? 12 : 10)
-                .padding(.vertical, role == .status ? 8 : 7)
-                .frame(maxWidth: role == .status ? 284 : 252)
-                .background(Color.white.opacity(role == .status ? 0.94 : 0.88), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(Color.black.opacity(0.1), lineWidth: 1)
-                )
-                .shadow(color: Color.black.opacity(role == .status ? 0.14 : 0.1), radius: role == .status ? 8 : 6, x: 0, y: 3)
+            HStack(spacing: role == .status ? 0 : 7) {
+                if role == .conversation {
+                    Circle()
+                        .fill(Color(red: 0.36, green: 0.58, blue: 0.86).opacity(0.85))
+                        .frame(width: 5, height: 5)
+                }
+
+                Text(text)
+                    .font(.system(size: role == .status ? 13 : 12, weight: role == .status ? .medium : .regular))
+                    .foregroundStyle(.primary)
+                    .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
+                    .minimumScaleFactor(role == .status ? 0.9 : 0.82)
+                    .truncationMode(.tail)
+                    .multilineTextAlignment(role == .status ? .center : .leading)
+            }
+            .padding(.horizontal, role == .status ? 12 : 10)
+            .padding(.vertical, role == .status ? 8 : 7)
+            .frame(maxWidth: CGFloat(maxTextWidth ?? (role == .status ? 284 : 252)))
+            .background(Color.white.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .strokeBorder(Color.black.opacity(0.1), lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(role == .status ? 0.14 : 0.1), radius: role == .status ? 8 : 6, x: 0, y: 3)
 
             if showsTail {
                 BubbleTail()
-                    .fill(Color.white.opacity(role == .status ? 0.94 : 0.88))
+                    .fill(Color.white.opacity(resolvedFillOpacity))
                     .frame(width: 18, height: 9)
                     .offset(y: -1)
                     .shadow(color: Color.black.opacity(0.08), radius: 3, x: 0, y: 2)
