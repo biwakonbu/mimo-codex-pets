@@ -36,13 +36,16 @@ Priority rows for motion repair:
 
 Only repair `running-right` / `running-left` when cadence or direction is wrong.
 
-For `running-right` / `running-left`, reject literal sprinting if it feels too athletic for a companion pet. Also reject broken foot-transfer frames where the sending foot collapses inward, both feet stack unnaturally, or the lower-body centroid jumps mid-loop. If identity and transparency are already clean, prefer a narrow existing-frame repair before regeneration. The current repaired sequence is:
+For `running-right` / `running-left`, reject broken foot-transfer frames where the sending foot collapses inward, both feet stack unnaturally, or the lower-body centroid jumps mid-loop. Also reject a repair that merely hides bad frames by repeating clean poses: it may pass static QA while no longer reading as running.
 
-```text
-running-right source frames: [0, 1, 2, 1, 0, 1, 2, 1]
-vertical offsets: [0, -1, -2, -1, 0, -1, -2, -1]
-running-left: mirror repaired running-right, preserve frame order
-```
+The accepted repair path for these rows is:
+
+1. Regenerate `running-right` as an 8-frame side-view chibi gait.
+2. Require visible support-foot / sending-foot alternation across the loop.
+3. Extract the eight row components through the standard chroma/outline pipeline.
+4. Mirror the accepted `running-right` into `running-left` while preserving frame order.
+
+Do not call a repeated hover-step a natural run.
 
 ## Prompt Requirements For Row Regeneration
 

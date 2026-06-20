@@ -106,15 +106,14 @@ This fixed the key motion problem:
 
 ## Directional Running Repair
 
-A later GIF review found that `running-right` and `running-left` still looked too much like literal sprinting. The more visible defect was a broken foot-transfer section: the original frames `3` and `4` pulled the lower legs inward and made the sending foot look wrong mid-loop.
+A later GIF review found two separate issues in `running-right` and `running-left`:
 
-The repair intentionally avoided full regeneration because the character identity, outline, transparency, and most frames were already clean. The final directional rows use only existing verified transparent cells:
+- the original generated row had a broken foot-transfer section where the lower legs collapsed inward mid-loop
+- the first deterministic repair removed that defect by repeating clean frames, but it no longer read as natural running
 
-- `running-right` sequence: old frames `[0, 1, 2, 1, 0, 1, 2, 1]`
-- subtle vertical offsets: `[0, -1, -2, -1, 0, -1, -2, -1]`
-- `running-left`: mirrored from the repaired `running-right` with frame order preserved
+The final repair regenerated `running-right` as a true 8-frame chibi gait row, then extracted the eight components through the same chroma/outline pipeline used by the rest of the pet. `running-left` was mirrored from the accepted `running-right` with frame order preserved.
 
-This changes the read from an athletic run to a gentle hover-step, removes the broken sending-foot frames, and avoids reintroducing chroma-key or identity drift.
+Important lesson: for directional movement, smooth bbox metrics are not enough. The row must visibly alternate support foot and sending foot. A hover-step is acceptable only if the state intentionally wants floating movement; it should not be described as natural running.
 
 ## QA Performed
 
