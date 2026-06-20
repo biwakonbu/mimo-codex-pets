@@ -93,6 +93,9 @@ Conversation behavior:
   status/current-thread bubble plus compact summaries from other visible
   threads. This keeps Codex Pets-like multi-thread awareness in the production
   surface without rendering a console, transcript feed, or debug panel.
+- The stacked bubble list refreshes whenever conversation context changes, even
+  if the primary status bubble text is still showing a timed moment or an older
+  queue item.
 - `item/started` enqueues sanitized progress immediately, especially for tool
   and command activity.
 - Delta notifications enqueue generic Mimo reports such as response drafting,
@@ -129,6 +132,8 @@ Manual or visual checks:
   streaming delta activity, plus simultaneous stacked bubbles for a second
   visible thread and a later secondary-thread update discovered immediately
   from notification-triggered thread reads.
+- `MIMO_PRESENTATION_LOG` includes both `bubbleText` and `bubbleTexts`; stacked
+  bubble-only updates should be logged for deterministic E2E evidence.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.

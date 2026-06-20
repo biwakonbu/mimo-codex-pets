@@ -57,6 +57,7 @@ final class PetViewModel: ObservableObject {
         lastCodexPresentation = presentationState
         conversationLines = Array(snapshot.conversationLines.suffix(8))
         focusedThreadId = snapshot.focusedConversationLine?.threadId
+        let visibleBubblesChanged = refreshVisibleBubbles()
 
         if snapshot.connectionAvailable {
             enqueueConversationLines(
@@ -74,6 +75,8 @@ final class PetViewModel: ObservableObject {
                 momentToken = UUID()
                 setPresentation(presentationState)
             }
+        } else if visibleBubblesChanged {
+            appendPresentationLog(presentation)
         }
     }
 
@@ -240,12 +243,20 @@ final class PetViewModel: ObservableObject {
 
     private func setPresentation(_ state: PetPresentationState) {
         presentation = state
-        visibleBubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: state.bubbleText,
+        _ = refreshVisibleBubbles()
+        appendPresentationLog(state)
+    }
+
+    @discardableResult
+    private func refreshVisibleBubbles() -> Bool {
+        let nextBubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: presentation.bubbleText,
             conversationLines: conversationLines,
             preferredThreadId: focusedThreadId
         )
-        appendPresentationLog(state)
+        guard nextBubbles != visibleBubbles else { return false }
+        visibleBubbles = nextBubbles
+        return true
     }
 
     private func appendPresentationLog(_ state: PetPresentationState) {

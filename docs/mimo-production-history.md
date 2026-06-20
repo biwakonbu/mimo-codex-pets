@@ -199,6 +199,8 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - the production surface can stack up to three speech bubbles at once so the
   focused thread and other visible threads can be reported together without
   enabling the debug feed
+- the stacked bubble list is rebuilt when conversation context changes, even
+  when the primary timed bubble text is unchanged
 - `item/started` and `item/completed` notifications enqueue sanitized
   tool/command progress immediately from their schema-backed `item` payloads
 - streaming delta notifications are treated as activity signals and converted
