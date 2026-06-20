@@ -131,6 +131,7 @@ def state_sequence():
             },
         }
     )
+    time.sleep(0.7)
     with STATE_LOCK:
         SECOND_THREAD_STATUS = {"type": "active", "activeFlags": []}
         SECOND_THREAD_TURNS = [

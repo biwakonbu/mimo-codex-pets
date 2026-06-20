@@ -187,4 +187,60 @@ grep -Eq '"method":"thread\\?/read"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
 
+python3 - "$FAKE_LOG" <<'PY'
+import json
+import sys
+
+log_path = sys.argv[1]
+events = []
+with open(log_path, "r", encoding="utf-8") as handle:
+    for line in handle:
+        line = line.strip()
+        if not line.startswith(("in ", "out ")):
+            continue
+        direction, payload = line.split(" ", 1)
+        try:
+            message = json.loads(payload)
+        except json.JSONDecodeError:
+            continue
+        events.append((direction, message))
+
+notification_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events)
+        if direction == "out"
+        and message.get("method") == "thread/status/changed"
+        and message.get("params", {}).get("threadId") == "fake-review"
+    ),
+    None,
+)
+if notification_index is None:
+    raise SystemExit("fake-review status notification was not emitted")
+
+read_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events[notification_index + 1 :], notification_index + 1)
+        if direction == "in"
+        and message.get("method") == "thread/read"
+        and message.get("params", {}).get("threadId") == "fake-review"
+    ),
+    None,
+)
+if read_index is None:
+    raise SystemExit("fake-review notification did not trigger thread/read")
+
+next_poll_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events[notification_index + 1 :], notification_index + 1)
+        if direction == "in" and message.get("method") == "thread/loaded/list"
+    ),
+    None,
+)
+if next_poll_index is not None and read_index > next_poll_index:
+    raise SystemExit("fake-review thread/read waited for the next poll")
+PY
+
 echo "E2E passed: fake Codex app-server, notification-driven multi-thread Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."

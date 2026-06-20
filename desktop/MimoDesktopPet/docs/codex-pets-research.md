@@ -43,6 +43,9 @@ Verified runtime behavior:
 - The companion should periodically refresh visible threads, not only the
   currently selected thread, so stacked production bubbles keep following
   secondary thread progress after initial load.
+- Thread, turn, and item notifications should also trigger an immediate
+  `thread/read(includeTurns: true)` for the affected thread, so secondary
+  thread bubbles do not wait for the next periodic poll.
 - `codex app-server proxy` exists, but in this local environment it did not
   respond without changing daemon remote-control settings. The companion uses
   direct `codex app-server --stdio` to avoid mutating user configuration.
@@ -124,7 +127,8 @@ Manual or visual checks:
   production bubble text is a Mimo-style summary of the active thread title and
   latest progress/tool activity, including notification-driven tool activity and
   streaming delta activity, plus simultaneous stacked bubbles for a second
-  visible thread and a later secondary-thread update discovered by polling.
+  visible thread and a later secondary-thread update discovered immediately
+  from notification-triggered thread reads.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.

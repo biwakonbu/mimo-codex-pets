@@ -419,11 +419,7 @@ final class CodexAppServerClient {
         selectedThreadId = first
         rememberThreadOrder(ids)
         for id in ids.prefix(4) {
-            sendRequest(
-                method: "thread/read",
-                params: ["threadId": id, "includeTurns": true],
-                kind: .threadRead(threadId: id)
-            )
+            sendThreadRead(threadId: id)
         }
         sendRequest(method: "thread/list", params: ["limit": 4, "archived": false], kind: .threadList)
     }
@@ -460,11 +456,7 @@ final class CodexAppServerClient {
         }
         for thread in visibleThreads {
             guard let id = thread["id"] as? String else { continue }
-            sendRequest(
-                method: "thread/read",
-                params: ["threadId": id, "includeTurns": true],
-                kind: .threadRead(threadId: id)
-            )
+            sendThreadRead(threadId: id)
         }
     }
 
@@ -485,8 +477,10 @@ final class CodexAppServerClient {
             conversationByThread[snapshot.id] = lines
         }
 
-        if selectedThreadId == nil || selectedThreadId == expectedThreadId || selectedThreadId == snapshot.id {
+        if selectedThreadId == nil {
             selectedThreadId = snapshot.id
+        }
+        if selectedThreadId == snapshot.id {
             apply(snapshot: snapshot)
         } else {
             emitSnapshot(connectionAvailable: true)
@@ -500,26 +494,33 @@ final class CodexAppServerClient {
         case .threadStatusChanged:
             if let payload = decodeNotificationParams(ThreadStatusChangedNotification.self, from: params) {
                 selectedThreadId = selectedThreadId ?? payload.threadId
-                guard selectedThreadId == payload.threadId else { return }
-                latestThreadStatus = payload.status
-                if case .systemError = payload.status {
-                    latestTurnStatus = .failed
-                    hasRecentAssistantFinal = false
+                rememberThreadOrder([payload.threadId])
+                sendThreadRead(threadId: payload.threadId)
+                if selectedThreadId == payload.threadId {
+                    latestThreadStatus = payload.status
+                    if case .systemError = payload.status {
+                        latestTurnStatus = .failed
+                        hasRecentAssistantFinal = false
+                    }
+                    emitSnapshot(connectionAvailable: true)
                 }
-                emitSnapshot(connectionAvailable: true)
             }
         case .turnStarted:
             if let payload = decodeNotificationParams(TurnNotification.self, from: params) {
                 selectedThreadId = payload.threadId
+                rememberThreadOrder([payload.threadId])
                 latestTurnStatus = .inProgress
                 hasRecentAssistantFinal = false
+                sendThreadRead(threadId: payload.threadId)
                 emitSnapshot(connectionAvailable: true)
             }
         case .turnCompleted:
             if let payload = decodeNotificationParams(TurnNotification.self, from: params) {
                 selectedThreadId = payload.threadId
+                rememberThreadOrder([payload.threadId])
                 latestTurnStatus = payload.turn.status
                 hasRecentAssistantFinal = payload.turn.status == .completed
+                sendThreadRead(threadId: payload.threadId)
                 emitSnapshot(connectionAvailable: true)
             }
         case .itemStarted:
@@ -527,6 +528,7 @@ final class CodexAppServerClient {
                let threadId = dict["threadId"] as? String {
                 selectedThreadId = selectedThreadId ?? threadId
                 appendConversationLine(from: dict["item"], threadId: threadId)
+                sendThreadRead(threadId: threadId)
                 guard selectedThreadId == threadId else {
                     emitSnapshot(connectionAvailable: true)
                     return
@@ -540,6 +542,7 @@ final class CodexAppServerClient {
                let threadId = dict["threadId"] as? String {
                 selectedThreadId = selectedThreadId ?? threadId
                 appendConversationLine(from: dict["item"], threadId: threadId)
+                sendThreadRead(threadId: threadId)
                 guard selectedThreadId == threadId else {
                     emitSnapshot(connectionAvailable: true)
                     return
@@ -560,6 +563,14 @@ final class CodexAppServerClient {
         case .mcpToolCallProgress:
             appendProgressLine(from: params, kind: "mcpToolCallProgress")
         }
+    }
+
+    private func sendThreadRead(threadId: String) {
+        sendRequest(
+            method: "thread/read",
+            params: ["threadId": threadId, "includeTurns": true],
+            kind: .threadRead(threadId: threadId)
+        )
     }
 
     private func decodeThreadSnapshot(from object: [String: Any]) -> CodexThreadSnapshot? {

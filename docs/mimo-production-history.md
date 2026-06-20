@@ -209,11 +209,14 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - the app reads `thread/loaded/list`, `thread/list`, and `thread/read(includeTurns: true)` and sanitizes item text before display
 - periodic refresh uses `thread/loaded/list` to re-read visible threads, so
   secondary thread bubbles can update after initial load
+- thread, turn, and item notifications also trigger an immediate
+  `thread/read(includeTurns: true)` for the affected thread, keeping secondary
+  bubble text fresh without waiting for the next poll
 - autonomous wandering uses a test-covered planner that chooses visible-screen
   targets, caps production speed at `52 pt/s`, limits each hop distance, and uses a 60Hz
   time-based tween that moves smoothly without overshooting
 
-Local desktop captures from companion QA must stay out of the repository. Use `/tmp` for runtime screenshots. The local E2E smoke test is `desktop/MimoDesktopPet/script/e2e_fake_app_server.sh`; it verifies the fake app-server flow, notification-driven and streaming-delta per-thread Mimo-style production bubble summaries, simultaneous multi-thread speech bubbles, later secondary-thread polling updates, production window size, screen-saver window layer, smooth movement, transparent screenshot corners, and thread read calls. The live read-only app-server smoke test is `desktop/MimoDesktopPet/script/live_app_server_smoke.py`. The live app presentation smoke test is `desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh`; it launches the real app with a temporary `/tmp` presentation log and verifies that the visible presentation leaves the offline/connection state after a real app-server connection.
+Local desktop captures from companion QA must stay out of the repository. Use `/tmp` for runtime screenshots. The local E2E smoke test is `desktop/MimoDesktopPet/script/e2e_fake_app_server.sh`; it verifies the fake app-server flow, notification-driven and streaming-delta per-thread Mimo-style production bubble summaries, simultaneous multi-thread speech bubbles, secondary-thread notification refresh, production window size, screen-saver window layer, smooth movement, transparent screenshot corners, and thread read calls. The live read-only app-server smoke test is `desktop/MimoDesktopPet/script/live_app_server_smoke.py`. The live app presentation smoke test is `desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh`; it launches the real app with a temporary `/tmp` presentation log and verifies that the visible presentation leaves the offline/connection state after a real app-server connection.
 
 ## Public Repository Decision
 
