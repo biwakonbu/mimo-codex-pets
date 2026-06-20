@@ -30,6 +30,8 @@ require_pattern "ServerNotification.json" '"turn/started"'
 require_pattern "ServerNotification.json" '"turn/completed"'
 require_pattern "ServerNotification.json" '"item/started"'
 require_pattern "ServerNotification.json" '"item/completed"'
+require_pattern "v2/ItemStartedNotification.json" '"item"'
+require_pattern "v2/ItemCompletedNotification.json" '"item"'
 
 require_pattern "v2/ThreadReadParams.json" '"threadId"'
 require_pattern "v2/ThreadReadParams.json" '"includeTurns"'

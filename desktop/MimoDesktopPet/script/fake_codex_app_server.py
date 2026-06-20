@@ -71,6 +71,17 @@ def state_sequence():
             },
         }
     )
+    write_message(
+        {
+            "method": "item/started",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "startedAtMs": int(time.time() * 1000),
+                "item": {"id": "mcp-start", "type": "mcpToolCall", "tool": "get_app_state"},
+            },
+        }
+    )
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}

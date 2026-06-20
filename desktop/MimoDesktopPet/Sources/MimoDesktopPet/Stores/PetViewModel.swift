@@ -8,6 +8,7 @@ final class PetViewModel: ObservableObject {
     @Published var clickThrough = false
     @Published var debugOverlay: Bool
 
+    private let conversationBubbleDuration: TimeInterval
     private let presentationLogURL: URL?
     private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
     private var momentToken = UUID()
@@ -17,6 +18,7 @@ final class PetViewModel: ObservableObject {
 
     init(debugOverlay: Bool = ProcessInfo.processInfo.environment["MIMO_DEBUG_OVERLAY"] == "1") {
         self.debugOverlay = debugOverlay
+        conversationBubbleDuration = ProcessInfo.processInfo.environment["MIMO_BUBBLE_TEST_MODE"] == "1" ? 1.15 : 3.4
         if let path = ProcessInfo.processInfo.environment["MIMO_PRESENTATION_LOG"], !path.isEmpty {
             let url = URL(fileURLWithPath: path)
             presentationLogURL = url
@@ -80,7 +82,14 @@ final class PetViewModel: ObservableObject {
                 continue
             }
             shownConversationSignatures.insert(signature)
-            pendingConversationLines.append(line)
+            pendingConversationLines.insert(
+                line,
+                at: CodexConversationBubblePlanner.insertionIndex(
+                    for: line,
+                    preferredThreadId: preferredThreadId,
+                    pendingLines: pendingConversationLines
+                )
+            )
         }
     }
 
@@ -107,7 +116,8 @@ final class PetViewModel: ObservableObject {
         )
 
         Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: 3_400_000_000)
+            let duration = self?.conversationBubbleDuration ?? 3.4
+            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
             self?.finishConversationBubble(token: token)
         }
     }

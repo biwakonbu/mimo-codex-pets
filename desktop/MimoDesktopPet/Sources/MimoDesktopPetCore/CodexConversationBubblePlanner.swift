@@ -28,6 +28,17 @@ public enum CodexConversationBubblePlanner {
         "\(line.threadId)|\(line.speaker)|\(line.text)"
     }
 
+    public static func insertionIndex(
+        for line: CodexConversationLine,
+        preferredThreadId: String?,
+        pendingLines: [CodexConversationLine]
+    ) -> Int {
+        guard line.threadId == preferredThreadId else {
+            return pendingLines.count
+        }
+        return pendingLines.firstIndex { $0.threadId != line.threadId } ?? pendingLines.count
+    }
+
     public static func animation(
         for line: CodexConversationLine,
         fallback: PetAnimationState

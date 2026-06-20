@@ -53,6 +53,39 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         )
     }
 
+    func testPreferredThreadUpdateInsertsBeforeOtherPendingThreads() {
+        let pending = [
+            line(threadId: "other", speaker: "codex", text: "古い別スレッド", isAssistant: true),
+            line(threadId: "third", speaker: "codex", text: "第三スレッド", isAssistant: true)
+        ]
+        let update = line(threadId: "current", speaker: "tool", text: "ツール: get_app_state", isAssistant: true)
+
+        XCTAssertEqual(
+            CodexConversationBubblePlanner.insertionIndex(
+                for: update,
+                preferredThreadId: "current",
+                pendingLines: pending
+            ),
+            0
+        )
+    }
+
+    func testNonPreferredThreadUpdateAppendsAfterPendingThreads() {
+        let pending = [
+            line(threadId: "current", speaker: "codex", text: "現在", isAssistant: true)
+        ]
+        let update = line(threadId: "other", speaker: "tool", text: "ツール: get_app_state", isAssistant: true)
+
+        XCTAssertEqual(
+            CodexConversationBubblePlanner.insertionIndex(
+                for: update,
+                preferredThreadId: "current",
+                pendingLines: pending
+            ),
+            1
+        )
+    }
+
     private func line(
         threadId: String,
         speaker: String,

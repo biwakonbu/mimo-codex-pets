@@ -24,6 +24,9 @@ Verified public protocol surface:
   - `commandExecution`
   - `fileChange`
   - `mcpToolCall`
+- `item/started` and `item/completed` notifications include a schema-backed
+  `item` payload. Production bubbles use this to report in-progress tool or
+  command activity before the next poll completes.
 
 Verified runtime behavior:
 
@@ -75,6 +78,8 @@ Conversation behavior:
 - The production bubble queue deduplicates by thread, speaker, and sanitized
   text, then rotates the latest short report from each visible thread instead of
   pinning only one focused thread forever.
+- `item/started` enqueues sanitized progress immediately, especially for tool
+  and command activity.
 - Tool activity should be summarized, not dumped.
 - Machine payload-looking text is suppressed and replaced with a generic short phrase.
 - Bubble text is transient; durable feed display belongs only in `Debug Overlay`.
@@ -102,7 +107,8 @@ Manual or visual checks:
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
   production bubble text is a Mimo-style summary of the active thread title and
-  latest progress/tool activity, including a second visible thread.
+  latest progress/tool activity, including notification-driven tool activity and
+  a second visible thread.
 - Live app presentation smoke launches the actual app process with a temporary
   presentation log and verifies that the UI state leaves offline/connection
   presentation after a real app-server connection.

@@ -531,10 +531,16 @@ final class CodexAppServerClient {
                 emitSnapshot(connectionAvailable: true)
             }
         case .itemStarted:
-            if let payload = decodeNotificationParams(ItemLifecycleNotification.self, from: params) {
-                selectedThreadId = selectedThreadId ?? payload.threadId
-                guard selectedThreadId == payload.threadId else { return }
+            if let dict = params as? [String: Any],
+               let threadId = dict["threadId"] as? String {
+                selectedThreadId = selectedThreadId ?? threadId
+                appendConversationLine(from: dict["item"], threadId: threadId)
+                guard selectedThreadId == threadId else {
+                    emitSnapshot(connectionAvailable: true)
+                    return
+                }
                 latestTurnStatus = .inProgress
+                hasRecentAssistantFinal = false
                 emitSnapshot(connectionAvailable: true)
             }
         case .itemCompleted:
