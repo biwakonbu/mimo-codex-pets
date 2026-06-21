@@ -33,6 +33,20 @@ final class CodexAppServerClient {
         case unavailable
     }
 
+    private enum AppServerTransportMode {
+        case proxy
+        case stdio
+
+        var arguments: [String] {
+            switch self {
+            case .proxy:
+                return ["app-server", "proxy"]
+            case .stdio:
+                return ["app-server", "--stdio"]
+            }
+        }
+    }
+
     private let queue = DispatchQueue(label: "MimoDesktopPet.CodexAppServerClient")
     private let decoder = JSONDecoder()
     private let invocation = CodexCommandLocator.resolve()
@@ -44,6 +58,8 @@ final class CodexAppServerClient {
     private var stdoutPipe: Pipe?
     private var stderrPipe: Pipe?
     private var proxyIsRunning = false
+    private var currentTransportMode: AppServerTransportMode?
+    private var transportInitialized = false
     private var outgoingFraming: CodexJSONRPCStreamParser.Framing = .jsonLines
     private var streamParser = CodexJSONRPCStreamParser()
     private var nextRequestId = 1
@@ -93,9 +109,9 @@ final class CodexAppServerClient {
         cancelReconnectLocked()
         switch startDaemonBestEffort() {
         case .available:
-            startAppServerStdio()
+            startAppServerTransport(.proxy)
         case .unavailable:
-            startAppServerStdio()
+            startAppServerTransport(.stdio)
         }
     }
 
@@ -134,22 +150,22 @@ final class CodexAppServerClient {
         }
     }
 
-    private func startAppServerStdio() {
+    private func startAppServerTransport(_ mode: AppServerTransportMode) {
         let process = Process()
         let stdout = Pipe()
         let stdin = Pipe()
         let stderr = Pipe()
 
         process.executableURL = invocation.executableURL
-        process.arguments = invocation.argumentsPrefix + ["app-server", "--stdio"]
+        process.arguments = invocation.argumentsPrefix + mode.arguments
         process.environment = CodexCommandLocator.launchEnvironment()
         process.standardInput = stdin
         process.standardOutput = stdout
         process.standardError = stderr
         process.terminationHandler = { [weak self, weak process] _ in
             self?.queue.async {
-                guard let process, self?.proxyProcess === process else { return }
-                self?.transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: "Codex 接続切れ")
+                guard let self, let process, self.proxyProcess === process else { return }
+                self.handleAppServerTerminationLocked(process: process, mode: mode)
             }
         }
 
@@ -172,14 +188,35 @@ final class CodexAppServerClient {
             stdoutPipe = stdout
             stderrPipe = stderr
             proxyIsRunning = true
+            currentTransportMode = mode
+            transportInitialized = false
             outgoingFraming = .jsonLines
             streamParser.reset()
             startRequestTimeoutWatchdog()
             sendInitialize()
             startHandshakeTimeout()
         } catch {
-            transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: "Codex 接続待ち")
+            if mode == .proxy {
+                startAppServerTransport(.stdio)
+            } else {
+                transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: "Codex 接続待ち")
+            }
         }
+    }
+
+    private func handleAppServerTerminationLocked(process: Process, mode: AppServerTransportMode) {
+        guard proxyProcess === process else { return }
+        if mode == .proxy, !transportInitialized, shouldReconnect {
+            fallbackToDirectStdioLocked()
+        } else {
+            transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: "Codex 接続切れ")
+        }
+    }
+
+    private func fallbackToDirectStdioLocked() {
+        guard shouldReconnect else { return }
+        clearProxyLocked(terminate: true)
+        startAppServerTransport(.stdio)
     }
 
     private func stopLocked() {
@@ -211,6 +248,8 @@ final class CodexAppServerClient {
         }
         proxyProcess = nil
         proxyIsRunning = false
+        currentTransportMode = nil
+        transportInitialized = false
         stdinPipe = nil
         stdoutPipe?.fileHandleForReading.readabilityHandler = nil
         stdoutPipe = nil
@@ -245,7 +284,11 @@ final class CodexAppServerClient {
         timer.schedule(deadline: .now() + 5.0)
         timer.setEventHandler { [weak self] in
             guard let self, self.handshakeTimer != nil else { return }
-            self.transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続タイムアウト")
+            if self.currentTransportMode == .proxy {
+                self.fallbackToDirectStdioLocked()
+            } else {
+                self.transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続タイムアウト")
+            }
         }
         timer.resume()
         handshakeTimer = timer
@@ -353,7 +396,7 @@ final class CodexAppServerClient {
             proxyProcess?.isRunning == true,
             let stdinPipe
         else {
-            transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
+            handleTransportWriteFailureLocked()
             return
         }
 
@@ -368,7 +411,7 @@ final class CodexAppServerClient {
             case .contentLength:
                 let header = "Content-Length: \(data.count)\r\n\r\n"
                 guard var contentLengthData = header.data(using: .utf8) else {
-                    transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
+                    handleTransportWriteFailureLocked()
                     return
                 }
                 contentLengthData.append(data)
@@ -379,10 +422,18 @@ final class CodexAppServerClient {
                 framedData = lineData
             }
             guard writeData(framedData, to: stdinPipe.fileHandleForWriting.fileDescriptor) else {
-                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
+                handleTransportWriteFailureLocked()
                 return
             }
         } catch {
+            handleTransportWriteFailureLocked()
+        }
+    }
+
+    private func handleTransportWriteFailureLocked() {
+        if currentTransportMode == .proxy, !transportInitialized {
+            fallbackToDirectStdioLocked()
+        } else {
             transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
         }
     }
@@ -452,6 +503,7 @@ final class CodexAppServerClient {
         switch kind {
         case .initialize:
             cancelHandshakeTimeout()
+            transportInitialized = true
             onConnectionState?(true)
             sendNotification(method: "initialized")
             threadReadIdsInRefreshCycle.removeAll()

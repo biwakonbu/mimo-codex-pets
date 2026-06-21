@@ -62,7 +62,11 @@ Verified runtime behavior:
 
 - `initialize` requires `clientInfo.name` and `clientInfo.version`; extra
   JSON-RPC `jsonrpc` fields are tolerated but not required.
-- `codex app-server --stdio` returns a Codex Desktop user agent and can read local thread state.
+- `codex app-server proxy` is the preferred companion transport after a bounded
+  `codex app-server daemon start`. Direct `codex app-server --stdio` remains the
+  fallback when daemon startup, proxy launch, or proxy handshake is unavailable.
+  The direct stdio transport returns a Codex Desktop user agent and can read local
+  thread state.
 - Read-only live smoke checks use a fresh stdio app-server process per attempt
   and retry transient response timeouts. This keeps the product gate resilient
   to momentary local Codex stalls while still failing immediately on protocol
@@ -82,10 +86,10 @@ Verified runtime behavior:
 - When the local Codex command or app-server is unavailable, the companion must
   stay open in transparent production mode and show a short offline bubble
   instead of crashing or revealing a debug surface.
-- `codex app-server daemon start` is a helper, not the primary transport. If it
-  hangs, the companion should time it out and proceed to the direct
-  `codex app-server --stdio` JSON-RPC transport rather than leaving Mimo in a
-  startup wait.
+- `codex app-server daemon start` is a bounded helper for the preferred proxy
+  transport. If daemon startup hangs, proxy startup fails, proxy exits early, or
+  proxy handshake times out, the companion should proceed to direct
+  `codex app-server --stdio` JSON-RPC rather than leaving Mimo in a startup wait.
 - The companion should periodically refresh visible threads, not only the
   currently selected thread, so stacked production bubbles keep following
   secondary thread progress after initial load.
@@ -102,9 +106,10 @@ Verified runtime behavior:
 - Thread name updates should retitle already visible conversation summaries.
   Thread archived, closed, or deleted notifications must remove that thread's
   cached title and bubble text immediately so stale bubbles do not linger.
-- `codex app-server proxy` exists, but in this local environment it did not
-  respond without changing daemon remote-control settings. The companion uses
-  direct `codex app-server --stdio` to avoid mutating user configuration.
+- The companion must not mutate daemon remote-control settings. It can try
+  `daemon start` and `proxy`, but direct stdio fallback must remain available so
+  production startup does not depend on private Codex.app state or user config
+  changes.
 
 Computer Use limitation:
 
@@ -249,7 +254,7 @@ cd desktop/MimoDesktopPet
 
 `./script/qa_all.sh` is the canonical local gate. It runs the unit suite,
 static syntax checks, generated app-server schema drift checks, live app-server
-read/presentation smoke checks, fake/content-length/empty-list/overflow/offline/disconnect/state-matrix
+read/presentation smoke checks, fake/content-length/proxy-fallback/empty-list/overflow/offline/disconnect/state-matrix
 production E2E capture gates, and bundle verification. When a real Codex app-server is
 intentionally unavailable, run `./script/qa_all.sh fake-only` and then rerun full
 mode before accepting app-server integration changes.
@@ -264,6 +269,7 @@ swift test
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh
 ./script/e2e_content_length_app_server.sh
+./script/e2e_proxy_fallback_app_server.sh
 ./script/e2e_hanging_daemon_start.sh
 ./script/e2e_empty_thread_list.sh
 ./script/e2e_overflow_thread_list.sh
@@ -332,6 +338,10 @@ Manual or visual checks:
   then verifies that the second fresh app-server process succeeds and writes
   the expected summary JSON. This protects the full gate from one-shot local
   app-server stalls without hiding deterministic protocol failures.
+- Proxy fallback E2E launches the app after a successful fake daemon start but
+  forces `codex app-server proxy` to exit immediately. Mimo must then retry with
+  direct `codex app-server --stdio`, reach connected thread-summary bubbles, and
+  keep the transparent production surface.
 - Disconnect E2E launches against a fake app-server that reaches a connected
   thread-summary state and then exits. Mimo must stay alive, keep the production
   surface transparent, and show `Codex 接続切れ` instead of leaving stale

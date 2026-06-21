@@ -220,6 +220,8 @@ PY
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 
+grep -Fq 'argv ["app-server", "daemon", "start"]' "$FAKE_LOG"
+grep -Fq 'argv ["app-server", "proxy"]' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/read"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
