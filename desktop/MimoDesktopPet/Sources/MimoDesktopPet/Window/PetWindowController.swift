@@ -17,14 +17,19 @@ final class PetWindowController: NSObject {
     private let viewModel: PetViewModel
     private let zOrderPolicy = PetWindowZOrderPolicy.alwaysOnTopCompanion
     private let autonomousTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1"
+    private let autonomousEnergyTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_ENERGY_TEST_MODE"] == "1"
     private let autonomousDisabled = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_DISABLED"] == "1"
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
     private var movementAnimationActive = false
     private var movementAnimationWasManual = false
     private var manualDragActive = false
+    private var autonomousEnergy = PetWindowController.makeAutonomousEnergyController()
     private var autonomousMotion: PetAutonomousMotionTween?
-    private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + 2.0
+    private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + PetWindowController.environmentDouble(
+        "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS",
+        default: 2.0
+    )
     private var nextAutonomousRetargetAt = Date.timeIntervalSinceReferenceDate + 10.0
     private var nextIdleMomentAt = Date.timeIntervalSinceReferenceDate + 4.0
     private var cancellables: Set<AnyCancellable> = []
@@ -49,10 +54,10 @@ final class PetWindowController: NSObject {
         )
         super.init()
 
-        if autonomousTestMode {
+        if autonomousTestMode || autonomousEnergyTestMode {
             let now = Date.timeIntervalSinceReferenceDate
             autonomousRestUntil = now
-            nextAutonomousRetargetAt = now + 60
+            nextAutonomousRetargetAt = now + (autonomousEnergyTestMode ? 0.8 : 60)
             nextIdleMomentAt = .greatestFiniteMagnitude
         }
 
@@ -98,12 +103,22 @@ final class PetWindowController: NSObject {
             },
             onDragEnded: { [weak self, weak viewModel] in
                 self?.manualDragActive = false
-                self?.autonomousRestUntil = Date.timeIntervalSinceReferenceDate + Double.random(in: 2.0...5.0)
+                if let self {
+                    self.scheduleAutonomousRest(
+                        now: Date.timeIntervalSinceReferenceDate,
+                        includeMoment: false
+                    )
+                }
                 viewModel?.endDrag()
             },
             onClicked: { [weak self, weak viewModel] in
                 self?.manualDragActive = false
-                self?.autonomousRestUntil = Date.timeIntervalSinceReferenceDate + Double.random(in: 1.5...4.0)
+                if let self {
+                    self.scheduleAutonomousRest(
+                        now: Date.timeIntervalSinceReferenceDate,
+                        includeMoment: false
+                    )
+                }
                 viewModel?.playMoment(animation: .waving, bubbleText: "呼びましたか?", duration: 1.6)
             }
         )
@@ -230,17 +245,22 @@ final class PetWindowController: NSObject {
 
         guard panel.isVisible, !manualDragActive, !autonomousDisabled else { return }
 
+        autonomousEnergy.update(
+            now: now,
+            isMoving: autonomousMotion != nil,
+            isResting: autonomousMotion == nil
+        )
+
         if now >= nextIdleMomentAt, autonomousMotion == nil {
             playRandomRestingMoment()
             nextIdleMomentAt = now + Double.random(in: 3.0...6.5)
         }
 
         if autonomousMotion == nil, now >= autonomousRestUntil {
-            if autonomousTestMode || Double.random(in: 0...1) < 0.52 {
+            if shouldBeginAutonomousMotion() {
                 chooseNextAutonomousMotion(now: now)
             } else {
-                autonomousRestUntil = now + Double.random(in: 3.5...8.0)
-                playRandomRestingMoment()
+                scheduleAutonomousRest(now: now, includeMoment: true)
             }
         }
 
@@ -251,13 +271,17 @@ final class PetWindowController: NSObject {
 
         if position.isComplete {
             autonomousMotion = nil
-            autonomousRestUntil = now + Double.random(in: 3.5...8.5)
-            playRandomRestingMoment()
+            scheduleAutonomousRest(now: now, includeMoment: true)
             return
         }
 
         if now >= nextAutonomousRetargetAt {
-            chooseNextAutonomousMotion(now: now)
+            if shouldInterruptAutonomousMotionForRest() {
+                autonomousMotion = nil
+                scheduleAutonomousRest(now: now, includeMoment: true)
+            } else {
+                chooseNextAutonomousMotion(now: now)
+            }
         }
     }
 
@@ -301,7 +325,10 @@ final class PetWindowController: NSObject {
                 rawTarget: rawTarget,
                 maximumDistance: Self.maximumProductionStepDistance
             )
-            baseSpeed = Double.random(in: 30...Self.maximumProductionSpeed)
+            baseSpeed = autonomousEnergy.speed(
+                maximumSpeed: Self.maximumProductionSpeed,
+                moodUnit: autonomousEnergyTestMode ? 0.5 : Double.random(in: 0...1)
+            )
             speedWaveAmplitude = Double.random(in: 0.08...0.18)
             speedWaveCycles = Double.random(in: 1.0...2.4)
             speedWavePhase = Double.random(in: 0...(2 * Double.pi))
@@ -316,7 +343,50 @@ final class PetWindowController: NSObject {
             speedWaveCycles: speedWaveCycles,
             speedWavePhase: speedWavePhase
         )
-        nextAutonomousRetargetAt = now + (autonomousTestMode ? 60 : Double.random(in: 10.0...22.0))
+        nextAutonomousRetargetAt = now + retargetDelay()
+    }
+
+    private func shouldBeginAutonomousMotion() -> Bool {
+        if autonomousTestMode {
+            return true
+        }
+        if autonomousEnergy.shouldPauseForRest(moodUnit: fatigueMoodUnit()) {
+            return false
+        }
+        if autonomousEnergyTestMode {
+            return true
+        }
+        return Double.random(in: 0...1) < 0.52
+    }
+
+    private func shouldInterruptAutonomousMotionForRest() -> Bool {
+        guard !autonomousTestMode else { return false }
+        return autonomousEnergy.shouldPauseForRest(moodUnit: fatigueMoodUnit())
+    }
+
+    private func scheduleAutonomousRest(now: TimeInterval, includeMoment: Bool) {
+        let duration = autonomousEnergy.restDuration(
+            moodUnit: autonomousEnergyTestMode ? 0 : Double.random(in: 0...1)
+        )
+        autonomousRestUntil = now + duration
+        nextIdleMomentAt = now + Double.random(in: 2.5...6.0)
+        if includeMoment {
+            playRandomRestingMoment()
+        }
+    }
+
+    private func retargetDelay() -> TimeInterval {
+        if autonomousTestMode {
+            return 60
+        }
+        if autonomousEnergyTestMode {
+            return 0.8
+        }
+        return Double.random(in: 10.0...22.0)
+    }
+
+    private func fatigueMoodUnit() -> Double {
+        autonomousEnergyTestMode ? 0 : Double.random(in: 0...1)
     }
 
     private func playRandomRestingMoment() {
@@ -350,6 +420,33 @@ final class PetWindowController: NSObject {
         }
 
         return PetDragFrame(x: x, y: y, width: width, height: height)
+    }
+}
+
+private extension PetWindowController {
+    static func makeAutonomousEnergyController() -> PetAutonomousEnergyController {
+        PetAutonomousEnergyController(
+            stamina: environmentDouble("MIMO_AUTONOMOUS_STAMINA_INITIAL", default: 1),
+            drainPerSecond: environmentDouble(
+                "MIMO_AUTONOMOUS_STAMINA_DRAIN_PER_SECOND",
+                default: PetAutonomousEnergyController.defaultDrainPerSecond
+            ),
+            recoveryPerSecond: environmentDouble(
+                "MIMO_AUTONOMOUS_STAMINA_RECOVERY_PER_SECOND",
+                default: PetAutonomousEnergyController.defaultRecoveryPerSecond
+            )
+        )
+    }
+
+    static func environmentDouble(_ key: String, default defaultValue: Double) -> Double {
+        guard
+            let raw = ProcessInfo.processInfo.environment[key],
+            let value = Double(raw),
+            value.isFinite
+        else {
+            return defaultValue
+        }
+        return value
     }
 }
 

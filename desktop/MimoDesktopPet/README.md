@@ -105,6 +105,10 @@ transparent-surface inspection on every capture. The multi-thread capture also
 checks that the primary Mimo report is the largest, lowest bubble and that the
 secondary thread summaries remain smaller, subtly staggered context bubbles
 above it without speech tails.
+`./script/e2e_autonomous_energy.sh` launches the production app with a
+deterministic fast-drain stamina setup and verifies that Mimo moves, pauses for
+rest after stamina drops, shows a non-running rest animation, and keeps the
+transparent speech-bubble surface.
 Production E2E scripts capture the exact Mimo window and run
 `script/inspect_production_capture.swift` to reject blank, fully opaque, or
 debug-style surfaces.
@@ -138,8 +142,11 @@ is hidden in normal production launches and appears only when
 When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
 When not being dragged, Mimo periodically wanders to a random visible-screen
-position with a 60Hz time-based tween capped at `52 pt/s`. Mimo moves in short
-hops, rests between them, and plays idle, waiting, note-taking, waving, or
+position with a 60Hz time-based tween capped at `52 pt/s`. Autonomous movement
+has a stamina model: high stamina keeps Mimo near the maximum speed, movement
+drains stamina, and resting quickly recovers it to full. Once stamina drops
+below 50%, Mimo's mood can interrupt the next hop or stop the current one for a
+short break. During breaks Mimo plays idle, waiting, note-taking, waving, or
 jumping moments instead of walking endlessly.
 
 For deterministic QA, set `MIMO_WINDOW_ORIGIN=x,y` to pin the initial panel
