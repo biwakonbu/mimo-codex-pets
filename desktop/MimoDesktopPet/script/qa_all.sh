@@ -120,6 +120,7 @@ run_from_repo "python syntax checks" python3 -m py_compile \
 run_from_repo "swift script parse checks" bash -c '
   set -euo pipefail
   swiftc -parse desktop/MimoDesktopPet/script/find_mimo_window.swift
+  swiftc -parse desktop/MimoDesktopPet/script/inspect_accessibility_surface.swift
   swiftc -parse desktop/MimoDesktopPet/script/inspect_production_capture.swift
 '
 run_from_root "QA all E2E coverage check" ./script/check_qa_all_coverage.py

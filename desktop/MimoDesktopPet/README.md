@@ -108,6 +108,12 @@ speech tails.
 Production E2E scripts capture the exact Mimo window and run
 `script/inspect_production_capture.swift` to reject blank, fully opaque, or
 debug-style surfaces.
+`script/inspect_accessibility_surface.swift` also inspects the running app's
+macOS accessibility tree. The empty-thread E2E verifies the production surface
+identifier, idle bubble text, and Mimo image node; the overflow-thread E2E
+requires the compact multi-thread bubble stack to expose multiple static-text
+nodes and the overflow summary from the same `MimoDesktopPet.productionSurface`
+box that Computer Use sees.
 
 ## Controls
 

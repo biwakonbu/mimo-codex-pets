@@ -71,6 +71,13 @@ while time.time() < deadline:
 raise SystemExit(last_error)
 PY
 
+swift ./script/inspect_accessibility_surface.swift \
+  --pid "$APP_PID" \
+  --value-contains "本番表示。" \
+  --value-contains "待機中" \
+  --child-value "待機中" \
+  --child-description "Mimo"
+
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 
