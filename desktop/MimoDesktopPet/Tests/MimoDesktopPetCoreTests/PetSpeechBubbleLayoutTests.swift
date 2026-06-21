@@ -26,7 +26,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placement.index, 0)
         XCTAssertEqual(placement.horizontalOffset, 0)
         XCTAssertEqual(placement.verticalOffset, 0)
-        XCTAssertEqual(placement.maxTextWidth, 318)
+        XCTAssertEqual(placement.maxTextWidth, 344)
+        XCTAssertNil(placement.minTextWidth)
         XCTAssertEqual(placement.scale, 1)
         XCTAssertEqual(placement.zIndex, 10)
     }
@@ -41,13 +42,14 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placement.index, 0)
         XCTAssertEqual(placement.horizontalOffset, 0)
         XCTAssertEqual(placement.verticalOffset, 0)
-        XCTAssertEqual(placement.maxTextWidth, 318)
+        XCTAssertEqual(placement.maxTextWidth, 344)
+        XCTAssertEqual(placement.minTextWidth, 326)
         XCTAssertEqual(placement.scale, 1)
         XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .focus), 48)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .focus), 2)
     }
 
-    func testThreeBubbleStackKeepsPrimaryBubbleAttachedToMimoWithCompactThreadChips() {
+    func testThreeBubbleStackKeepsPrimaryBubbleAttachedToMimoWithStackedThreadRows() {
         let status = PetSpeechBubbleLayout.placement(
             for: 0,
             role: .status,
@@ -65,21 +67,22 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(status.verticalOffset, 0)
-        XCTAssertEqual(firstThread.verticalOffset, -74)
-        XCTAssertEqual(secondThread.verticalOffset, -126)
-        XCTAssertLessThan(firstThread.horizontalOffset, 0)
-        XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
-        XCTAssertEqual(firstThread.maxTextWidth, 190)
-        XCTAssertEqual(secondThread.maxTextWidth, 190)
-        XCTAssertEqual(firstThread.minTextWidth, 184)
-        XCTAssertEqual(secondThread.minTextWidth, 184)
-        XCTAssertEqual(firstThread.scale, 0.9)
-        XCTAssertEqual(secondThread.scale, 0.9)
+        XCTAssertEqual(status.minTextWidth, 326)
+        XCTAssertEqual(firstThread.verticalOffset, -43)
+        XCTAssertEqual(secondThread.verticalOffset, -75)
+        XCTAssertEqual(firstThread.horizontalOffset, 0)
+        XCTAssertEqual(secondThread.horizontalOffset, 0)
+        XCTAssertEqual(firstThread.maxTextWidth, 318)
+        XCTAssertEqual(secondThread.maxTextWidth, 318)
+        XCTAssertEqual(firstThread.minTextWidth, 302)
+        XCTAssertEqual(secondThread.minTextWidth, 302)
+        XCTAssertEqual(firstThread.scale, 1)
+        XCTAssertEqual(secondThread.scale, 1)
         XCTAssertGreaterThan(status.zIndex, firstThread.zIndex)
         XCTAssertGreaterThan(firstThread.zIndex, secondThread.zIndex)
     }
 
-    func testFourBubbleStackFansOutCompactThreadChipsAroundPrimaryBubble() {
+    func testFourBubbleStackAlignsThreadRowsAbovePrimaryBubble() {
         let status = PetSpeechBubbleLayout.placement(
             for: 0,
             role: .status,
@@ -102,24 +105,24 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(status.verticalOffset, 0)
-        XCTAssertEqual(firstThread.verticalOffset, -64)
-        XCTAssertEqual(secondThread.verticalOffset, -108)
-        XCTAssertEqual(thirdThread.verticalOffset, -158)
-        XCTAssertLessThan(firstThread.horizontalOffset, 0)
-        XCTAssertGreaterThan(secondThread.horizontalOffset, 0)
-        XCTAssertLessThan(thirdThread.horizontalOffset, secondThread.horizontalOffset)
-        XCTAssertEqual(firstThread.maxTextWidth, 190)
-        XCTAssertEqual(secondThread.maxTextWidth, 190)
-        XCTAssertEqual(thirdThread.maxTextWidth, 190)
-        XCTAssertTrue([firstThread, secondThread, thirdThread].allSatisfy { $0.minTextWidth == 184 })
+        XCTAssertEqual(firstThread.verticalOffset, -43)
+        XCTAssertEqual(secondThread.verticalOffset, -75)
+        XCTAssertEqual(thirdThread.verticalOffset, -107)
+        XCTAssertEqual(firstThread.horizontalOffset, 0)
+        XCTAssertEqual(secondThread.horizontalOffset, 0)
+        XCTAssertEqual(thirdThread.horizontalOffset, 0)
+        XCTAssertEqual(firstThread.maxTextWidth, 318)
+        XCTAssertEqual(secondThread.maxTextWidth, 318)
+        XCTAssertEqual(thirdThread.maxTextWidth, 318)
+        XCTAssertTrue([firstThread, secondThread, thirdThread].allSatisfy { $0.minTextWidth == 302 })
         XCTAssertEqual(status.scale, 1)
-        XCTAssertEqual(firstThread.scale, 0.9)
-        XCTAssertEqual(secondThread.scale, 0.9)
-        XCTAssertEqual(thirdThread.scale, 0.9)
-        XCTAssertLessThan(firstThread.maxTextWidth, status.maxTextWidth - 100)
+        XCTAssertEqual(firstThread.scale, 1)
+        XCTAssertEqual(secondThread.scale, 1)
+        XCTAssertEqual(thirdThread.scale, 1)
+        XCTAssertLessThan(firstThread.maxTextWidth, status.maxTextWidth)
     }
 
-    func testFiveBubbleStackKeepsPrimaryReadableAndFansOutThreadChips() {
+    func testFiveBubbleStackKeepsPrimaryReadableAndStacksThreadRows() {
         let placements = (0..<PetSpeechBubbleLayout.productionVisibleLimit).map { index in
             PetSpeechBubbleLayout.placement(
                 for: index,
@@ -128,15 +131,16 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             )
         }
 
-        XCTAssertEqual(placements.map(\.verticalOffset), [0, -58, -98, -140, -184])
-        XCTAssertEqual(placements.map(\.horizontalOffset), [0, -110, 110, -110, 110])
-        XCTAssertEqual(placements[0].maxTextWidth, 318)
-        XCTAssertEqual(placements[1].maxTextWidth, 190)
-        XCTAssertEqual(placements[4].maxTextWidth, 168)
-        XCTAssertEqual(placements[1].minTextWidth, 184)
-        XCTAssertEqual(placements[4].minTextWidth, 158)
+        XCTAssertEqual(placements.map(\.verticalOffset), [0, -43, -75, -107, -139])
+        XCTAssertEqual(placements.map(\.horizontalOffset), [0, 0, 0, 0, 0])
+        XCTAssertEqual(placements[0].maxTextWidth, 344)
+        XCTAssertEqual(placements[0].minTextWidth, 326)
+        XCTAssertEqual(placements[1].maxTextWidth, 318)
+        XCTAssertEqual(placements[4].maxTextWidth, 288)
+        XCTAssertEqual(placements[1].minTextWidth, 302)
+        XCTAssertEqual(placements[4].minTextWidth, 238)
         XCTAssertEqual(placements[0].scale, 1)
-        XCTAssertTrue(placements.dropFirst().allSatisfy { $0.scale <= 0.9 })
+        XCTAssertTrue(placements.dropFirst().allSatisfy { $0.scale == 1 })
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.zIndex < placements[0].zIndex })
     }
 
@@ -147,12 +151,12 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: PetSpeechBubbleLayout.productionVisibleLimit
         )
 
-        XCTAssertEqual(overflow.verticalOffset, -184)
-        XCTAssertEqual(overflow.horizontalOffset, 110)
-        XCTAssertEqual(overflow.maxTextWidth, 168)
-        XCTAssertEqual(overflow.minTextWidth, 158)
+        XCTAssertEqual(overflow.verticalOffset, -139)
+        XCTAssertEqual(overflow.horizontalOffset, 0)
+        XCTAssertEqual(overflow.maxTextWidth, 288)
+        XCTAssertEqual(overflow.minTextWidth, 238)
         XCTAssertEqual(overflow.fillOpacity, 0.88)
-        XCTAssertEqual(overflow.scale, 0.9)
+        XCTAssertEqual(overflow.scale, 1)
         XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .overflow), 22)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .overflow), 1)
     }
@@ -165,11 +169,11 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
-        XCTAssertEqual(placement.verticalOffset, -184)
-        XCTAssertEqual(placement.horizontalOffset, 110)
+        XCTAssertEqual(placement.verticalOffset, -139)
+        XCTAssertEqual(placement.horizontalOffset, 0)
     }
 
-    func testFourBubbleFanFitsInsideProductionStackWidth() {
+    func testStackedThreadRowsFitInsideProductionStackWidth() {
         for index in 0..<PetSpeechBubbleLayout.productionVisibleLimit {
             let role: PetSpeechBubbleRole = index == 0 ? .status : (
                 index == PetSpeechBubbleLayout.productionVisibleLimit - 1 ? .overflow : .conversation
@@ -199,9 +203,9 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(primary.verticalOffset, 0)
         XCTAssertEqual(primary.scale, 1)
-        XCTAssertEqual(primary.maxTextWidth, 318)
+        XCTAssertEqual(primary.maxTextWidth, 344)
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.verticalOffset < primary.verticalOffset })
-        XCTAssertTrue(placements.dropFirst().allSatisfy { $0.scale < primary.scale })
+        XCTAssertTrue(placements.dropFirst().allSatisfy { $0.scale == primary.scale })
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.maxTextWidth < primary.maxTextWidth })
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.zIndex < primary.zIndex })
     }
@@ -222,17 +226,16 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(primary.scale, 1)
         XCTAssertEqual(primary.fillOpacity, 0.96)
-        XCTAssertEqual(primary.maxTextWidth, 318)
-        XCTAssertTrue(secondary.allSatisfy { $0.scale <= 0.9 })
+        XCTAssertEqual(primary.maxTextWidth, 344)
+        XCTAssertTrue(secondary.allSatisfy { $0.scale == 1 })
         XCTAssertTrue(secondary.allSatisfy { $0.fillOpacity < primary.fillOpacity })
-        XCTAssertTrue(secondary.allSatisfy { $0.maxTextWidth <= 190 || $0.role == .overflow })
+        XCTAssertTrue(secondary.allSatisfy { $0.maxTextWidth <= 318 || $0.role == .overflow })
         XCTAssertTrue(secondary.allSatisfy { $0.minTextWidth != nil })
     }
 
-    func testClusterGuideStaysSubtleBehindMultipleThreadBubbles() {
-        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.clusterGuideOpacity, 0.06)
-        XCTAssertGreaterThan(PetSpeechBubbleLayout.clusterGuideOpacity, 0)
-        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.clusterGuideLineWidth, 1.25)
-        XCTAssertGreaterThan(PetSpeechBubbleLayout.clusterGuideLineWidth, 0)
+    func testStackedThreadRowsUseCompactSpacing() {
+        XCTAssertEqual(PetSpeechBubbleLayout.productionRowSpacing, 5)
+        XCTAssertGreaterThan(PetSpeechBubbleLayout.productionRowSpacing, 0)
+        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.productionRowSpacing, 7)
     }
 }

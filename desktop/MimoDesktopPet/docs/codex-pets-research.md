@@ -187,7 +187,7 @@ Production mode:
 - Keep the panel transparent and borderless.
 - Keep the panel above other apps by using macOS screen-saver window level plus
   all-Spaces/fullscreen auxiliary collection behavior.
-- Show only Mimo and a speech bubble.
+- Show only Mimo and speech bubbles.
 - Do not show a console, transcript feed, JSON payload, raw tool arguments, local paths, or long model output.
 - Keep status and conversation text short enough to fit a two-line bubble.
 - Use a debug-only overlay for feed-style inspection. Production startup must
@@ -260,23 +260,23 @@ Conversation behavior:
   it uses the `focus` presentation role, a stronger accent marker, and the
   Mimo-style thread report instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
-  Secondary thread bubbles are smaller fixed-width context chips above it: they
+  Secondary thread bubbles are smaller fixed-width context rows above it: they
   stay white, use compact accent markers, omit the longer `ご主人、...です`
-  phrase, and alternate through left/right columns with a subtle cluster guide
-  behind the bubbles so concurrent thread status is readable without becoming a
-  feed panel. The fixed secondary widths keep short and long thread titles from
-  making the bubble cluster jitter as Codex notifications arrive. This keeps
-  Codex Pets-like multi-thread awareness in the production surface without
-  rendering a console, transcript feed, or debug panel.
+  phrase, and align into a centered stacked list so concurrent thread status is
+  readable without becoming a transcript panel. The fixed secondary widths keep
+  short and long thread titles from making the bubble stack jitter as Codex
+  notifications arrive. This keeps Codex Pets-like multi-thread awareness in
+  the production surface without rendering a console, transcript feed, or debug
+  panel.
 - Status bubbles are capped at 44 characters, focused-thread primary bubbles at
-  48 characters, secondary thread chips at 34 characters, and overflow bubbles
+  48 characters, secondary thread rows at 34 characters, and overflow bubbles
   at 22 characters. Secondary bubbles render as one-line compact summaries such
   as `「資料整理」作業中` or `「承認」確認待ち`, so a five-bubble stack can show the
-  primary Mimo report, three concrete thread chips, and one overflow counter
+  primary Mimo report, three concrete thread rows, and one overflow counter
   without crowding or clipping Mimo. SwiftUI splits those thread bubble strings
-  into a small title line and a short Mimo report line at render time, preserving
-  compact app-server logs while making simultaneous thread bubbles easier to
-  scan visually. If more thread summaries are available than the remaining
+  into a colored title segment and one-line Mimo summary at render time,
+  preserving compact app-server logs while making simultaneous thread bubbles
+  easier to scan visually. If more thread summaries are available than the remaining
   compact slots can show, Mimo keeps up to six thread contexts internally and
   reserves the final compact slot for a smaller overflow counter bubble such as
   `ほか2件も見ています` rather than silently dropping that extra context. If hidden
@@ -301,11 +301,12 @@ Conversation behavior:
   panel. This makes screen-reader and Computer Use-visible text match the
   product bubble surface instead of introducing a second transcript channel.
 - The multi-bubble production capture gate verifies more than raw bubble count:
-  it requires four separated white bubble components, a larger primary bubble
-  below the secondary thread chips, a single primary speech tail, no secondary
-  tails, and one compact colored activity/state marker inside every bubble.
-  This keeps the Codex Pets-style simultaneous thread surface from regressing
-  into a flat transcript list or anonymous white chips.
+  it requires four or five separated white bubble components, a larger primary
+  bubble below the secondary thread rows, a centered stacked alignment, a single
+  primary speech tail, no secondary tails, and one compact colored
+  activity/state marker inside every bubble. This keeps the Codex Pets-style
+  simultaneous thread surface from regressing into a scattered cluster, flat
+  transcript list, or anonymous white cards.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary bubble text is still showing a timed moment or an older queue
   item.
@@ -318,9 +319,9 @@ Conversation behavior:
 - Secondary thread progress from notifications should be able to outrank a
   routine synthesized `作業中` status line, but static previews should not. If
   a secondary thread only has a preview plus active status, Mimo should keep the
-  clearer active-status chip. If a concrete notification arrives for that
+  clearer active-status row. If a concrete notification arrives for that
   thread, such as diff, approval review, hook, server request, or goal progress,
-  the notification summary should briefly replace the routine status chip.
+  the notification summary should briefly replace the routine status row.
   The same applies to safe fixed summaries for context compaction, model
   rerouting/verification, moderation metadata, warnings, guardian warnings,
   errors, and MCP startup status.
@@ -407,10 +408,11 @@ Manual or visual checks:
   white bubble components and verifies four or five bubble surfaces: the
   primary Mimo report must be widest, visually largest, and separated below the
   secondary context bubbles. The same hierarchy check verifies that only the
-  primary Mimo report has a speech tail; secondary thread context chips must
-  stay tailless. Secondary thread chips must also occupy both left and right
-  columns with enough horizontal and vertical spread, so the UI cannot regress
-  into a single stacked feed panel while still passing a raw bubble-count check.
+  primary Mimo report has a speech tail; secondary thread context rows must stay
+  tailless. Secondary thread rows must stay horizontally aligned while preserving
+  enough vertical spread, so the UI cannot regress into scattered cards,
+  anonymous badges, or one merged white panel while still passing a raw
+  bubble-count check.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
@@ -447,14 +449,17 @@ Manual or visual checks:
   Live app presentation smoke applies the same accessibility channel checks to
   real Codex app-server data: the value must mark production mode, mirror every
   visible bubble, and pass the same raw/sensitive-fragment leak gate as the
-  rendered bubble text.
+  rendered bubble text. The live gate also rejects generic ambient-unsafe
+  shapes such as URLs, local paths, credential markers, long token-like
+  strings, and email addresses, so the real app-server path is not weaker than
+  fake leak scenarios.
   Overflow E2E separately verifies one focused primary bubble, three concrete
   conversation bubbles, and one overflow counter bubble with no activity kind
   on the counter.
 - Primary bubble selection is not a transcript cursor. Mimo normally favors the
   focused Codex thread, but a failure, confirmation-waiting thread, or
   review-ready thread can take the primary report ahead of a merely active
-  focused thread. The active focused thread remains as a secondary context chip,
+  focused thread. The active focused thread remains as a secondary context row,
   which better matches the multi-thread companion role: Mimo reports the state
   that most needs the user's attention first.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so

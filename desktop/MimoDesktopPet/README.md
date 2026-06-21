@@ -122,23 +122,21 @@ For deterministic QA, set `MIMO_WINDOW_ORIGIN=x,y` to pin the initial panel
 origin inside the main visible screen. Set `MIMO_AUTONOMOUS_DISABLED=1` only for
 visual inspection runs where Mimo must stay still.
 
-In production mode the panel stays transparent and shows only Mimo plus a short
-fan of white bubbles. When Codex conversation context is available, the primary
-bubble sits closest to Mimo, keeps the speech tail, and promotes the focused
-thread into a short Mimo-style report. The visible stack is capped at five
-bubbles total: one primary Mimo report plus up to four smaller secondary
-context bubbles above it. Those secondary bubbles are compact thread-status
-chips, with accent markers, no tails, and a
-subtle cluster guide behind the bubbles so concurrent threads read as one Mimo
-reporting surface rather than a feed panel. Thread bubbles split
-`「thread title」summary` text into a tiny title line plus Mimo's short report, so
-multiple bubbles can be scanned without relying on a transcript-like list. They
-do not repeat the longer `ご主人、...です` phrase, and they do not dump raw model
-output, commands, or payload text. Threads can be summarized from sanitized item
-activity or from thread/turn status alone. Bubble markers use semantic tone for
-urgent states and typed activity kind for ordinary Codex work such as plan,
-command, file, browser, image, skill, or mention activity. The stack favors
-thread coverage, so
+In production mode the panel stays transparent and shows only Mimo plus a
+stacked list of white speech bubbles. When Codex conversation context is
+available, the primary bubble sits closest to Mimo, keeps the speech tail, and
+promotes the focused thread into a short Mimo-style report. The visible stack is
+capped at five bubbles total: one primary Mimo report plus up to four smaller
+secondary context bubbles above it. Those secondary bubbles are compact
+thread-status rows with accent markers and no tails, forming a small readable
+thread dashboard rather than a transcript panel. Thread bubbles render
+`「thread title」summary` as a colored title plus one-line Mimo summary, so
+multiple bubbles can be scanned quickly. They do not repeat the longer
+`ご主人、...です` phrase, and they do not dump raw model output, commands, or
+payload text. Threads can be summarized from sanitized item activity or from
+thread/turn status alone. Bubble markers use semantic tone for urgent states
+and typed activity kind for ordinary Codex work such as plan, command, file,
+browser, image, skill, or mention activity. The stack favors thread coverage, so
 each visible thread appears at most once. If more threads are active than the
 compact stack can show, Mimo tracks up to six thread contexts and the last
 secondary bubble becomes a short overflow note such as `ほか2件も見ています`
@@ -150,7 +148,7 @@ If another visible thread needs attention, such as a failure, confirmation
 wait, or review-ready state, that thread is promoted into the primary Mimo
 report ahead of a merely active focused thread. The active focused thread stays
 visible as a smaller context bubble, so urgent Codex state is not buried in the
-cluster.
+stack.
 Thread contexts discovered from lifecycle notifications are kept briefly even
 when the next `thread/loaded/list` or `thread/list` response has not yet caught
 up, so a newly started or updated Codex session does not flicker out of the

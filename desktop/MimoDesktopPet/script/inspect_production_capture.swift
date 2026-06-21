@@ -143,7 +143,7 @@ if requiresMultiBubbleHierarchy {
     let components = whiteComponents(mask: whiteMask, width: width, height: height)
     let bubbleComponents = components.filter { component in
         component.area >= 3_000 &&
-            component.width >= 150 &&
+            component.width >= 220 &&
             component.height >= 22 &&
             component.maxY <= 245
     }
@@ -162,10 +162,10 @@ if requiresMultiBubbleHierarchy {
     let maxSecondaryArea = secondaryComponents.map(\.area).max() ?? 0
     let lowestSecondaryBottom = secondaryComponents.map(\.maxY).max() ?? 0
 
-    guard primary.width >= maxSecondaryWidth + 50 else {
+    guard primary.width >= maxSecondaryWidth + 18 else {
         fail("primary bubble is not visibly wider than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
-    guard primary.area >= Int(Double(maxSecondaryArea) * 1.35) else {
+    guard primary.area >= Int(Double(maxSecondaryArea) * 1.2) else {
         fail("primary bubble is not visibly more prominent than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
     guard primary.minY >= lowestSecondaryBottom + 6 else {
@@ -173,16 +173,10 @@ if requiresMultiBubbleHierarchy {
     }
     let secondaryCentersX = secondaryComponents.map(\.centerX)
     let secondaryCentersY = secondaryComponents.map(\.centerY)
-    guard
-        secondaryCentersX.contains(where: { $0 <= primary.centerX - 36 }),
-        secondaryCentersX.contains(where: { $0 >= primary.centerX + 36 })
-    else {
-        fail("secondary context chips are not fanned to both sides of the primary bubble: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
-    }
     let secondaryHorizontalSpread = (secondaryCentersX.max() ?? 0) - (secondaryCentersX.min() ?? 0)
     let secondaryVerticalSpread = (secondaryCentersY.max() ?? 0) - (secondaryCentersY.min() ?? 0)
-    guard secondaryHorizontalSpread >= 120, secondaryVerticalSpread >= 70 else {
-        fail("secondary context chips look like a collapsed feed instead of a fanned bubble cluster: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
+    guard secondaryHorizontalSpread <= 36, secondaryVerticalSpread >= 64 else {
+        fail("secondary context bubbles are not aligned as a readable stacked thread list: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
     }
 
     guard hasCenteredTailTaper(mask: whiteMask, width: width, component: primary) else {
@@ -205,7 +199,7 @@ if requiresMultiBubbleHierarchy {
     }
 
     print(
-        "Multi-bubble hierarchy inspection passed: " +
+        "Multi-bubble stacked hierarchy inspection passed: " +
         "primary=\(describe(primary)), " +
         "secondary=\(describe(secondaryComponents)), " +
         "markers=\(markerDescriptions)"

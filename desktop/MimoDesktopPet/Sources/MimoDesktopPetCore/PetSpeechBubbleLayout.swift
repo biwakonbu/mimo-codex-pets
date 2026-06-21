@@ -42,12 +42,11 @@ public enum PetSpeechBubbleLayout {
     public static let productionSpriteWidth = 192.0
     public static let productionSpriteHeight = 208.0
     public static let productionVisibleLimit = 5
+    public static let productionRowSpacing = 5.0
     public static let statusTextLimit = 44
     public static let focusTextLimit = 48
     public static let conversationTextLimit = 34
     public static let overflowTextLimit = 22
-    public static let clusterGuideOpacity = 0.045
-    public static let clusterGuideLineWidth = 1.0
 
     public static func textLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {
@@ -78,31 +77,17 @@ public enum PetSpeechBubbleLayout {
     ) -> PetSpeechBubblePlacement {
         let count = max(1, min(visibleCount, productionVisibleLimit))
         let normalizedIndex = max(0, min(index, count - 1))
-        let offsets: [(x: Double, y: Double)]
-        switch count {
-        case 1:
-            offsets = [(0, 0)]
-        case 2:
-            offsets = [(0, 0), (-110, -82)]
-        case 3:
-            offsets = [(0, 0), (-110, -74), (110, -126)]
-        case 4:
-            offsets = [(0, 0), (-110, -64), (110, -108), (-110, -158)]
-        default:
-            offsets = [(0, 0), (-110, -58), (110, -98), (-110, -140), (110, -184)]
-        }
-        let offset = offsets[normalizedIndex]
         let isPrimary = normalizedIndex == 0
 
         return PetSpeechBubblePlacement(
             index: normalizedIndex,
             role: role,
             maxTextWidth: maxTextWidth(role: role),
-            minTextWidth: minTextWidth(role: role),
-            horizontalOffset: offset.x,
-            verticalOffset: offset.y,
+            minTextWidth: minTextWidth(role: role, isPrimary: isPrimary, visibleCount: count),
+            horizontalOffset: 0,
+            verticalOffset: -rowOffset(for: normalizedIndex),
             fillOpacity: fillOpacity(role: role),
-            scale: scale(role: role, isPrimary: isPrimary),
+            scale: 1,
             zIndex: isPrimary ? 10 : Double(productionVisibleLimit - normalizedIndex)
         )
     }
@@ -110,22 +95,28 @@ public enum PetSpeechBubbleLayout {
     private static func maxTextWidth(role: PetSpeechBubbleRole) -> Double {
         switch role {
         case .status, .focus:
-            return 318
+            return 344
         case .conversation:
-            return 190
+            return 318
         case .overflow:
-            return 168
+            return 288
         }
     }
 
-    private static func minTextWidth(role: PetSpeechBubbleRole) -> Double? {
+    private static func minTextWidth(
+        role: PetSpeechBubbleRole,
+        isPrimary: Bool,
+        visibleCount: Int
+    ) -> Double? {
         switch role {
-        case .status, .focus:
-            return nil
+        case .status:
+            return isPrimary && visibleCount > 1 ? 326 : nil
+        case .focus:
+            return 326
         case .conversation:
-            return 184
+            return 302
         case .overflow:
-            return 158
+            return 238
         }
     }
 
@@ -140,14 +131,18 @@ public enum PetSpeechBubbleLayout {
         }
     }
 
-    private static func scale(role: PetSpeechBubbleRole, isPrimary: Bool) -> Double {
-        switch role {
-        case .status, .focus:
-            return isPrimary ? 1.0 : 0.94
-        case .conversation:
-            return 0.9
-        case .overflow:
-            return 0.9
+    private static func rowOffset(for index: Int) -> Double {
+        switch index {
+        case 0:
+            return 0
+        case 1:
+            return 43
+        case 2:
+            return 75
+        case 3:
+            return 107
+        default:
+            return 139
         }
     }
 }

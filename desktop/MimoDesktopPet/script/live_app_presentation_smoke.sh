@@ -119,6 +119,39 @@ forbidden_fragments = (
     "Ignore previous instructions",
     "developer message",
 )
+blocked_ambient_fragments = (
+    "://",
+    "www.",
+    "localhost:",
+    "127.0.0.1",
+    "/users/",
+    "/private/",
+    "/volumes/",
+    "~/",
+    "\\users\\",
+    ".env",
+    "credentials",
+    "secret",
+    "authorization:",
+    "api_key",
+    "apikey",
+    "x-api-key",
+    "access token",
+    "auth token",
+    "bearer ",
+    "password",
+    "private key",
+)
+blocked_ambient_patterns = (
+    r"(?:^|\s)/(?:tmp|var|etc|opt|usr|bin|sbin)/",
+    r"[A-Za-z]:\\",
+    r"(?i)\b(?:token|authorization|api[-_ ]?key|password|passwd|secret|session|cookie)\s*[:=]",
+    r"(?i)\b[A-Z][A-Z0-9_]*(?:TOKEN|SECRET|KEY|PASSWORD|COOKIE)[A-Z0-9_]*\s*=",
+    r"(?i)\bsk-[A-Za-z0-9_-]{20,}",
+    r"(?i)\bgh[pousr]_[A-Za-z0-9_]{20,}",
+    r"[A-Fa-f0-9]{32,}",
+    r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
+)
 role_limits = {
     "status": 44,
     "focus": 48,
@@ -170,6 +203,25 @@ if expect_thread_context:
 def bubble_title(text):
     match = re.search(r"「([^」]+)」", str(text))
     return match.group(1) if match else None
+
+
+def reject_unsafe_visible_text(text):
+    lowered = text.lower()
+    for fragment in forbidden_fragments:
+        if fragment in text:
+            raise SystemExit(
+                f"live app production surface leaked raw or sensitive text: {fragment!r} in {text!r}"
+            )
+    for fragment in blocked_ambient_fragments:
+        if fragment in lowered:
+            raise SystemExit(
+                f"live app production surface leaked unsafe ambient fragment: {fragment!r} in {text!r}"
+            )
+    for pattern in blocked_ambient_patterns:
+        if re.search(pattern, text):
+            raise SystemExit(
+                f"live app production surface leaked unsafe ambient pattern: {pattern!r} in {text!r}"
+            )
 
 while time.time() < deadline:
     if not os.path.exists(log_path):
@@ -253,11 +305,7 @@ while time.time() < deadline:
             [str(row.get("bubbleText", "")), accessibility_value] +
             [str(bubble) for bubble in visible_bubbles]
         )
-        for fragment in forbidden_fragments:
-            if fragment in all_visible_text:
-                raise SystemExit(
-                    f"live app production surface leaked raw or sensitive text: {fragment!r} in {all_visible_text!r}"
-                )
+        reject_unsafe_visible_text(all_visible_text)
         bubble = str(row.get("bubbleText", ""))
         is_offline = bool(row.get("isOffline", False))
         if is_offline:

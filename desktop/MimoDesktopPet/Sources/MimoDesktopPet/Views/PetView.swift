@@ -49,26 +49,10 @@ private struct ProductionBubbleStackView: View {
 
     var body: some View {
         let visible = Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit))
+        let rows = Array(visible.enumerated()).reversed()
 
-        ZStack(alignment: .bottom) {
-            if visible.count > 1 {
-                BubbleClusterGuide(visibleCount: visible.count)
-                    .stroke(
-                        Color(red: 0.48, green: 0.62, blue: 0.78).opacity(PetSpeechBubbleLayout.clusterGuideOpacity),
-                        style: StrokeStyle(
-                            lineWidth: CGFloat(PetSpeechBubbleLayout.clusterGuideLineWidth),
-                            lineCap: .round,
-                            lineJoin: .round
-                        )
-                    )
-                    .frame(
-                        width: CGFloat(PetSpeechBubbleLayout.productionStackWidth),
-                        height: CGFloat(PetSpeechBubbleLayout.productionStackHeight)
-                    )
-                    .zIndex(0)
-            }
-
-            ForEach(Array(visible.enumerated()), id: \.element.id) { index, bubble in
+        VStack(spacing: CGFloat(PetSpeechBubbleLayout.productionRowSpacing)) {
+            ForEach(rows, id: \.element.id) { index, bubble in
                 let placement = PetSpeechBubbleLayout.placement(
                     for: index,
                     role: bubble.role,
@@ -86,10 +70,6 @@ private struct ProductionBubbleStackView: View {
                     accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone)
                 )
                 .scaleEffect(CGFloat(placement.scale), anchor: .center)
-                .offset(
-                    x: CGFloat(placement.horizontalOffset),
-                    y: CGFloat(placement.verticalOffset)
-                )
                 .zIndex(placement.zIndex)
             }
         }
@@ -98,36 +78,6 @@ private struct ProductionBubbleStackView: View {
             height: CGFloat(PetSpeechBubbleLayout.productionStackHeight),
             alignment: .bottom
         )
-    }
-}
-
-private struct BubbleClusterGuide: Shape {
-    let visibleCount: Int
-
-    func path(in rect: CGRect) -> Path {
-        let count = max(1, min(visibleCount, PetSpeechBubbleLayout.productionVisibleLimit))
-        var path = Path()
-        guard count > 1 else { return path }
-
-        let primaryAnchor = CGPoint(x: rect.midX, y: rect.maxY - 24)
-        for index in 1..<count {
-            let placement = PetSpeechBubbleLayout.placement(
-                for: index,
-                role: .conversation,
-                visibleCount: count
-            )
-            let secondaryAnchor = CGPoint(
-                x: rect.midX + CGFloat(placement.horizontalOffset),
-                y: rect.maxY - 24 + CGFloat(placement.verticalOffset)
-            )
-            let control = CGPoint(
-                x: (primaryAnchor.x + secondaryAnchor.x) / 2,
-                y: min(primaryAnchor.y, secondaryAnchor.y) - 12
-            )
-            path.move(to: primaryAnchor)
-            path.addQuadCurve(to: secondaryAnchor, control: control)
-        }
-        return path
     }
 }
 
@@ -342,10 +292,10 @@ private struct BubbleTextContent: View {
     var body: some View {
         let parts = PetSpeechBubbleTextParts.parse(text)
 
-        if role != .status, let threadTitle = parts.threadTitle {
+        if role == .focus, let threadTitle = parts.threadTitle {
             VStack(alignment: .leading, spacing: role == .focus ? 2 : 1) {
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
-                    if role == .focus, let prefix = parts.prefix {
+                    if let prefix = parts.prefix {
                         Text(prefix)
                             .font(.system(size: titleFontSize - 0.5, weight: .medium))
                             .foregroundStyle(.secondary)
@@ -368,6 +318,23 @@ private struct BubbleTextContent: View {
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.leading)
+            }
+        } else if role == .conversation, let threadTitle = parts.threadTitle {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text(threadTitle)
+                    .font(.system(size: titleFontSize, weight: .semibold))
+                    .foregroundStyle(accentColor.opacity(0.96))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.74)
+                    .truncationMode(.tail)
+
+                Text(parts.summary)
+                    .font(.system(size: fontSize, weight: fontWeight))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(minimumScaleFactor)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
             Text(text)
