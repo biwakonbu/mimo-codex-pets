@@ -55,7 +55,8 @@ Build a signed release DMG without notarization:
 The script builds the release binary, stages `dist/release/v0.0.1/MimoDesktopPet.app`,
 signs it with the first available `Developer ID Application` identity, creates
 `dist/release/v0.0.1/MimoDesktopPet-0.0.1.dmg`, signs the DMG, and writes a
-SHA-256 sidecar file.
+SHA-256 sidecar file. The staged app bundle includes the Mimo pet package and
+`Resources/AppIcon.icns`.
 
 To notarize and staple the DMG, first store Apple notary credentials in the
 keychain with `xcrun notarytool store-credentials`, then run:

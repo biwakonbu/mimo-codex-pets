@@ -15,6 +15,8 @@ APP_MACOS="$APP_CONTENTS/MacOS"
 APP_RESOURCES="$APP_CONTENTS/Resources"
 APP_BINARY="$APP_MACOS/$APP_NAME"
 INFO_PLIST="$APP_CONTENTS/Info.plist"
+APP_ICON_SOURCE="$ROOT_DIR/Resources/AppIcon.icns"
+APP_ICON_RESOURCE="$APP_RESOURCES/AppIcon.icns"
 PET_SOURCE_DIR="$REPO_ROOT/pets/mimo"
 PET_RESOURCE_DIR="$APP_RESOURCES/pets/mimo"
 
@@ -56,8 +58,14 @@ rm -rf "$APP_BUNDLE"
 mkdir -p "$APP_MACOS" "$PET_RESOURCE_DIR"
 cp "$BUILD_BINARY" "$APP_BINARY"
 chmod +x "$APP_BINARY"
+cp "$APP_ICON_SOURCE" "$APP_ICON_RESOURCE"
 cp "$PET_SOURCE_DIR/pet.json" "$PET_RESOURCE_DIR/pet.json"
 cp "$PET_SOURCE_DIR/spritesheet.webp" "$PET_RESOURCE_DIR/spritesheet.webp"
+
+if [[ ! -s "$APP_ICON_RESOURCE" ]]; then
+  echo "failed to stage non-empty app icon into $APP_ICON_RESOURCE" >&2
+  exit 1
+fi
 
 if [[ ! -s "$PET_RESOURCE_DIR/pet.json" || ! -s "$PET_RESOURCE_DIR/spritesheet.webp" ]]; then
   echo "failed to stage non-empty Mimo pet resources into $PET_RESOURCE_DIR" >&2
@@ -73,6 +81,8 @@ cat >"$INFO_PLIST" <<PLIST
   <string>$APP_NAME</string>
   <key>CFBundleIdentifier</key>
   <string>$BUNDLE_ID</string>
+  <key>CFBundleIconFile</key>
+  <string>AppIcon</string>
   <key>CFBundleName</key>
   <string>$APP_NAME</string>
   <key>CFBundlePackageType</key>

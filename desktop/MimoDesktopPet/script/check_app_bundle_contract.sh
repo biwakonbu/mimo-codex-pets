@@ -20,6 +20,7 @@ app_bundle = Path(sys.argv[1])
 contents = app_bundle / "Contents"
 plist_path = contents / "Info.plist"
 binary_path = contents / "MacOS" / "MimoDesktopPet"
+app_icon_path = contents / "Resources" / "AppIcon.icns"
 pet_json_path = contents / "Resources" / "pets" / "mimo" / "pet.json"
 spritesheet_path = contents / "Resources" / "pets" / "mimo" / "spritesheet.webp"
 
@@ -37,6 +38,7 @@ with plist_path.open("rb") as handle:
 expected_values = {
     "CFBundleExecutable": "MimoDesktopPet",
     "CFBundleIdentifier": "com.biwakonbu.MimoDesktopPet",
+    "CFBundleIconFile": "AppIcon",
     "CFBundleName": "MimoDesktopPet",
     "CFBundlePackageType": "APPL",
     "LSMinimumSystemVersion": "14.0",
@@ -56,6 +58,13 @@ if not os.access(binary_path, os.X_OK):
     fail(f"app executable is not executable: {binary_path}")
 if binary_path.stat().st_size <= 0:
     fail(f"app executable is empty: {binary_path}")
+
+if not app_icon_path.is_file() or app_icon_path.stat().st_size <= 0:
+    fail(f"app icon is missing or empty: {app_icon_path}")
+with app_icon_path.open("rb") as handle:
+    icon_header = handle.read(4)
+if icon_header != b"icns":
+    fail(f"app icon is not an ICNS file: {app_icon_path}")
 
 if not pet_json_path.is_file() or pet_json_path.stat().st_size <= 0:
     fail(f"Mimo pet.json is missing or empty: {pet_json_path}")
