@@ -80,6 +80,7 @@ private struct ProductionBubbleStackView: View {
                     tone: bubble.tone,
                     activityKind: bubble.activityKind,
                     showsTail: index == 0,
+                    minTextWidth: placement.minTextWidth,
                     maxTextWidth: placement.maxTextWidth,
                     fillOpacity: placement.fillOpacity,
                     accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone)
@@ -159,6 +160,7 @@ struct BubbleView: View {
     var tone: PetSpeechBubbleTone = .neutral
     var activityKind: CodexConversationActivityKind?
     var showsTail = true
+    var minTextWidth: Double?
     var maxTextWidth: Double?
     var fillOpacity: Double?
     var accentColor: Color?
@@ -192,7 +194,7 @@ struct BubbleView: View {
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
             .frame(
-                minWidth: role == .overflow ? 158 : nil,
+                minWidth: resolvedMinTextWidth.map { CGFloat($0) },
                 maxWidth: CGFloat(maxTextWidth ?? defaultMaxTextWidth)
             )
             .background(bubbleFill.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -310,6 +312,13 @@ struct BubbleView: View {
         case .overflow:
             return 176
         }
+    }
+
+    private var resolvedMinTextWidth: Double? {
+        if let minTextWidth {
+            return minTextWidth
+        }
+        return role == .overflow ? 158 : nil
     }
 
     private var showsStateMarker: Bool {

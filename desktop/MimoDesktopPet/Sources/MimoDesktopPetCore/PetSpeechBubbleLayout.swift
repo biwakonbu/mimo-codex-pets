@@ -4,6 +4,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
     public let index: Int
     public let role: PetSpeechBubbleRole
     public let maxTextWidth: Double
+    public let minTextWidth: Double?
     public let horizontalOffset: Double
     public let verticalOffset: Double
     public let fillOpacity: Double
@@ -14,6 +15,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         index: Int,
         role: PetSpeechBubbleRole,
         maxTextWidth: Double,
+        minTextWidth: Double? = nil,
         horizontalOffset: Double,
         verticalOffset: Double,
         fillOpacity: Double,
@@ -23,6 +25,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         self.index = index
         self.role = role
         self.maxTextWidth = maxTextWidth
+        self.minTextWidth = minTextWidth
         self.horizontalOffset = horizontalOffset
         self.verticalOffset = verticalOffset
         self.fillOpacity = fillOpacity
@@ -80,13 +83,13 @@ public enum PetSpeechBubbleLayout {
         case 1:
             offsets = [(0, 0)]
         case 2:
-            offsets = [(0, 0), (-100, -76)]
+            offsets = [(0, 0), (-110, -82)]
         case 3:
-            offsets = [(0, 0), (-106, -78), (104, -132)]
+            offsets = [(0, 0), (-110, -74), (110, -126)]
         case 4:
-            offsets = [(0, 0), (-106, -70), (104, -122), (-54, -174)]
+            offsets = [(0, 0), (-110, -64), (110, -108), (-110, -158)]
         default:
-            offsets = [(0, 0), (-108, -58), (108, -98), (-92, -144), (66, -186)]
+            offsets = [(0, 0), (-110, -58), (110, -98), (-110, -140), (110, -184)]
         }
         let offset = offsets[normalizedIndex]
         let isPrimary = normalizedIndex == 0
@@ -95,6 +98,7 @@ public enum PetSpeechBubbleLayout {
             index: normalizedIndex,
             role: role,
             maxTextWidth: maxTextWidth(role: role),
+            minTextWidth: minTextWidth(role: role),
             horizontalOffset: offset.x,
             verticalOffset: offset.y,
             fillOpacity: fillOpacity(role: role),
@@ -108,9 +112,20 @@ public enum PetSpeechBubbleLayout {
         case .status, .focus:
             return 318
         case .conversation:
-            return 204
+            return 190
         case .overflow:
-            return 176
+            return 168
+        }
+    }
+
+    private static func minTextWidth(role: PetSpeechBubbleRole) -> Double? {
+        switch role {
+        case .status, .focus:
+            return nil
+        case .conversation:
+            return 184
+        case .overflow:
+            return 158
         }
     }
 

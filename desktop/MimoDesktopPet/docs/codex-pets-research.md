@@ -218,18 +218,20 @@ Conversation behavior:
 - When multiple threads compete for the stack, action-required states are
   promoted before ordinary work chatter: failure first, then confirmation
   waiting, then review-ready, then the existing preferred-thread/recency order.
-- Production can show up to four fanned speech bubbles at once: one primary
+- Production can show up to five speech bubbles at once: one primary
   status/focused-thread bubble plus compact summaries from other visible
   threads. The primary bubble stays lowest, widest, and visually attached to
   Mimo with the only speech tail. When it reports a focused conversation thread
   it uses the `focus` presentation role, a stronger accent marker, and the
   Mimo-style thread report instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
-  Secondary thread bubbles are smaller context chips above it: they stay white,
-  use compact accent markers, omit the longer `ご主人、...です` phrase, and
-  alternate left/right placement with a subtle cluster guide behind the bubbles
-  so concurrent thread status is readable without becoming a feed panel. This
-  keeps Codex Pets-like multi-thread awareness in the production surface without
+  Secondary thread bubbles are smaller fixed-width context chips above it: they
+  stay white, use compact accent markers, omit the longer `ご主人、...です`
+  phrase, and alternate through left/right columns with a subtle cluster guide
+  behind the bubbles so concurrent thread status is readable without becoming a
+  feed panel. The fixed secondary widths keep short and long thread titles from
+  making the bubble cluster jitter as Codex notifications arrive. This keeps
+  Codex Pets-like multi-thread awareness in the production surface without
   rendering a console, transcript feed, or debug panel.
 - Status bubbles are capped at 44 characters, focused-thread primary bubbles at
   48 characters, secondary thread chips at 34 characters, and overflow bubbles
@@ -350,14 +352,13 @@ Manual or visual checks:
   color pixels.
 - Multi-thread state captures additionally run
   `inspect_production_capture.swift --multi-bubble-hierarchy`, which segments
-  white bubble components and verifies exactly four bubble surfaces: the
+  white bubble components and verifies four or five bubble surfaces: the
   primary Mimo report must be widest, visually largest, and separated below the
-  three secondary context bubbles. The same hierarchy check verifies that only
-  the primary Mimo report has a speech tail; secondary thread context chips
-  must stay tailless. Secondary thread chips must also fan out to both sides of
-  the primary bubble with enough horizontal and vertical spread, so the UI
-  cannot regress into a single stacked feed panel while still passing a raw
-  bubble-count check.
+  secondary context bubbles. The same hierarchy check verifies that only the
+  primary Mimo report has a speech tail; secondary thread context chips must
+  stay tailless. Secondary thread chips must also occupy both left and right
+  columns with enough horizontal and vertical spread, so the UI cannot regress
+  into a single stacked feed panel while still passing a raw bubble-count check.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
@@ -386,7 +387,7 @@ Manual or visual checks:
   the five-bubble visible limit, the primary/secondary/overflow text-length
   caps, activity-kind marker propagation, and a three-thread simultaneous
   bubble case with one focused primary bubble plus three conversation bubbles.
-  Overflow E2E separately verifies one focused primary bubble, two concrete
+  Overflow E2E separately verifies one focused primary bubble, three concrete
   conversation bubbles, and one overflow counter bubble with no activity kind
   on the counter.
 - Primary bubble selection is not a transcript cursor. Mimo normally favors the
