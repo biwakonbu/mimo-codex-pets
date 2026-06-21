@@ -280,9 +280,12 @@ cd desktop/MimoDesktopPet
 `./script/qa_all.sh` is the canonical local gate. It runs the unit suite,
 static syntax checks, generated app-server schema drift checks, live app-server
 read/presentation smoke checks, fake/content-length/proxy-fallback/empty-list/overflow/offline/disconnect/state-matrix
-production E2E capture gates, and bundle verification. When a real Codex app-server is
-intentionally unavailable, run `./script/qa_all.sh fake-only` and then rerun full
-mode before accepting app-server integration changes.
+production E2E capture gates, and bundle verification. It also runs
+`script/check_qa_all_coverage.py`, which fails if any `script/e2e_*.sh` file is
+not present in both the shell-syntax check list and the canonical execution
+steps. When a real Codex app-server is intentionally unavailable, run
+`./script/qa_all.sh fake-only` and then rerun full mode before accepting
+app-server integration changes.
 
 The full gate expands to:
 

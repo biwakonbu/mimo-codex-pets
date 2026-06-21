@@ -39,7 +39,9 @@ swift test
 
 `./script/qa_all.sh` is the pre-acceptance gate for companion behavior changes.
 It runs unit tests, static checks, schema/live app-server smoke checks, and all
-production E2E capture gates. Use `./script/qa_all.sh fake-only` only when a
+production E2E capture gates. It also verifies that every `script/e2e_*.sh`
+file is wired into the canonical gate, so new production E2E coverage cannot be
+added and then silently skipped. Use `./script/qa_all.sh fake-only` only when a
 real Codex app-server is intentionally unavailable.
 
 `./script/build_and_run.sh` stages a local app bundle under
