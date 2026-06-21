@@ -361,7 +361,10 @@ Manual or visual checks:
   visible thread and a later secondary-thread update discovered immediately
   from notification-triggered thread reads. The same fake E2E emits
   `thread/started` for a new thread and verifies that Mimo reports the new
-  thread title and sends `thread/read` before the next polling cycle.
+  thread title and sends `thread/read` before the next polling cycle. The fake
+  also keeps that started thread out of subsequent list responses and verifies
+  that Mimo retains the notification-discovered thread in later production
+  bubble refreshes instead of pruning it while list state catches up.
 - Unit tests verify that extracted `CodexConversationLine` values retain typed
   activity kinds and that bubble summaries prefer those kinds over brittle raw
   text guesses, while failure text still overrides the kind.

@@ -140,6 +140,10 @@ each visible thread appears at most once. If more threads are active than the
 compact stack can show, Mimo tracks up to six thread contexts and the last
 secondary bubble becomes a short overflow note such as `ほか3件も見ています`
 instead of silently dropping the extra context.
+Thread contexts discovered from lifecycle notifications are kept briefly even
+when the next `thread/loaded/list` or `thread/list` response has not yet caught
+up, so a newly started or updated Codex session does not flicker out of the
+production bubble stack just because it is outside the current list window.
 The debug overlay is opt-in only: production startup keeps it disabled unless
 `MIMO_DEBUG_OVERLAY=1` is set or the menu item is toggled manually.
 

@@ -254,6 +254,12 @@ if any(
     for text in row.get("bubbleTexts", [])
 ):
     raise SystemExit("closed secondary thread remained in recent production bubbles")
+
+if not any(
+    any("新しい実装スレッド" in str(text) for text in row.get("bubbleTexts", []))
+    for row in tail_rows
+):
+    raise SystemExit("notification-only started thread was not retained across later production bubble refreshes")
 PY
 
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"

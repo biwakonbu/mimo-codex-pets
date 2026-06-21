@@ -42,7 +42,7 @@ STATUS_ONLY_THREAD_TURNS = []
 THIRD_THREAD_STATUS = {"type": "active", "activeFlags": []}
 THIRD_THREAD_TURNS = []
 STARTED_THREAD_VISIBLE = False
-STARTED_THREAD_STATUS = {"type": "active", "activeFlags": []}
+STARTED_THREAD_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}
 STARTED_THREAD_TURNS = [
     {
         "id": "turn-started",
@@ -173,7 +173,7 @@ def started_thread_snapshot():
 
 
 def state_sequence():
-    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS, STATUS_ONLY_THREAD_STATUS, STARTED_THREAD_VISIBLE
+    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS, STATUS_ONLY_THREAD_STATUS
     time.sleep(2.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": []}
@@ -352,7 +352,6 @@ def state_sequence():
     )
     time.sleep(0.7)
     with STATE_LOCK:
-        STARTED_THREAD_VISIBLE = True
         started_thread = started_thread_snapshot()
     write_message(
         {

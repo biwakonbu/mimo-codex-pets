@@ -9,6 +9,7 @@ final class CodexAppServerClient {
     private enum ThreadContext {
         static let requestLimit = 6
         static let loadedRequestLimit = 10
+        static let notificationTrackingTTLSeconds = 30.0
     }
 
     private enum RequestKind {
@@ -75,6 +76,7 @@ final class CodexAppServerClient {
     private var threadTurnStatusesById: [String: CodexTurnStatus] = [:]
     private var threadAssistantFinalById: [String: Bool] = [:]
     private var threadDisplayOrder: [String] = []
+    private var notificationThreadLastSeenById: [String: DispatchTime] = [:]
     private var loadedThreadIds: [String] = []
     private var listedThreadIds: [String] = []
     private var suppressedThreadIds = Set<String>()
@@ -272,6 +274,7 @@ final class CodexAppServerClient {
         threadTurnStatusesById.removeAll()
         threadAssistantFinalById.removeAll()
         threadDisplayOrder.removeAll()
+        notificationThreadLastSeenById.removeAll()
         loadedThreadIds.removeAll()
         listedThreadIds.removeAll()
         suppressedThreadIds.removeAll()
@@ -655,9 +658,9 @@ final class CodexAppServerClient {
                let snapshot = decodeThreadSnapshot(from: threadObject) {
                 suppressedThreadIds.remove(snapshot.id)
                 selectedThreadId = snapshot.id
+                rememberNotificationThread(snapshot.id)
                 let title = threadTitle(from: threadObject)
                 threadTitlesById[snapshot.id] = title
-                rememberThreadOrder([snapshot.id])
                 let lines = CodexConversationExtractor.lines(from: threadObject)
                 if !lines.isEmpty {
                     conversationByThread[snapshot.id] = lines
@@ -676,7 +679,7 @@ final class CodexAppServerClient {
             if let payload = decodeNotificationParams(ThreadStatusChangedNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
                 selectedThreadId = selectedThreadId ?? payload.threadId
-                rememberThreadOrder([payload.threadId])
+                rememberNotificationThread(payload.threadId)
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
                 if selectedThreadId == payload.threadId {
                     latestThreadStatus = payload.status
@@ -697,6 +700,7 @@ final class CodexAppServerClient {
         case .threadNameUpdated:
             if let payload = decodeNotificationParams(ThreadNameUpdatedNotification.self, from: params) {
                 let title = CodexThreadTitleFormatter.title(from: [payload.threadName, "Codex Thread"])
+                rememberNotificationThread(payload.threadId)
                 retitleThread(threadId: payload.threadId, title: title)
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
@@ -709,7 +713,7 @@ final class CodexAppServerClient {
         case .threadUnarchived:
             if let payload = decodeNotificationParams(ThreadIdNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
-                rememberThreadOrder([payload.threadId])
+                rememberNotificationThread(payload.threadId)
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
@@ -717,7 +721,7 @@ final class CodexAppServerClient {
             if let payload = decodeNotificationParams(TurnNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
                 selectedThreadId = payload.threadId
-                rememberThreadOrder([payload.threadId])
+                rememberNotificationThread(payload.threadId)
                 latestTurnStatus = .inProgress
                 hasRecentAssistantFinal = false
                 updateThreadActivity(
@@ -734,7 +738,7 @@ final class CodexAppServerClient {
             if let payload = decodeNotificationParams(TurnNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
                 selectedThreadId = payload.threadId
-                rememberThreadOrder([payload.threadId])
+                rememberNotificationThread(payload.threadId)
                 latestTurnStatus = payload.turn.status
                 hasRecentAssistantFinal = payload.turn.status == .completed
                 updateThreadActivity(
@@ -754,6 +758,7 @@ final class CodexAppServerClient {
                let threadId = dict["threadId"] as? String {
                 suppressedThreadIds.remove(threadId)
                 selectedThreadId = selectedThreadId ?? threadId
+                rememberNotificationThread(threadId)
                 appendConversationLine(from: dict["item"], threadId: threadId)
                 sendThreadRead(threadId: threadId, reason: .notification)
                 guard selectedThreadId == threadId else {
@@ -769,6 +774,7 @@ final class CodexAppServerClient {
                let threadId = dict["threadId"] as? String {
                 suppressedThreadIds.remove(threadId)
                 selectedThreadId = selectedThreadId ?? threadId
+                rememberNotificationThread(threadId)
                 appendConversationLine(from: dict["item"], threadId: threadId)
                 sendThreadRead(threadId: threadId, reason: .notification)
                 guard selectedThreadId == threadId else {
@@ -886,8 +892,27 @@ final class CodexAppServerClient {
         }
     }
 
+    private func rememberNotificationThread(_ id: String) {
+        notificationThreadLastSeenById[id] = .now()
+        rememberThreadOrder([id])
+        if notificationThreadLastSeenById.count > 6 {
+            let orderedTrackedIds = threadDisplayOrder.filter { notificationThreadLastSeenById[$0] != nil }
+            for staleId in orderedTrackedIds.dropLast(6) {
+                notificationThreadLastSeenById.removeValue(forKey: staleId)
+            }
+        }
+    }
+
+    private func pruneExpiredNotificationThreads() {
+        let now = DispatchTime.now()
+        notificationThreadLastSeenById = notificationThreadLastSeenById.filter { _, lastSeen in
+            secondsBetween(lastSeen, now) < ThreadContext.notificationTrackingTTLSeconds
+        }
+    }
+
     private func currentVisibleThreadIds() -> Set<String> {
-        Set(loadedThreadIds + listedThreadIds)
+        pruneExpiredNotificationThreads()
+        return Set(loadedThreadIds + listedThreadIds + Array(notificationThreadLastSeenById.keys))
     }
 
     private func pruneThreadTracking(keeping ids: Set<String>) {
@@ -899,6 +924,7 @@ final class CodexAppServerClient {
             threadTurnStatusesById.removeAll()
             threadAssistantFinalById.removeAll()
             threadDisplayOrder.removeAll()
+            notificationThreadLastSeenById.removeAll()
             selectedThreadId = nil
             latestThreadStatus = nil
             latestTurnStatus = nil
@@ -913,6 +939,7 @@ final class CodexAppServerClient {
         threadTurnStatusesById = threadTurnStatusesById.filter { ids.contains($0.key) }
         threadAssistantFinalById = threadAssistantFinalById.filter { ids.contains($0.key) }
         threadDisplayOrder = threadDisplayOrder.filter { ids.contains($0) }
+        notificationThreadLastSeenById = notificationThreadLastSeenById.filter { ids.contains($0.key) }
         if let selectedThreadId, !ids.contains(selectedThreadId) {
             self.selectedThreadId = threadDisplayOrder.last ?? ids.first
             latestThreadStatus = nil
@@ -934,6 +961,7 @@ final class CodexAppServerClient {
         threadTurnStatusesById.removeValue(forKey: threadId)
         threadAssistantFinalById.removeValue(forKey: threadId)
         threadDisplayOrder.removeAll { $0 == threadId }
+        notificationThreadLastSeenById.removeValue(forKey: threadId)
         if selectedThreadId == threadId {
             selectedThreadId = threadDisplayOrder.last
             latestThreadStatus = nil
@@ -1009,6 +1037,7 @@ final class CodexAppServerClient {
         else { return }
 
         selectedThreadId = selectedThreadId ?? threadId
+        rememberNotificationThread(threadId)
         let title = threadTitlesById[threadId] ?? "Codex Thread"
         let line = CodexConversationExtractor.progressLine(
             threadId: threadId,
@@ -1018,7 +1047,6 @@ final class CodexAppServerClient {
         var lines = conversationByThread[threadId] ?? []
         lines.append(line)
         conversationByThread[threadId] = Array(lines.suffix(6))
-        rememberThreadOrder([threadId])
         latestTurnStatus = .inProgress
         hasRecentAssistantFinal = false
         updateThreadActivity(
