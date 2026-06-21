@@ -257,6 +257,13 @@ Conversation behavior:
   bubbles show at most one summary per thread, and if the primary bubble is
   already speaking for a conversation thread, that same thread is skipped in
   the secondary bubbles.
+- The app-server client combines recent conversation lines with synthesized
+  thread-status lines through `CodexConversationLineCombiner` before planner
+  selection. When the internal line cap is hit, the combiner keeps at least one
+  representative line for every tracked visible thread, then spends remaining
+  line budget on focused-thread and recent-thread details. This keeps
+  multi-thread bubbles from silently collapsing to only the most recently read
+  sessions when `thread/read` returns several items per thread.
 - When multiple threads compete for the stack, action-required states are
   promoted before ordinary work chatter: failure first, then confirmation
   waiting, then review-ready, then the existing preferred-thread/recency order.

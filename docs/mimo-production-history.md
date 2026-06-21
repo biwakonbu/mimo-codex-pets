@@ -265,6 +265,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   cannot accidentally satisfy a screenshot gate.
 - periodic refresh uses `thread/loaded/list` to re-read visible threads, so
   secondary thread bubbles can update after initial load
+- `CodexConversationLineCombiner` preserves at least one representative line
+  for every tracked visible thread before applying the internal conversation
+  line cap, so multi-thread bubbles do not collapse to only the most recently
+  read sessions when `thread/read` returns several items per thread
 - refresh-cycle reads are coalesced across `thread/loaded/list` and
   `thread/list(limit: 6)`, so a tracked thread is read once per poll even when
   both list phases include it

@@ -1036,33 +1036,12 @@ final class CodexAppServerClient {
     }
 
     private func combinedConversationLines() -> [CodexConversationLine] {
-        let orderedLines = threadDisplayOrder.flatMap { threadId in
-            let recentLines = Array((conversationByThread[threadId] ?? []).suffix(3))
-            guard let activity = threadActivityById[threadId] else {
-                return recentLines
-            }
-
-            if CodexConversationBubblePlanner.displayPriority(for: activity) <= 2 {
-                return recentLines + [activity]
-            }
-
-            if recentLines.contains(where: shouldPreferLineOverRoutineActivity) {
-                return [activity] + recentLines
-            }
-
-            return recentLines + [activity]
-        }
-        return Array(orderedLines.suffix(12))
-    }
-
-    private func shouldPreferLineOverRoutineActivity(_ line: CodexConversationLine) -> Bool {
-        if line.speaker == "you" {
-            return false
-        }
-        if line.activityKind == .message, !line.isAssistant {
-            return false
-        }
-        return line.activityKind != .message || line.isAssistant
+        CodexConversationLineCombiner.combinedConversationLines(
+            threadDisplayOrder: threadDisplayOrder,
+            conversationByThread: conversationByThread,
+            threadActivityById: threadActivityById,
+            preferredThreadId: selectedThreadId
+        )
     }
 
     private func focusedConversationLine() -> CodexConversationLine? {
