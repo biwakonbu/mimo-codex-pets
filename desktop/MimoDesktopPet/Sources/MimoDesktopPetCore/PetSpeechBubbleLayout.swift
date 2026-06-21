@@ -38,7 +38,7 @@ public enum PetSpeechBubbleLayout {
     public static let productionStackHeight = 226.0
     public static let productionSpriteWidth = 192.0
     public static let productionSpriteHeight = 208.0
-    public static let productionVisibleLimit = 4
+    public static let productionVisibleLimit = 5
     public static let statusTextLimit = 44
     public static let focusTextLimit = 48
     public static let conversationTextLimit = 34
@@ -83,8 +83,10 @@ public enum PetSpeechBubbleLayout {
             offsets = [(0, 0), (-100, -76)]
         case 3:
             offsets = [(0, 0), (-106, -78), (104, -132)]
-        default:
+        case 4:
             offsets = [(0, 0), (-106, -70), (104, -122), (-54, -174)]
+        default:
+            offsets = [(0, 0), (-108, -58), (108, -98), (-92, -144), (66, -186)]
         }
         let offset = offsets[normalizedIndex]
         let isPrimary = normalizedIndex == 0

@@ -231,14 +231,15 @@ Conversation behavior:
 - Status bubbles are capped at 44 characters, focused-thread primary bubbles at
   48 characters, secondary thread chips at 34 characters, and overflow bubbles
   at 22 characters. Secondary bubbles render as one-line compact summaries such
-  as `「資料整理」作業中` or `「承認」確認待ち`, so a four-bubble stack does not crowd
-  or clip Mimo. SwiftUI splits those thread bubble strings into a small title
-  line and a short Mimo report line at render time, preserving compact app-server
-  logs while making simultaneous thread bubbles easier to scan visually. If more
-  thread summaries are available than the remaining
+  as `「資料整理」作業中` or `「承認」確認待ち`, so a five-bubble stack can show the
+  primary Mimo report, three concrete thread chips, and one overflow counter
+  without crowding or clipping Mimo. SwiftUI splits those thread bubble strings
+  into a small title line and a short Mimo report line at render time, preserving
+  compact app-server logs while making simultaneous thread bubbles easier to
+  scan visually. If more thread summaries are available than the remaining
   compact slots can show, Mimo keeps up to six thread contexts internally and
   reserves the final compact slot for a smaller overflow counter bubble such as
-  `ほか3件も見ています` rather than silently dropping that extra context. The focus
+  `ほか2件も見ています` rather than silently dropping that extra context. The focus
   and overflow bubbles have their own `bubbleRoles` in presentation logs so E2E
   can distinguish a primary thread report from generic status and a concrete
   thread summary.
@@ -378,7 +379,7 @@ Manual or visual checks:
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, `bubbleRoles`,
   `bubbleTones`, and `bubbleActivityKinds`; stacked bubble-only updates should
   be logged for deterministic E2E evidence. Fake production E2E also enforces
-  the four-bubble visible limit, the primary/secondary/overflow text-length
+  the five-bubble visible limit, the primary/secondary/overflow text-length
   caps, activity-kind marker propagation, and a three-thread simultaneous
   bubble case with one focused primary bubble plus three conversation bubbles.
   Overflow E2E separately verifies one focused primary bubble, two concrete

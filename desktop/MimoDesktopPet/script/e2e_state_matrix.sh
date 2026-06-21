@@ -131,7 +131,7 @@ while time.time() < deadline:
         activity_kinds = row.get("bubbleActivityKinds", [])
         if not isinstance(bubbles, list):
             continue
-        if len(bubbles) > 4:
+        if len(bubbles) > 5:
             raise SystemExit(f"{label}: too many production bubbles: {bubbles}")
         if roles and len(roles) != len(bubbles):
             raise SystemExit(f"{label}: bubble roles did not match text count: roles={roles} bubbles={bubbles}")
@@ -153,12 +153,12 @@ while time.time() < deadline:
         if required_tone and required_tone not in tones:
             continue
         if require_four_bubbles == "1":
-            if len(bubbles) != 4:
+            if len(bubbles) < 4:
                 continue
-            if roles != ["focus", "conversation", "conversation", "conversation"]:
-                raise SystemExit(f"{label}: unexpected four-bubble roles: {roles}")
-            if any(kind == "none" for kind in activity_kinds):
-                raise SystemExit(f"{label}: four-bubble activity kinds were missing: {activity_kinds}")
+            if roles[0] != "focus" or roles.count("conversation") < 3:
+                raise SystemExit(f"{label}: unexpected multi-thread roles: {roles}")
+            if any(kind == "none" for kind, role in zip(activity_kinds, roles) if role != "overflow"):
+                raise SystemExit(f"{label}: multi-thread activity kinds were missing: {activity_kinds}")
         print(f"{label} presentation observed.")
         raise SystemExit(0)
 

@@ -340,13 +340,18 @@ public enum CodexConversationExtractor {
             return nil
         default:
             if let role = item["role"] as? String {
+                let isAssistant = role == "assistant"
+                let fallback = isAssistant ? "応答を受信" : "ユーザー入力を受信"
                 return makeLine(
                     threadId: threadId,
                     threadTitle: threadTitle,
-                    speaker: role == "assistant" ? "codex" : "you",
-                    isAssistant: role == "assistant",
-                    activityKind: role == "assistant" ? .assistantMessage : .userRequest,
-                    text: compactText(from: firstNonEmptyString(item["text"], item["content"], item["message"]), limit: 72)
+                    speaker: isAssistant ? "codex" : "you",
+                    isAssistant: isAssistant,
+                    activityKind: isAssistant ? .assistantMessage : .userRequest,
+                    text: compactText(
+                        from: firstNonEmptyString(item["text"], item["content"], item["message"]),
+                        limit: 72
+                    ) ?? fallback
                 )
             }
             return nil

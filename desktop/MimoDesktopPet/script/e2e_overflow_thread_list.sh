@@ -86,19 +86,19 @@ while time.time() < deadline:
         if row.get("isOffline") is not False:
             last_error = f"latest row was offline: {bubbles!r}"
             continue
-        if len(bubbles) != 4:
-            last_error = f"expected four production bubbles, got {bubbles!r}"
+        if len(bubbles) != 5:
+            last_error = f"expected five production bubbles, got {bubbles!r}"
             continue
-        if roles != ["focus", "conversation", "conversation", "overflow"]:
+        if roles != ["focus", "conversation", "conversation", "conversation", "overflow"]:
             last_error = f"expected overflow bubble role, got roles={roles} bubbles={bubbles}"
             continue
         if not isinstance(activity_kinds, list) or len(activity_kinds) != len(bubbles):
             last_error = f"activity kinds did not match overflow bubble count: activity_kinds={activity_kinds} bubbles={bubbles}"
             continue
-        if activity_kinds[:3].count("none") > 0 or activity_kinds[3] != "none":
+        if activity_kinds[:4].count("none") > 0 or activity_kinds[4] != "none":
             last_error = f"overflow bubble stack had wrong activity-kind markers: {activity_kinds}"
             continue
-        if "ほか3件も見ています" not in bubbles:
+        if "ほか2件も見ています" not in bubbles:
             last_error = f"overflow note missing from {bubbles!r}"
             continue
         thread_titles = [

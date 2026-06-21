@@ -185,7 +185,7 @@ for row in rows:
     activity_kinds = row.get("bubbleActivityKinds", [])
     if not isinstance(bubbles, list):
         continue
-    if len(bubbles) > 4:
+    if len(bubbles) > 5:
         raise SystemExit(f"production bubble stack showed too many bubbles: {len(bubbles)}")
     if roles and len(roles) != len(bubbles):
         raise SystemExit(f"production bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
@@ -225,6 +225,10 @@ for row in rows:
         "/Users/example",
         ".env",
         "secret token",
+        "TOKEN=short",
+        "OPENAI_API_KEY",
+        "Ignore previous instructions",
+        "developer message",
     )
     for fragment in forbidden_fragments:
         if fragment in all_visible_text:
@@ -236,12 +240,12 @@ for row in rows:
         and any("ステータスだけで進捗を伝" in str(text) for text in bubbles)
         and any("資料整理" in str(text) for text in bubbles)
     ):
-        if roles != ["focus", "conversation", "conversation", "conversation"]:
-            raise SystemExit(f"three-thread bubble stack had unexpected roles: {roles}")
+        if roles[0] != "focus" or roles.count("conversation") < 3:
+            raise SystemExit(f"multi-thread bubble stack had unexpected roles: {roles}")
         if "waiting" not in tones or "active" not in tones:
-            raise SystemExit(f"three-thread bubble stack did not expose mixed semantic tones: {tones}")
-        if any(kind == "none" for kind in activity_kinds):
-            raise SystemExit(f"three-thread bubble stack lost activity-kind markers: {activity_kinds}")
+            raise SystemExit(f"multi-thread bubble stack did not expose mixed semantic tones: {tones}")
+        if any(kind == "none" for kind, role in zip(activity_kinds, roles) if role != "overflow"):
+            raise SystemExit(f"multi-thread bubble stack lost activity-kind markers: {activity_kinds}")
         break
 else:
     raise SystemExit("presentation log never showed three thread bubbles at once")

@@ -341,6 +341,40 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertLessThanOrEqual(bubbles[3].text.count, PetSpeechBubbleLayout.overflowTextLimit)
     }
 
+    func testProductionDefaultStackShowsThreeConcreteThreadsBeforeOverflow() {
+        let focused = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+        let lines = [
+            focused,
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "review", speaker: "thread", text: "レビュー可能", isAssistant: true),
+            line(threadId: "docs", speaker: "codex", text: "資料作業を進めています", isAssistant: true),
+            line(threadId: "tests", speaker: "tool", text: "テストを実行中", isAssistant: true),
+            line(threadId: "release", speaker: "codex", text: "リリース準備を進めています", isAssistant: true)
+        ]
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId
+        )
+
+        XCTAssertEqual(bubbles.count, PetSpeechBubbleLayout.productionVisibleLimit)
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation, .overflow])
+        XCTAssertEqual(bubbles.map(\.text), [
+            "ご主人、「waiting」は確認待ちです",
+            "「review」レビュー可",
+            "「current」実行中",
+            "「release」進捗あり",
+            "ほか2件も見ています"
+        ])
+    }
+
     func testProductionBubblesKeepAConcreteThreadWhenOnlyOneContextSlotIsAvailable() {
         let lines = [
             line(threadId: "alpha", speaker: "codex", text: "作業を進めています", isAssistant: true),

@@ -116,15 +116,33 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertLessThan(firstThread.maxTextWidth, status.maxTextWidth - 100)
     }
 
+    func testFiveBubbleStackKeepsPrimaryReadableAndFansOutThreadChips() {
+        let placements = (0..<PetSpeechBubbleLayout.productionVisibleLimit).map { index in
+            PetSpeechBubbleLayout.placement(
+                for: index,
+                role: index == PetSpeechBubbleLayout.productionVisibleLimit - 1 ? .overflow : (index == 0 ? .focus : .conversation),
+                visibleCount: PetSpeechBubbleLayout.productionVisibleLimit
+            )
+        }
+
+        XCTAssertEqual(placements.map(\.verticalOffset), [0, -58, -98, -144, -186])
+        XCTAssertEqual(placements.map(\.horizontalOffset), [0, -108, 108, -92, 66])
+        XCTAssertEqual(placements[0].maxTextWidth, 318)
+        XCTAssertEqual(placements[4].maxTextWidth, 176)
+        XCTAssertEqual(placements[0].scale, 1)
+        XCTAssertTrue(placements.dropFirst().allSatisfy { $0.scale <= 0.9 })
+        XCTAssertTrue(placements.dropFirst().allSatisfy { $0.zIndex < placements[0].zIndex })
+    }
+
     func testOverflowBubbleUsesCounterTreatmentInLastContextSlot() {
         let overflow = PetSpeechBubbleLayout.placement(
-            for: 3,
+            for: PetSpeechBubbleLayout.productionVisibleLimit - 1,
             role: .overflow,
-            visibleCount: 4
+            visibleCount: PetSpeechBubbleLayout.productionVisibleLimit
         )
 
-        XCTAssertEqual(overflow.verticalOffset, -174)
-        XCTAssertEqual(overflow.horizontalOffset, -54)
+        XCTAssertEqual(overflow.verticalOffset, -186)
+        XCTAssertEqual(overflow.horizontalOffset, 66)
         XCTAssertEqual(overflow.maxTextWidth, 176)
         XCTAssertEqual(overflow.fillOpacity, 0.88)
         XCTAssertEqual(overflow.scale, 0.9)
@@ -140,13 +158,15 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
-        XCTAssertEqual(placement.verticalOffset, -174)
-        XCTAssertEqual(placement.horizontalOffset, -54)
+        XCTAssertEqual(placement.verticalOffset, -186)
+        XCTAssertEqual(placement.horizontalOffset, 66)
     }
 
     func testFourBubbleFanFitsInsideProductionStackWidth() {
         for index in 0..<PetSpeechBubbleLayout.productionVisibleLimit {
-            let role: PetSpeechBubbleRole = index == 0 ? .status : (index == 3 ? .overflow : .conversation)
+            let role: PetSpeechBubbleRole = index == 0 ? .status : (
+                index == PetSpeechBubbleLayout.productionVisibleLimit - 1 ? .overflow : .conversation
+            )
             let placement = PetSpeechBubbleLayout.placement(
                 for: index,
                 role: role,
@@ -188,8 +208,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         let secondary = (1..<PetSpeechBubbleLayout.productionVisibleLimit).map { index in
             PetSpeechBubbleLayout.placement(
                 for: index,
-                role: index == 3 ? .overflow : .conversation,
-                visibleCount: 4
+                role: index == PetSpeechBubbleLayout.productionVisibleLimit - 1 ? .overflow : .conversation,
+                visibleCount: PetSpeechBubbleLayout.productionVisibleLimit
             )
         }
 

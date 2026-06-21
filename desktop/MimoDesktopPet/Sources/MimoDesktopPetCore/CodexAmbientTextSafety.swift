@@ -24,6 +24,10 @@ enum CodexAmbientTextSafety {
         let blockedFragments = [
             "treat it as the task",
             "higher-priority instructions",
+            "ignore previous instructions",
+            "disregard previous instructions",
+            "system prompt",
+            "developer message",
             "do not reveal",
             "you are selected"
         ]
@@ -78,11 +82,15 @@ enum CodexAmbientTextSafety {
             ".env",
             "credentials",
             "secret",
+            "authorization:",
             "api_key",
             "apikey",
+            "x-api-key",
             "access token",
+            "auth token",
             "bearer ",
-            "password"
+            "password",
+            "private key"
         ]
         if blockedFragments.contains(where: { lowercased.contains($0) }) {
             return true
@@ -91,6 +99,10 @@ enum CodexAmbientTextSafety {
         let blockedPatterns = [
             #"(?:^|\s)/(?:tmp|var|etc|opt|usr|bin|sbin)/"#,
             #"[A-Za-z]:\\"#,
+            #"(?i)\b(?:token|authorization|api[-_ ]?key|password|passwd|secret|session|cookie)\s*[:=]"#,
+            #"(?i)\b[A-Z][A-Z0-9_]*(?:TOKEN|SECRET|KEY|PASSWORD|COOKIE)[A-Z0-9_]*\s*="#,
+            #"(?i)\bsk-[A-Za-z0-9_-]{20,}"#,
+            #"(?i)\bgh[pousr]_[A-Za-z0-9_]{20,}"#,
             #"[A-Fa-f0-9]{32,}"#,
             #"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#
         ]

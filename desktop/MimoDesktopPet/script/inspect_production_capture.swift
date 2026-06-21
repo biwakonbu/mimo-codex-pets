@@ -148,8 +148,8 @@ if requiresMultiBubbleHierarchy {
             component.maxY <= 245
     }
 
-    guard bubbleComponents.count == 4 else {
-        fail("multi-thread capture should show exactly four white bubble components, found \(bubbleComponents.count): \(describe(bubbleComponents))")
+    guard (4...5).contains(bubbleComponents.count) else {
+        fail("multi-thread capture should show four or five white bubble components, found \(bubbleComponents.count): \(describe(bubbleComponents))")
     }
 
     guard let primary = bubbleComponents.max(by: { $0.maxY < $1.maxY }) else {
@@ -168,7 +168,7 @@ if requiresMultiBubbleHierarchy {
     guard primary.area >= Int(Double(maxSecondaryArea) * 1.35) else {
         fail("primary bubble is not visibly more prominent than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
-    guard primary.minY >= lowestSecondaryBottom + 12 else {
+    guard primary.minY >= lowestSecondaryBottom + 6 else {
         fail("primary bubble is not separated below the secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
     let secondaryCentersX = secondaryComponents.map(\.centerX)

@@ -202,6 +202,10 @@ def looks_like_instruction_title(title):
     blocked_fragments = (
         "treat it as the task",
         "higher-priority instructions",
+        "ignore previous instructions",
+        "disregard previous instructions",
+        "system prompt",
+        "developer message",
         "do not reveal",
         "you are selected",
     )
@@ -256,11 +260,15 @@ def looks_unsafe_for_ambient_display(title):
         ".env",
         "credentials",
         "secret",
+        "authorization:",
         "api_key",
         "apikey",
+        "x-api-key",
         "access token",
+        "auth token",
         "bearer ",
         "password",
+        "private key",
     )
     if any(fragment in lowercased for fragment in blocked_fragments):
         return True
@@ -268,6 +276,10 @@ def looks_unsafe_for_ambient_display(title):
     blocked_patterns = (
         r"(?:^|\s)/(?:tmp|var|etc|opt|usr|bin|sbin)/",
         r"[A-Za-z]:\\",
+        r"(?i)\b(?:token|authorization|api[-_ ]?key|password|passwd|secret|session|cookie)\s*[:=]",
+        r"(?i)\b[A-Z][A-Z0-9_]*(?:TOKEN|SECRET|KEY|PASSWORD|COOKIE)[A-Z0-9_]*\s*=",
+        r"(?i)\bsk-[A-Za-z0-9_-]{20,}",
+        r"(?i)\bgh[pousr]_[A-Za-z0-9_]{20,}",
         r"[A-Fa-f0-9]{32,}",
         r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
     )

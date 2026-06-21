@@ -125,7 +125,7 @@ visual inspection runs where Mimo must stay still.
 In production mode the panel stays transparent and shows only Mimo plus a short
 fan of white bubbles. When Codex conversation context is available, the primary
 bubble sits closest to Mimo, keeps the speech tail, and promotes the focused
-thread into a short Mimo-style report. Up to three smaller secondary bubbles sit
+thread into a short Mimo-style report. Up to four smaller secondary bubbles sit
 above it as compact thread-status chips, with accent markers, no tails, and a
 subtle cluster guide behind the bubbles so concurrent threads read as one Mimo
 reporting surface rather than a feed panel. Thread bubbles split
@@ -139,7 +139,7 @@ command, file, browser, image, skill, or mention activity. The stack favors
 thread coverage, so
 each visible thread appears at most once. If more threads are active than the
 compact stack can show, Mimo tracks up to six thread contexts and the last
-secondary bubble becomes a short overflow note such as `ほか3件も見ています`
+secondary bubble becomes a short overflow note such as `ほか2件も見ています`
 instead of silently dropping the extra context.
 If another visible thread needs attention, such as a failure, confirmation
 wait, or review-ready state, that thread is promoted into the primary Mimo

@@ -114,6 +114,10 @@ forbidden_fragments = (
     "/Users/",
     ".env",
     "secret token",
+    "TOKEN=short",
+    "OPENAI_API_KEY",
+    "Ignore previous instructions",
+    "developer message",
 )
 role_limits = {
     "status": 44,
@@ -195,7 +199,7 @@ while time.time() < deadline:
             raise SystemExit(f"live app bubble activity kinds were not a list: {activity_kinds!r}")
         visible_bubbles = bubbles if isinstance(bubbles, list) else []
         if isinstance(bubbles, list):
-            if len(bubbles) > 4:
+            if len(bubbles) > 5:
                 raise SystemExit(f"live app presentation showed too many bubbles: {bubbles}")
             if roles and len(roles) != len(bubbles):
                 raise SystemExit(f"live app bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
