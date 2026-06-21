@@ -180,16 +180,16 @@ capture_and_inspect() {
 wait_for_presentation "active" "running" "Mimo runtime QA" "0" "active"
 capture_and_inspect "active"
 
-wait_for_presentation "waiting" "waiting" "確認待ち" "0" "waiting"
+wait_for_presentation "waiting" "waiting" "確認を待" "0" "waiting"
 capture_and_inspect "waiting"
 
 wait_for_presentation "multi-thread" "waiting" "資料整理" "1" "active"
 capture_and_inspect "multi-thread"
 
-wait_for_presentation "review" "review" "レビュー可" "0" "review"
+wait_for_presentation "review" "review" "確認できる" "0" "review"
 capture_and_inspect "review"
 
-wait_for_presentation "failed" "failed" "失敗" "0" "failed"
+wait_for_presentation "failed" "failed" "つまずき" "0" "failed"
 capture_and_inspect "failed"
 
 kill -0 "$APP_PID" >/dev/null

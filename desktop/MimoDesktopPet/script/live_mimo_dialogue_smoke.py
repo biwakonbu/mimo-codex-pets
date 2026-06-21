@@ -27,29 +27,30 @@ PROXY_INITIALIZE_TIMEOUT_SECONDS = float(
 
 BASE_INSTRUCTIONS = """\
 You write one short Japanese desktop-pet speech bubble for Mimo.
-Mimo is a tiny meeting-minutes AI assistant who gently reports Codex progress to ご主人.
-Use only the sanitized session fields supplied by the client. Do not infer hidden file paths, commands, logs, credentials, or private context.
-Output exactly one Japanese sentence, 55-100 characters, starting with ご主人、.
-Include the session/chat name in Japanese corner quotes if it is supplied.
-Clearly say whether the session is 動作中, 確認待ち, 停止中, or 失敗.
+Mimo is a tiny meeting-minutes AI assistant who gently reports Codex chat progress to the app user.
+Use only the sanitized chat fields supplied by the client. Do not infer hidden file paths, commands, logs, credentials, or private context.
+Output exactly one Japanese sentence, 55-100 characters.
+Include the chat name in Japanese corner quotes if it is supplied.
+Explain what Codex is doing from the safe work topic and activity, not as raw internal status.
+Describe state naturally: 進めている, 返事を待っている, 確認できる, or つまずいた.
 Sound warm and conversational, but do not add emoji, markdown, bullet points, or role labels.
-Never use the word スレッド in the output; say セッション or チャット instead.
+Never use the words スレッド, セッション, Thread, Session, or Codex Session in the output; say チャット instead.
 """
 
 DEVELOPER_INSTRUCTIONS = (
-    "Transform only the supplied sanitized session state into Mimo's visible speech bubble. "
+    "Transform only the supplied sanitized chat state into Mimo's visible speech bubble. "
     "Do not perform repository work, shell work, web browsing, or file access."
 )
 
 SMOKE_INPUT = """\
 Mimo speech request:
-session_name: Live Mimo Dialogue Smoke
-session_state: 動作中
+chat_name: Live Mimo Dialogue Smoke
+chat_state: 作業を進めている
 activity_kind: 応答確認
 safe_work_topic: app-server 会話生成の疎通確認
-deterministic_fallback: ご主人、「Live Mimo Dialogue Smoke」は動作中で、会話生成を確認中です
+deterministic_fallback: 「Live Mimo Dialogue Smoke」は会話生成を確認中だよ
 
-Write Mimo's next speech bubble for ご主人.
+Write Mimo's next speech bubble for the app user.
 """
 
 
@@ -430,9 +431,9 @@ def is_dialogue_notification(message: dict[str, Any], thread_id: str, turn_id: s
 def validate_speech(speech: str) -> None:
     if not speech:
         raise SmokeFailure("Mimo dialogue turn completed without assistant text")
-    if "ご主人" not in speech:
-        raise SmokeFailure(f"Mimo dialogue output did not address ご主人: {speech!r}")
-    if "スレッド" in speech:
+    if "Live Mimo Dialogue Smoke" not in speech:
+        raise SmokeFailure(f"Mimo dialogue output did not mention the chat name: {speech!r}")
+    if any(term in speech for term in ("スレッド", "セッション", "Thread", "Session", "Codex Session")):
         raise SmokeFailure(f"Mimo dialogue output used forbidden vocabulary: {speech!r}")
     if speech.startswith("Mimo speech request:") or "deterministic_fallback:" in speech:
         raise SmokeFailure(f"Mimo dialogue output echoed the prompt instead of generated speech: {speech!r}")

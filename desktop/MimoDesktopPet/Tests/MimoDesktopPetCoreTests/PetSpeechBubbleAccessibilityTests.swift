@@ -8,14 +8,14 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
             bubbles: [
                 PetSpeechBubble(
                     id: "primary",
-                    text: "ご主人、「実装」は作業を進めています",
+                    text: "「実装」は作業を進めているよ",
                     role: .focus,
                     tone: .active,
                     activityKind: .assistantMessage
                 ),
                 PetSpeechBubble(
                     id: "secondary",
-                    text: "「QA」確認待ち",
+                    text: "「QA」返事待ち",
                     role: .conversation,
                     tone: .waiting,
                     activityKind: .threadStatus
@@ -26,7 +26,7 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
 
         XCTAssertEqual(
             value,
-            "本番表示。running。ご主人、「実装」は作業を進めています / 「QA」確認待ち"
+            "本番表示。running。「実装」は作業を進めているよ / 「QA」返事待ち"
         )
     }
 
@@ -83,9 +83,9 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
             PetSpeechBubbleAccessibility.bubbleElementLabel(
                 index: 0,
                 role: .focus,
-                text: "ご主人、「実装」は作業中です"
+                text: "「実装」は作業中だよ"
             ),
-            "Mimo primary thread bubble 1: ご主人、「実装」は作業中です"
+            "Mimo primary thread bubble 1: 「実装」は作業中だよ"
         )
         XCTAssertGreaterThan(
             PetSpeechBubbleAccessibility.bubbleSortPriority(index: 0),

@@ -24,7 +24,7 @@ CURRENT_TURNS = [
         "status": "completed",
         "items": [
             {"id": "u1", "type": "userMessage", "content": [{"type": "inputText", "text": "吹き出しに Codex 作業内容の要約を出して状況を説明して"}]},
-            {"id": "a1", "type": "agentMessage", "content": [{"type": "outputText", "text": "セッションごとの吹き出し要約を準備しています"}]},
+            {"id": "a1", "type": "agentMessage", "content": [{"type": "outputText", "text": "チャットごとの吹き出し要約を準備しています"}]},
             {"id": "u-sensitive", "type": "userMessage", "content": "/Users/example/private/project/.env を見て"},
             {"id": "a-sensitive-token", "type": "agentMessage", "text": "Authorization: Bearer abcdef0123456789abcdef0123456789"},
             {"id": "a-sensitive-stdout", "type": "agentMessage", "text": "stdout: password=secret"},
@@ -35,7 +35,7 @@ CURRENT_TURNS = [
     }
 ]
 SECOND_THREAD_STATUS = {"type": "idle"}
-SECOND_THREAD_NAME = "別スレッドの確認"
+SECOND_THREAD_NAME = "別チャットの確認"
 SECOND_THREAD_CLOSED = False
 SECOND_THREAD_TURNS = [
     {
@@ -58,8 +58,8 @@ STARTED_THREAD_TURNS = [
         "id": "turn-started",
         "status": "inProgress",
         "items": [
-            {"id": "u-started", "type": "userMessage", "content": [{"type": "inputText", "text": "新しいスレッドの吹き出し要約も見て"}]},
-            {"id": "a-started", "type": "agentMessage", "content": [{"type": "outputText", "text": "新しい実装スレッドの吹き出し要約を進めています"}]},
+            {"id": "u-started", "type": "userMessage", "content": [{"type": "inputText", "text": "新しいチャットの吹き出し要約も見て"}]},
+            {"id": "a-started", "type": "agentMessage", "content": [{"type": "outputText", "text": "新しい実装チャットの吹き出し要約を進めています"}]},
         ],
     }
 ]
@@ -181,8 +181,8 @@ def third_thread_snapshot():
 def started_thread_snapshot():
     return {
         "id": "fake-started",
-        "name": "新しい実装スレッド",
-        "preview": "新しい実装スレッドの進捗を短く伝える検証",
+        "name": "新しい実装チャット",
+        "preview": "新しい実装チャットの進捗を短く伝える検証",
         "status": dict(STARTED_THREAD_STATUS),
         "turns": [dict(turn) for turn in STARTED_THREAD_TURNS],
     }
@@ -203,21 +203,21 @@ def dialogue_text_from_input(params):
     for item in params.get("input", []):
         if isinstance(item, dict) and item.get("type") == "text":
             text += str(item.get("text", ""))
-    session_name = "Codex"
-    session_state = "動作中"
+    chat_name = "このチャット"
+    chat_state = "作業を進めている"
     safe_work_topic = "作業内容の説明"
     for line in text.splitlines():
         key, sep, value = line.partition(":")
         if not sep:
             continue
         value = value.strip()
-        if key.strip() == "session_name" and value:
-            session_name = value
-        elif key.strip() == "session_state" and value:
-            session_state = value
+        if key.strip() == "chat_name" and value:
+            chat_name = value
+        elif key.strip() == "chat_state" and value:
+            chat_state = value
         elif key.strip() == "safe_work_topic" and value:
             safe_work_topic = value
-    return f"ご主人、「{session_name}」は{session_state}です。Codex が{safe_work_topic}を整理して、Mimo が見やすく伝える準備を進めています"
+    return f"「{chat_name}」は{chat_state}よ。Codex が{safe_work_topic}を整理して、Mimo が見やすく伝える準備を進めています"
 
 
 def write_dialogue_turn_sequence(turn_id, text):
@@ -579,7 +579,7 @@ def state_sequence():
                 "id": "turn-other-followup",
                 "status": "inProgress",
                 "items": [
-                    {"id": "u7", "type": "userMessage", "content": [{"type": "inputText", "text": "別スレッドも進めて"}]},
+                    {"id": "u7", "type": "userMessage", "content": [{"type": "inputText", "text": "別チャットも進めて"}]},
                     {"id": "a7", "type": "agentMessage", "content": [{"type": "outputText", "text": "追加作業を進めています"}]},
                 ],
             }
@@ -595,13 +595,13 @@ def state_sequence():
     )
     state_sleep(0.8)
     with STATE_LOCK:
-        SECOND_THREAD_NAME = "更新された別スレッド"
+        SECOND_THREAD_NAME = "更新された別チャット"
     write_message(
         {
             "method": "thread/name/updated",
             "params": {
                 "threadId": "fake-review",
-                "threadName": "更新された別スレッド",
+                "threadName": "更新された別チャット",
             },
         }
     )

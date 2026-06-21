@@ -91,7 +91,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         ])
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: lines[1]),
-            "ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です"
+            "「Mimo runtime QA」は作業内容の説明をテスト中だよ"
         )
     }
 
@@ -131,7 +131,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(failed?.sessionState, .failed)
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: stopped!),
-            "ご主人、「stopped」は停止中で、レビューできます"
+            "「stopped」は確認できるよ"
         )
     }
 

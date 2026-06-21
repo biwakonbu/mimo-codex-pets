@@ -16,14 +16,14 @@ final class CodexSessionSummarizerTests: XCTestCase {
         )
     }
 
-    func testUsesSessionVocabularyForMultiChatSummaries() {
+    func testUsesChatVocabularyForMultiChatSummaries() {
         XCTAssertEqual(
             CodexSessionSummarizer.summary(from: "複数スレッドの吹き出し表示を整理して"),
-            "複数セッション表示"
+            "複数チャット表示"
         )
         XCTAssertEqual(
             CodexSessionSummarizer.summary(from: "セッションごとの吹き出し要約を準備して"),
-            "セッション別の状況整理"
+            "チャット別の状況整理"
         )
     }
 

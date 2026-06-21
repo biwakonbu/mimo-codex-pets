@@ -4,14 +4,14 @@ import XCTest
 final class PetSpeechBubblePaginatorTests: XCTestCase {
     func testShortTextStaysOnOnePage() {
         XCTAssertEqual(
-            PetSpeechBubblePaginator.pages(for: "ご主人、短い報告です", role: .focus, limit: 24),
-            ["ご主人、短い報告です"]
+            PetSpeechBubblePaginator.pages(for: "「実装」は短い報告だよ", role: .focus, limit: 24),
+            ["「実装」は短い報告だよ"]
         )
     }
 
     func testLongTextSplitsAtReadablePunctuation() {
         let pages = PetSpeechBubblePaginator.pages(
-            for: "ご主人、「実装」は動作中です。Codex が吹き出しの幅と高さを広げています。Mimo は長い説明を読みやすいページに分けます。",
+            for: "「実装」は吹き出しを整えているよ。Codex が吹き出しの幅と高さを広げています。Mimo は長い説明を読みやすいページに分けます。",
             role: .focus,
             limit: 36
         )
@@ -20,7 +20,7 @@ final class PetSpeechBubblePaginatorTests: XCTestCase {
         XCTAssertTrue(pages.allSatisfy { $0.count <= 36 })
         XCTAssertEqual(
             pages.joined(),
-            "ご主人、「実装」は動作中です。Codex が吹き出しの幅と高さを広げています。Mimo は長い説明を読みやすいページに分けます。"
+            "「実装」は吹き出しを整えているよ。Codex が吹き出しの幅と高さを広げています。Mimo は長い説明を読みやすいページに分けます。"
         )
     }
 

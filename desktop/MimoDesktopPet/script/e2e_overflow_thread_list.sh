@@ -102,7 +102,7 @@ swift ./script/inspect_accessibility_surface.swift \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.1.conversation" \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.2.conversation" \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.3.conversation" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.focus=ご主人" \
+  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.focus=「主作業」は作業を進めているよ" \
   --node-description-contains "MimoDesktopPet.productionSurface.bubble.4.overflow=ほか2件も見ています" \
   --forbid-identifier "MimoDesktopPet.productionSurface.bubble.debug.status" \
   --forbid-description-contains "Mimo speech bubble:" \

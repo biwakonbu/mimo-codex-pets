@@ -115,7 +115,7 @@ final class CodexConversationLineCombinerTests: XCTestCase {
         XCTAssertEqual(activityLine?.text, "作業中")
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: activityLine!),
-            "ご主人、「summary」は作業内容の説明を進めています"
+            "「summary」は作業内容の説明を進めているよ"
         )
     }
 
@@ -153,7 +153,7 @@ final class CodexConversationLineCombinerTests: XCTestCase {
         let testLine = ordered.first { $0.activityKind == .test }
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: testLine!),
-            "ご主人、「summary」は動作中で、作業内容の説明をテスト中です"
+            "「summary」は作業内容の説明をテスト中だよ"
         )
     }
 

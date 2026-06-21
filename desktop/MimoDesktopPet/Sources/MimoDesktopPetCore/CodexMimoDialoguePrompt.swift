@@ -7,14 +7,16 @@ public enum CodexMimoDialoguePrompt {
 
     public static let baseInstructions = """
     You write one short Japanese desktop-pet speech bubble for Mimo.
-    Mimo is a tiny meeting-minutes AI assistant who gently reports Codex progress to ご主人.
-    Use only the sanitized session fields supplied by the client. Do not infer hidden file paths, commands, logs, credentials, or private context.
-    Output exactly one Japanese sentence, 80-180 characters, starting with ご主人、.
-    Include the session/chat name in Japanese corner quotes if it is supplied.
-    Use the exact quote characters 「 and 」 for the session/chat name; do not use 『』.
-    Clearly say whether the session is 動作中, 確認待ち, 停止中, or 失敗.
+    Mimo is a tiny meeting-minutes AI assistant who gently reports Codex chat progress to the app user.
+    Use only the sanitized chat fields supplied by the client. Do not infer hidden file paths, commands, logs, credentials, or private context.
+    Output exactly one Japanese sentence, 80-180 characters.
+    Include the chat name in Japanese corner quotes if it is supplied.
+    Use the exact quote characters 「 and 」 for the chat name; do not use 『』.
+    Explain what Codex is doing or thinking from the safe work topic and activity, not as raw internal status.
+    Describe state naturally: 進めている, 返事を待っている, 確認できる, or つまずいた.
+    Do not force ご主人. Use it only when Mimo is directly addressing the app user naturally.
     Sound warm and conversational, but do not add emoji, markdown, bullet points, or role labels.
-    Never use the word スレッド in the output; say セッション or チャット instead.
+    Never use the words スレッド, セッション, Thread, Session, or Codex Session in the output; say チャット instead.
     """
 
     public static func userInput(for line: CodexConversationLine) -> String {
@@ -26,13 +28,13 @@ public enum CodexMimoDialoguePrompt {
 
         return """
         Mimo speech request:
-        session_name: \(title)
-        session_state: \(state)
+        chat_name: \(title)
+        chat_state: \(state)
         activity_kind: \(activity)
         safe_work_topic: \(topic)
         deterministic_fallback: \(deterministic)
 
-        Write Mimo's next speech bubble for ご主人.
+        Write Mimo's next speech bubble for the app user.
         """
     }
 
@@ -55,9 +57,41 @@ public enum CodexMimoDialoguePrompt {
             .trimmingCharacters(in: CharacterSet(charactersIn: "\"'`"))
             .replacingOccurrences(of: "『", with: "「")
             .replacingOccurrences(of: "』", with: "」")
-            .replacingOccurrences(of: "スレッド", with: "セッション")
-            .replacingOccurrences(of: "Thread", with: "Session")
-            .replacingOccurrences(of: "thread", with: "session")
+            .replacingOccurrences(of: "Codex Session", with: "このチャット")
+            .replacingOccurrences(of: "Codex Thread", with: "このチャット")
+            .replacingOccurrences(of: "スレッド", with: "チャット")
+            .replacingOccurrences(of: "セッション", with: "チャット")
+            .replacingOccurrences(of: "Session", with: "チャット")
+            .replacingOccurrences(of: "session", with: "チャット")
+            .replacingOccurrences(of: "Thread", with: "チャット")
+            .replacingOccurrences(of: "thread", with: "チャット")
+            .replacingOccurrences(
+                of: #"「([^」]+)」は動作中です"#,
+                with: #"「$1」で作業を進めているよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」は動作中で"#,
+                with: #"「$1」で作業を進めていて"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」は停止中です"#,
+                with: #"「$1」は確認できるよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(of: "動作中・", with: "")
+            .replacingOccurrences(of: "停止・", with: "")
+            .replacingOccurrences(of: "動作中です", with: "作業を進めているよ")
+            .replacingOccurrences(of: "動作中で", with: "作業を進めていて")
+            .replacingOccurrences(of: "動作中", with: "作業中")
+            .replacingOccurrences(of: "停止中です", with: "確認できるよ")
+            .replacingOccurrences(of: "停止中", with: "確認できる状態")
+            .replacingOccurrences(
+                of: #"^ご主人[、,]\s*"#,
+                with: "",
+                options: .regularExpression
+            )
 
         if text.hasPrefix("- ") {
             text.removeFirst(2)
@@ -69,24 +103,32 @@ public enum CodexMimoDialoguePrompt {
 
     private static func displayTitle(_ rawTitle: String) -> String {
         let title = CodexThreadTitleFormatter.title(
-            from: [rawTitle, "Codex"],
-            fallback: "Codex",
+            from: [rawTitle],
+            fallback: "このチャット",
             limit: 24
         )
+        if ["Codex Thread", "Codex Session", "unknown-thread", "Codex"].contains(title) {
+            return "このチャット"
+        }
         return sanitized(title)
-            .replacingOccurrences(of: "スレッド", with: "セッション")
-            .replacingOccurrences(of: "Thread", with: "Session")
-            .replacingOccurrences(of: "thread", with: "session")
+            .replacingOccurrences(of: "Codex Session", with: "このチャット")
+            .replacingOccurrences(of: "Codex Thread", with: "このチャット")
+            .replacingOccurrences(of: "スレッド", with: "チャット")
+            .replacingOccurrences(of: "セッション", with: "チャット")
+            .replacingOccurrences(of: "Session", with: "チャット")
+            .replacingOccurrences(of: "session", with: "チャット")
+            .replacingOccurrences(of: "Thread", with: "チャット")
+            .replacingOccurrences(of: "thread", with: "チャット")
     }
 
     private static func stateLabel(for state: CodexSessionActivityState?) -> String {
         switch state {
         case .active:
-            return "動作中"
+            return "作業を進めている"
         case .waiting:
-            return "確認待ち"
+            return "返事や確認を待っている"
         case .stopped:
-            return "停止中"
+            return "確認できる状態"
         case .failed:
             return "失敗"
         case nil:
@@ -137,7 +179,7 @@ public enum CodexMimoDialoguePrompt {
         case .mention:
             return "参照確認"
         case .threadStatus:
-            return "セッション状態"
+            return "チャット状態"
         }
     }
 

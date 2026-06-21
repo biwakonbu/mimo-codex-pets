@@ -11,15 +11,15 @@ public enum CodexSessionSummarizer {
 
         let lowercased = collapsed.lowercased()
         if containsAny(lowercased, ["吹き出し", "bubble"]) &&
-            containsAny(lowercased, ["要約", "summary", "会話", "セッション", "状況", "説明"]) {
+            containsAny(lowercased, ["要約", "summary", "会話", "セッション", "チャット", "状況", "説明"]) {
             if containsAny(lowercased, ["具体", "考察", "進捗", "どんな事", "何を"]) {
                 return "吹き出し要約の具体説明"
             }
             if containsAny(lowercased, ["作業内容", "内容"]) {
                 return "作業内容の説明"
             }
-            if containsAny(lowercased, ["セッションごと", "スレッドごと", "thread", "複数"]) {
-                return "セッション別の状況整理"
+            if containsAny(lowercased, ["チャットごと", "セッションごと", "スレッドごと", "thread", "複数"]) {
+                return "チャット別の状況整理"
             }
             if containsAny(lowercased, ["実装", "修正", "改善", "対応", "作る"]) {
                 return "吹き出し要約の実装"
@@ -42,15 +42,15 @@ public enum CodexSessionSummarizer {
         }
         if containsAny(lowercased, ["複数スレッド", "マルチスレッド", "multi-thread", "同時"]) &&
             containsAny(lowercased, ["吹き出し", "bubble", "表示", "thread"]) {
-            return "複数セッション表示"
+            return "複数チャット表示"
         }
         if containsAny(lowercased, ["codex"]) &&
             containsAny(lowercased, ["app-server", "接続", "通信", "protocol", "プロトコル", "thread/read"]) {
             return "Codex 連携"
         }
-        if containsAny(lowercased, ["セッション", "session"]) &&
+        if containsAny(lowercased, ["チャット", "セッション", "session"]) &&
             containsAny(lowercased, ["状態", "内容", "情報", "進捗"]) {
-            return "セッション状況"
+            return "チャット状況"
         }
         if containsAny(lowercased, ["computer use", "accessibility", "productionSurface", "画面", "アクセシビリティ"]) {
             return "画面確認"

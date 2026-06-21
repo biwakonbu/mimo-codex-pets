@@ -182,8 +182,8 @@ def require_mimicry_contract() -> None:
     require_text(
         FORMATTER,
         [
-            "sessionAwareSummary",
-            "contextStateLabel",
+            "primarySpeechSummary",
+            "contextDisplaySummary",
             "displayTitleVocabulary",
             "sessionState",
             "mimoSpeech",
@@ -200,10 +200,10 @@ def require_mimicry_contract() -> None:
             "CodexMimoDialoguePrompt",
             "gpt-5.4-mini",
             "Mimo speech request",
-            "session_state",
+            "chat_state",
             "safe_work_topic",
             "sanitizedSpeech",
-            "Never use the word スレッド",
+            "Never use the words スレッド",
         ],
         label="Codex-backed Mimo dialogue contract",
     )
@@ -216,7 +216,7 @@ def require_mimicry_contract() -> None:
             "進捗の具体説明",
             "吹き出し要約の表示文言",
             "吹き出し要約",
-            "複数セッション表示",
+            "複数チャット表示",
             "Codex 連携",
             "Mimo の動き",
         ],

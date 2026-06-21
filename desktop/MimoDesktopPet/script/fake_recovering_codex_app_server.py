@@ -38,7 +38,7 @@ def thread_snapshot(recovered):
     if recovered:
         name = "再接続後の確認"
         preview = "Codex app-server 復帰を確認しています"
-        output = "復帰後のセッションを読み直しています"
+        output = "復帰後のチャットを読み直しています"
     else:
         name = "再接続前の確認"
         preview = "接続後に一度 app-server が落ちる検証"

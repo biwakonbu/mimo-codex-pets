@@ -95,12 +95,12 @@ SWIFT
 sleep 10
 kill -0 "$APP_PID" >/dev/null
 
-grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)をツールで確認中です' "$PRESENTATION_LOG"
-grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)をまとめています' "$PRESENTATION_LOG"
-grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)を計画中です' "$PRESENTATION_LOG"
-grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)でコマンドを実行中です' "$PRESENTATION_LOG"
-grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)で端末入力を確認中です' "$PRESENTATION_LOG"
-grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)の差分確認中です' "$PRESENTATION_LOG"
+grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をツールで確認中だよ' "$PRESENTATION_LOG"
+grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をまとめているよ' "$PRESENTATION_LOG"
+grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)を計画中だよ' "$PRESENTATION_LOG"
+grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)でコマンドを実行中だよ' "$PRESENTATION_LOG"
+grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)で端末入力を確認中だよ' "$PRESENTATION_LOG"
+grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)の差分確認中だよ' "$PRESENTATION_LOG"
 grep -Eq 'Mimo runtime QA.*(作業内容|吹き出し要約).*テスト|Mimo runtime QA.*Mimo が見やすく伝える準備' "$PRESENTATION_LOG"
 grep -Fq 'Mimo が見やすく伝える準備を進めています' "$PRESENTATION_LOG"
 grep -Fq '承認確認' "$PRESENTATION_LOG"
@@ -116,13 +116,13 @@ grep -Fq '問題確認' "$PRESENTATION_LOG"
 grep -Fq '警告確認' "$PRESENTATION_LOG"
 grep -Fq '安全警告' "$PRESENTATION_LOG"
 grep -Fq 'MCP 確認' "$PRESENTATION_LOG"
-grep -Eq 'Mimo runtime.*吹き出し要約.*確認待ち' "$PRESENTATION_LOG"
-grep -Fq '「別セッションの確認」停止・検証レビュー可' "$PRESENTATION_LOG"
-grep -Fq '「別セッションの確認」動作中・作業中' "$PRESENTATION_LOG"
-grep -Fq '「更新された別セッション」動作中・作業中' "$PRESENTATION_LOG"
+grep -Eq 'Mimo runtime.*吹き出し要約.*(返事待ち|確認を待)' "$PRESENTATION_LOG"
+grep -Fq '「別チャットの確認」検証確認できる' "$PRESENTATION_LOG"
+grep -Fq '「別チャットの確認」作業中' "$PRESENTATION_LOG"
+grep -Fq '「更新された別チャット」作業中' "$PRESENTATION_LOG"
 grep -Fq 'ステータスだけで進捗を伝' "$PRESENTATION_LOG"
-grep -Fq '「資料整理」動作中・作業中' "$PRESENTATION_LOG"
-grep -Fq '新しい実装セッション' "$PRESENTATION_LOG"
+grep -Fq '「資料整理」作業中' "$PRESENTATION_LOG"
+grep -Fq '新しい実装チャット' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -252,7 +252,7 @@ for row in rows:
     if (
         len(bubbles) >= 4
         and any("Mimo runtime QA" in str(text) for text in bubbles)
-        and any("別セッションの確認" in str(text) for text in bubbles)
+        and any("別チャットの確認" in str(text) for text in bubbles)
         and any("ステータスだけで進捗を伝" in str(text) for text in bubbles)
         and any("資料整理" in str(text) for text in bubbles)
     ):
@@ -278,7 +278,7 @@ for row in rows:
         and tones[0] in {"waiting", "review", "failed"}
         and any(
             marker in str(bubbles[0])
-            for marker in ("ステータスだけで進捗を伝", "別セッションの確認", "新しい実装セッション")
+            for marker in ("ステータスだけで進捗を伝", "別チャットの確認", "新しい実装チャット")
         )
         and any("Mimo runtime" in str(text) for text in bubbles[1:])
     ):
@@ -288,7 +288,7 @@ for row in rows:
 if not action_required_primary_seen:
     raise SystemExit("action-required secondary thread was never promoted into the primary Mimo report")
 
-closed_thread_markers = ("別セッションの確認", "更新された別セッション")
+closed_thread_markers = ("別チャットの確認", "更新された別チャット")
 tail_rows = rows[-5:]
 if any(
     any(marker in str(text) for marker in closed_thread_markers)
@@ -298,7 +298,7 @@ if any(
     raise SystemExit("closed secondary thread remained in recent production bubbles")
 
 if not any(
-    any("新しい実装セッション" in str(text) for text in row.get("bubbleTexts", []))
+    any("新しい実装チャット" in str(text) for text in row.get("bubbleTexts", []))
     for row in tail_rows
 ):
     raise SystemExit("notification-only started thread was not retained across later production bubble refreshes")
