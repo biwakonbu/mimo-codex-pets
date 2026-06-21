@@ -17,7 +17,8 @@ bundles, DMGs, screenshots, and notarization logs out of git; `dist/` is ignored
 - Either store Apple notary credentials once before submitting:
   `xcrun notarytool store-credentials MimoDesktopPet --apple-id <apple-id> --team-id DZZW99M6D8`.
 - Or create/download an App Store Connect API team key and keep the `.p8` file
-  outside this repository.
+  outside this repository. If the user is unsure about this setup, follow
+  `desktop/MimoDesktopPet/docs/notarization-asc-api-key.md`.
 - Use the stored profile name through `--notary-profile MimoDesktopPet` or
   `MIMO_NOTARY_KEYCHAIN_PROFILE=MimoDesktopPet`.
 - Use API key auth through `--asc-key <AuthKey.p8> --asc-key-id <key-id>

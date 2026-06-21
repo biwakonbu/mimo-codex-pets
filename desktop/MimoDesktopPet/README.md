@@ -70,7 +70,8 @@ macOS Gatekeeper may warn users when opening an internet-downloaded copy.
 You can also notarize without Apple ID login prompts by using an App Store
 Connect API key. Create/download a team API key from App Store Connect, keep the
 `.p8` file outside this repository, then pass its key path, key ID, and issuer
-ID:
+ID. See `docs/notarization-asc-api-key.md` for the step-by-step setup flow and
+the safety boundary for handling `.p8` files:
 
 ```bash
 ./script/package_release.sh 0.0.1 --notarize \
