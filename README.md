@@ -21,8 +21,8 @@ This repository also includes a SwiftPM-based macOS companion app at
 `desktop/MimoDesktopPet`. It reuses the same Mimo pet package, displays Mimo in a
 transparent always-on-top desktop panel, and reads Codex state through the
 public `codex app-server` JSON-RPC interface. Production mode shows short status
-and conversation updates in a speech bubble; the white conversation feed is a
-debug overlay.
+and sanitized multi-thread conversation updates in stacked speech bubbles. The
+white conversation feed exists only in the opt-in debug overlay.
 
 Run it with:
 
@@ -34,6 +34,7 @@ cd desktop/MimoDesktopPet
 Local checks:
 
 ```bash
+./script/qa_all.sh
 ./script/live_app_server_smoke.py
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh

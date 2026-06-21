@@ -111,9 +111,12 @@ Use the `Mimo` menu bar item to:
 
 - show or hide Mimo
 - toggle click-through mode
-- toggle the debug overlay with the conversation feed
 - reconnect to Codex
 - quit the app
+
+The debug overlay with the conversation feed is a QA-only surface. Its menu item
+is hidden in normal production launches and appears only when
+`MIMO_DEBUG_MENU=1` or `MIMO_DEBUG_OVERLAY=1` is set.
 
 When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
