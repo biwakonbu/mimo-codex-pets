@@ -218,7 +218,7 @@ hdiutil verify "$DMG_PATH"
 codesign --verify --deep --strict --verbose=2 "$APP_BUNDLE"
 codesign --verify --verbose=2 "$DMG_PATH"
 spctl -a -vv "$APP_BUNDLE"
-spctl -a -vv --type open "$DMG_PATH"
+spctl -a -vv --type open --context context:primary-signature "$DMG_PATH"
 shasum -a 256 -c "$CHECKSUM_PATH"
 
 if [[ "$CREATE_TAG" == "1" ]]; then
