@@ -463,10 +463,10 @@ public enum CodexConversationExtractor {
             text = "作業中"
             sessionState = .active
         } else if latestTurnStatus == .completed && hasRecentAssistantFinal {
-            text = "レビュー可能"
+            text = "確認してよさそう"
             sessionState = .stopped
         } else if latestTurnStatus == .completed {
-            text = "停止中"
+            text = "ひと段落"
             sessionState = .stopped
         } else {
             text = nil

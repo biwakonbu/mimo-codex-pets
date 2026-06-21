@@ -186,7 +186,7 @@ capture_and_inspect "waiting"
 wait_for_presentation "multi-thread" "waiting" "資料整理" "1" "active"
 capture_and_inspect "multi-thread"
 
-wait_for_presentation "review" "review" "確認できる" "0" "review"
+wait_for_presentation "review" "review" "確認してよさそう" "0" "review"
 capture_and_inspect "review"
 
 wait_for_presentation "failed" "failed" "つまずき" "0" "failed"

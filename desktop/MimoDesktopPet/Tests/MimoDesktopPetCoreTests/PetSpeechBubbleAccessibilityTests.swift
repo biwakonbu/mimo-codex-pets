@@ -52,7 +52,7 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
         }
 
         let value = PetSpeechBubbleAccessibility.value(
-            presentation: PetPresentationState(animation: .review, bubbleText: "レビューできます"),
+            presentation: PetPresentationState(animation: .review, bubbleText: "確認してよさそう"),
             bubbles: bubbles,
             debugOverlay: false
         )

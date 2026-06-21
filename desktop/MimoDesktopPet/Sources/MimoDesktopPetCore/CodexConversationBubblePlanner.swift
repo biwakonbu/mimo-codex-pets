@@ -76,7 +76,8 @@ public enum CodexConversationBubblePlanner {
         if text.contains("確認待ち") || text.contains("待ち") || text.contains("入力") || text.contains("承認") || text.contains("安全") {
             return 1
         }
-        if text.contains("レビュー可能") || text.contains("レビューでき") || text.contains("レビューを開始") {
+        if text.contains("確認してよさそう") || text.contains("ひと段落") ||
+            text.contains("レビュー可能") || text.contains("レビューでき") || text.contains("レビューを開始") {
             return 2
         }
         return 3
@@ -112,7 +113,8 @@ public enum CodexConversationBubblePlanner {
         if lowered.contains("確認待ち") || lowered.contains("確認を待") || lowered.contains("入力") || lowered.contains("承認") || lowered.contains("安全") {
             return .waiting
         }
-        if lowered.contains("レビュー") || lowered.contains("完了") || lowered.contains("停止") || lowered.contains("止ま") {
+        if lowered.contains("確認してよさそう") || lowered.contains("ひと段落") ||
+            lowered.contains("レビュー") || lowered.contains("完了") || lowered.contains("停止") || lowered.contains("止ま") {
             return .review
         }
         if lowered.contains("作業") || lowered.contains("実行") || lowered.contains("検証") || lowered.contains("応答") || lowered.contains("計画") || lowered.contains("動作中") {
@@ -294,7 +296,7 @@ public enum CodexConversationBubblePlanner {
         case .waiting:
             text = "ほか\(hiddenCandidates.count)件に確認待ち"
         case .review:
-            text = "ほか\(hiddenCandidates.count)件レビューあり"
+            text = "ほか\(hiddenCandidates.count)件ひと段落"
         case .active, .neutral, .overflow:
             text = "ほか\(hiddenCandidates.count)件も見ています"
         }

@@ -70,8 +70,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(status.verticalOffset, 0)
         XCTAssertEqual(status.minTextWidth, 398)
-        XCTAssertEqual(firstThread.verticalOffset, -92)
-        XCTAssertEqual(secondThread.verticalOffset, -140)
+        XCTAssertEqual(firstThread.verticalOffset, -78)
+        XCTAssertEqual(secondThread.verticalOffset, -126)
         XCTAssertEqual(firstThread.horizontalOffset, -10)
         XCTAssertEqual(secondThread.horizontalOffset, 12)
         XCTAssertEqual(firstThread.maxTextWidth, 392)
@@ -107,9 +107,9 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(status.verticalOffset, 0)
-        XCTAssertEqual(firstThread.verticalOffset, -92)
-        XCTAssertEqual(secondThread.verticalOffset, -140)
-        XCTAssertEqual(thirdThread.verticalOffset, -188)
+        XCTAssertEqual(firstThread.verticalOffset, -78)
+        XCTAssertEqual(secondThread.verticalOffset, -126)
+        XCTAssertEqual(thirdThread.verticalOffset, -174)
         XCTAssertEqual(firstThread.horizontalOffset, -10)
         XCTAssertEqual(secondThread.horizontalOffset, 12)
         XCTAssertEqual(thirdThread.horizontalOffset, -8)
@@ -133,7 +133,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             )
         }
 
-        XCTAssertEqual(placements.map(\.verticalOffset), [0, -92, -140, -188, -236])
+        XCTAssertEqual(placements.map(\.verticalOffset), [0, -78, -126, -174, -222])
         XCTAssertEqual(placements.map(\.horizontalOffset), [0, -10, 12, -8, 10])
         XCTAssertEqual(placements[0].maxTextWidth, 416)
         XCTAssertEqual(placements[0].minTextWidth, 398)
@@ -153,7 +153,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             visibleCount: PetSpeechBubbleLayout.productionVisibleLimit
         )
 
-        XCTAssertEqual(overflow.verticalOffset, -236)
+        XCTAssertEqual(overflow.verticalOffset, -222)
         XCTAssertEqual(overflow.horizontalOffset, 10)
         XCTAssertEqual(overflow.maxTextWidth, 320)
         XCTAssertEqual(overflow.minTextWidth, 270)
@@ -171,7 +171,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
-        XCTAssertEqual(placement.verticalOffset, -236)
+        XCTAssertEqual(placement.verticalOffset, -222)
         XCTAssertEqual(placement.horizontalOffset, 10)
     }
 

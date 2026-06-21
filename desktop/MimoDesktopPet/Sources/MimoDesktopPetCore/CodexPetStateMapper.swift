@@ -77,7 +77,7 @@ public enum CodexPetStateMapper {
         }
 
         if latestTurnStatus == .completed && hasRecentAssistantFinal {
-            return PetPresentationState(animation: .review, bubbleText: "レビューできます")
+            return PetPresentationState(animation: .review, bubbleText: "確認してよさそう")
         }
 
         return PetPresentationState(animation: .idle, bubbleText: "待機中")

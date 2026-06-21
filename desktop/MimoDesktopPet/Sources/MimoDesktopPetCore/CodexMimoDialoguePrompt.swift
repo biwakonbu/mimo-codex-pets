@@ -13,7 +13,7 @@ public enum CodexMimoDialoguePrompt {
     Include the chat name in Japanese corner quotes if it is supplied.
     Use the exact quote characters 「 and 」 for the chat name; do not use 『』.
     Explain what Codex is doing or thinking from the safe work topic and activity, not as raw internal status.
-    Describe state naturally: 進めている, 返事を待っている, 確認できる, or つまずいた.
+    Describe state naturally: 進めている, 返事を待っている, 確認してよさそう, ひと段落した, or つまずいた.
     Do not force ご主人. Use it only when Mimo is directly addressing the app user naturally.
     Sound warm and conversational, but do not add emoji, markdown, bullet points, or role labels.
     Never use the words スレッド, セッション, Thread, Session, or Codex Session in the output; say チャット instead.
@@ -66,6 +66,16 @@ public enum CodexMimoDialoguePrompt {
             .replacingOccurrences(of: "Thread", with: "チャット")
             .replacingOccurrences(of: "thread", with: "チャット")
             .replacingOccurrences(
+                of: #"「([^」]+)」は停止・レビュー可"#,
+                with: #"「$1」は確認してよさそうだよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」はレビュー可能です"#,
+                with: #"「$1」は確認してよさそうだよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
                 of: #"「([^」]+)」は動作中です"#,
                 with: #"「$1」で作業を進めているよ"#,
                 options: .regularExpression
@@ -77,16 +87,25 @@ public enum CodexMimoDialoguePrompt {
             )
             .replacingOccurrences(
                 of: #"「([^」]+)」は停止中です"#,
-                with: #"「$1」は確認できるよ"#,
+                with: #"「$1」はひと段落しているよ"#,
                 options: .regularExpression
             )
+            .replacingOccurrences(
+                of: #"停止・レビュー可\s*(?=「)"#,
+                with: "",
+                options: .regularExpression
+            )
+            .replacingOccurrences(of: "停止・レビュー可", with: "確認してよさそう")
             .replacingOccurrences(of: "動作中・", with: "")
             .replacingOccurrences(of: "停止・", with: "")
+            .replacingOccurrences(of: "レビュー可能", with: "確認してよさそう")
+            .replacingOccurrences(of: "レビュー可", with: "確認してよさそう")
+            .replacingOccurrences(of: "レビューできます", with: "確認してよさそう")
             .replacingOccurrences(of: "動作中です", with: "作業を進めているよ")
             .replacingOccurrences(of: "動作中で", with: "作業を進めていて")
             .replacingOccurrences(of: "動作中", with: "作業中")
-            .replacingOccurrences(of: "停止中です", with: "確認できるよ")
-            .replacingOccurrences(of: "停止中", with: "確認できる状態")
+            .replacingOccurrences(of: "停止中です", with: "ひと段落しているよ")
+            .replacingOccurrences(of: "停止中", with: "ひと段落")
             .replacingOccurrences(
                 of: #"^ご主人[、,]\s*"#,
                 with: "",
@@ -128,7 +147,7 @@ public enum CodexMimoDialoguePrompt {
         case .waiting:
             return "返事や確認を待っている"
         case .stopped:
-            return "確認できる状態"
+            return "ひと段落していて確認してよさそう"
         case .failed:
             return "失敗"
         case nil:
@@ -171,7 +190,7 @@ public enum CodexMimoDialoguePrompt {
         case .sleep:
             return "待機"
         case .review:
-            return "レビュー"
+            return "見直し"
         case .contextCompaction:
             return "文脈整理"
         case .skill:

@@ -57,4 +57,14 @@ final class CodexMimoDialoguePromptTests: XCTestCase {
 
         XCTAssertEqual(speech, "「UI改善チャット」は吹き出しの説明を整えています。")
     }
+
+    func testSanitizedSpeechRewritesStoppedReviewStatus() {
+        let speech = CodexMimoDialoguePrompt.sanitizedSpeech(
+            from: "停止・レビュー可「UI改善セッション」は吹き出しを見直せます。"
+        )
+
+        XCTAssertEqual(speech, "「UI改善チャット」は吹き出しを見直せます。")
+        XCTAssertFalse(speech?.contains("停止") ?? true)
+        XCTAssertFalse(speech?.contains("レビュー可") ?? true)
+    }
 }

@@ -32,7 +32,7 @@ Use only the sanitized chat fields supplied by the client. Do not infer hidden f
 Output exactly one Japanese sentence, 55-100 characters.
 Include the chat name in Japanese corner quotes if it is supplied.
 Explain what Codex is doing from the safe work topic and activity, not as raw internal status.
-Describe state naturally: 進めている, 返事を待っている, 確認できる, or つまずいた.
+Describe state naturally: 進めている, 返事を待っている, 確認してよさそう, ひと段落した, or つまずいた.
 Sound warm and conversational, but do not add emoji, markdown, bullet points, or role labels.
 Never use the words スレッド, セッション, Thread, Session, or Codex Session in the output; say チャット instead.
 """

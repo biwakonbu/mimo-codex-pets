@@ -131,7 +131,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(failed?.sessionState, .failed)
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: stopped!),
-            "「stopped」は確認できるよ"
+            "「stopped」は確認してよさそうだよ"
         )
     }
 
@@ -651,7 +651,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(active?.text, "作業中")
         XCTAssertEqual(active?.activityKind, .threadStatus)
         XCTAssertEqual(waiting?.text, "確認待ち")
-        XCTAssertEqual(review?.text, "レビュー可能")
+        XCTAssertEqual(review?.text, "確認してよさそう")
         XCTAssertNil(idle)
     }
 

@@ -67,6 +67,16 @@ public enum CodexBubbleFormatter {
     private static func displayStatusVocabulary(_ text: String) -> String {
         text
             .replacingOccurrences(
+                of: #"「([^」]+)」は停止・レビュー可"#,
+                with: #"「$1」は確認してよさそうだよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」はレビュー可能です"#,
+                with: #"「$1」は確認してよさそうだよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
                 of: #"「([^」]+)」は動作中です"#,
                 with: #"「$1」で作業を進めているよ"#,
                 options: .regularExpression
@@ -78,16 +88,25 @@ public enum CodexBubbleFormatter {
             )
             .replacingOccurrences(
                 of: #"「([^」]+)」は停止中です"#,
-                with: #"「$1」は確認できるよ"#,
+                with: #"「$1」はひと段落しているよ"#,
                 options: .regularExpression
             )
+            .replacingOccurrences(
+                of: #"停止・レビュー可\s*(?=「)"#,
+                with: "",
+                options: .regularExpression
+            )
+            .replacingOccurrences(of: "停止・レビュー可", with: "確認してよさそう")
             .replacingOccurrences(of: "動作中・", with: "")
             .replacingOccurrences(of: "停止・", with: "")
+            .replacingOccurrences(of: "レビュー可能", with: "確認してよさそう")
+            .replacingOccurrences(of: "レビュー可", with: "確認してよさそう")
+            .replacingOccurrences(of: "レビューできます", with: "確認してよさそう")
             .replacingOccurrences(of: "動作中です", with: "作業を進めているよ")
             .replacingOccurrences(of: "動作中で", with: "作業を進めていて")
             .replacingOccurrences(of: "動作中", with: "作業中")
-            .replacingOccurrences(of: "停止中です", with: "確認できるよ")
-            .replacingOccurrences(of: "停止中", with: "確認できる状態")
+            .replacingOccurrences(of: "停止中です", with: "ひと段落しているよ")
+            .replacingOccurrences(of: "停止中", with: "ひと段落")
     }
 
     private static func compactSummary(for summary: String, topic: String? = nil) -> String {
@@ -96,9 +115,9 @@ public enum CodexBubbleFormatter {
             case "失敗を確認しました":
                 return "\(topic)つまずき"
             case "レビューできます":
-                return "\(topic)確認できる"
+                return "\(topic)ひと段落"
             case "レビュー中です":
-                return "\(topic)レビュー中"
+                return "\(topic)見直し中"
             case "確認待ちです":
                 return "\(topic)返事待ち"
             case "依頼を確認しました":
@@ -174,9 +193,9 @@ public enum CodexBubbleFormatter {
         case "失敗を確認しました":
             return "つまずきあり"
         case "レビュー中です":
-            return "レビュー中"
+            return "見直し中"
         case "レビューを終えました":
-            return "レビュー完了"
+            return "見直し済み"
         case "文脈を整理中です":
             return "文脈整理"
         case "文脈を整理しました":
@@ -212,7 +231,7 @@ public enum CodexBubbleFormatter {
         case "画像を確認中です":
             return "画像確認"
         case "レビューできます":
-            return "確認できる"
+            return "ひと段落"
         case "テストを実行中です":
             return "テスト中"
         case "ツールで確認中です":
@@ -285,6 +304,9 @@ public enum CodexBubbleFormatter {
             }
             return "つまずいたところを見つけたよ"
         case .stopped:
+            if summary == "レビューできます" {
+                return "確認してよさそうだよ"
+            }
             if summary == "作業を進めています" || summary == "更新を確認しました" {
                 return "ここまで進んでいるよ"
             }
@@ -299,7 +321,7 @@ public enum CodexBubbleFormatter {
         case "失敗を確認しました":
             return "つまずいたところを見つけたよ"
         case "レビューできます":
-            return "確認できるよ"
+            return "確認してよさそうだよ"
         case "確認待ちです":
             return "確認を待っているよ"
         case "作業中です":
@@ -312,7 +334,9 @@ public enum CodexBubbleFormatter {
             return "更新を見つけたよ"
         default:
             return summary
-                .replacingOccurrences(of: "レビューできます", with: "確認できるよ")
+                .replacingOccurrences(of: "レビューできます", with: "確認してよさそうだよ")
+                .replacingOccurrences(of: "レビュー可能", with: "確認してよさそう")
+                .replacingOccurrences(of: "レビュー可", with: "確認してよさそう")
                 .replacingOccurrences(of: "確認待ちです", with: "確認を待っているよ")
                 .replacingOccurrences(of: "失敗を確認しました", with: "つまずいたところを見つけたよ")
                 .replacingOccurrences(of: "しています", with: "しているよ")
@@ -339,7 +363,9 @@ public enum CodexBubbleFormatter {
 
     private static func contextDisplaySummary(_ summary: String) -> String {
         summary
-            .replacingOccurrences(of: "レビュー可", with: "確認できる")
+            .replacingOccurrences(of: "レビュー可能", with: "ひと段落")
+            .replacingOccurrences(of: "レビュー可", with: "ひと段落")
+            .replacingOccurrences(of: "確認してよさそう", with: "ひと段落")
             .replacingOccurrences(of: "失敗", with: "つまずき")
             .replacingOccurrences(of: "確認待ち", with: "返事待ち")
     }
@@ -349,6 +375,9 @@ public enum CodexBubbleFormatter {
 
         if text.contains("失敗") || text.contains("エラー") || text.contains("failed") || text.contains("systemerror") {
             return "失敗を確認しました"
+        }
+        if text.contains("確認してよさそう") || text.contains("ひと段落") {
+            return "レビューできます"
         }
         if let summary = activitySummary(for: line.activityKind, text: text) {
             return summary
@@ -462,9 +491,9 @@ public enum CodexBubbleFormatter {
         case "失敗を確認しました":
             return "\(topic)で失敗を確認しました"
         case "レビューできます":
-            return "\(topic)をレビューできます"
+            return "\(topic)を確認してよさそうです"
         case "レビュー中です":
-            return "\(topic)をレビュー中です"
+            return "\(topic)を見直し中です"
         case "確認待ちです":
             return "\(topic)で確認待ちです"
         case "依頼を確認しました":

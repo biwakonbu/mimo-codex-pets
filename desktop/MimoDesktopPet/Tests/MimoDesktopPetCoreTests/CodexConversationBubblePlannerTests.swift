@@ -112,7 +112,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
-            "「other」確認できる",
+            "「other」ひと段落",
             "「current」ツール確認",
             "「third」Mimo の動き中"
         ])
@@ -140,7 +140,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.text), [
             "「current」はコマンドを実行中だよ",
             "「waiting」返事待ち",
-            "「review」確認できる",
+            "「review」ひと段落",
             "「docs」作業中"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation])
@@ -364,7 +364,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "Codex が作業中",
-            "「other」確認できる",
+            "「other」ひと段落",
             "「current」ツール確認",
             "「third」作業中"
         ])
@@ -423,7 +423,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation, .overflow])
         XCTAssertEqual(bubbles.map(\.text), [
             "「waiting」は確認を待っているよ",
-            "「review」確認できる",
+            "「review」ひと段落",
             "「current」実行中",
             "「release」進捗あり",
             "ほか2件も見ています"
@@ -469,7 +469,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.text), [
             "「current」は応答をまとめているよ",
             "「fourth」返事待ち",
-            "「other」確認できる",
+            "「other」ひと段落",
             "「third」作業中"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation])
@@ -580,7 +580,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
         XCTAssertEqual(bubbles.first?.text, "「waiting」は確認を待っているよ")
         XCTAssertEqual(bubbles.dropFirst().map(\.text), [
-            "「review」確認できる",
+            "「review」ひと段落",
             "「current」実行中",
             "ほか2件も見ています"
         ])

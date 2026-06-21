@@ -47,6 +47,26 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertFalse(text.contains("動作中"))
     }
 
+    func testGeneratedSpeechDoesNotExposeRawStoppedReviewStatus() {
+        let line = CodexConversationLine(
+            threadId: "review",
+            threadTitle: "UI改善セッション",
+            speaker: "assistant",
+            text: "吹き出しを見直せます",
+            isAssistant: true,
+            activityKind: .assistantMessage,
+            workSummary: "吹き出しの余白",
+            sessionState: .stopped,
+            mimoSpeech: "停止・レビュー可「UI改善セッション」は吹き出しを見直せます。"
+        )
+
+        let text = CodexBubbleFormatter.bubbleText(for: line)
+
+        XCTAssertEqual(text, "「UI改善チャット」は吹き出しを見直せます。")
+        XCTAssertFalse(text.contains("停止"))
+        XCTAssertFalse(text.contains("レビュー可"))
+    }
+
     func testTargetUserCanScanMultipleChatsByChatNameAndNaturalState() {
         let active = CodexConversationLine(
             threadId: "main",
@@ -91,7 +111,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.text), [
             "「吹き出しUX」は吹き出し要約の表示文言をテスト中だよ",
             "「承認チャット」Codex 連携返事待ち",
-            "「レビュー用チャット」検証確認できる"
+            "「レビュー用チャット」検証ひと段落"
         ])
         XCTAssertTrue(bubbles.allSatisfy { !$0.text.contains("Codex Session") })
         XCTAssertTrue(bubbles.allSatisfy { !$0.text.contains("セッション") })
@@ -126,7 +146,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
             isAssistant: true
         )
 
-        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "「実装」は確認できるよ")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "「実装」は確認してよさそうだよ")
     }
 
     func testFormatsSecondaryContextAsShortThreadRow() {
@@ -152,7 +172,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
             isAssistant: true
         )
 
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: review), "「実装」確認できる")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: review), "「実装」ひと段落")
         XCTAssertEqual(CodexBubbleFormatter.contextText(for: command), "「QA」実行中")
         XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「承認」返事待ち")
     }
@@ -178,8 +198,8 @@ final class CodexBubbleFormatterTests: XCTestCase {
             isAssistant: true
         )
 
-        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "「別チャットの確認」は確認できるよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「別チャットの確認」確認できる")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "「別チャットの確認」は確認してよさそうだよ")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「別チャットの確認」ひと段落")
     }
 
     func testSummarizesSessionContentAsMimoWorkReport() {
@@ -271,14 +291,16 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: stopped),
-            "「Mimo runtime QA」は作業内容の説明を確認できるよ"
+            "「Mimo runtime QA」は作業内容の説明を確認してよさそうだよ"
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: stopped),
-            "「Mimo runtime QA」作業内容の説明確認できる"
+            "「Mimo runtime QA」作業内容の説明ひと段落"
         )
         XCTAssertFalse(CodexBubbleFormatter.bubbleText(for: active).contains("動作中"))
         XCTAssertFalse(CodexBubbleFormatter.contextText(for: stopped).contains("停止・"))
+        XCTAssertFalse(CodexBubbleFormatter.bubbleText(for: stopped).contains("レビュー"))
+        XCTAssertFalse(CodexBubbleFormatter.contextText(for: stopped).contains("レビュー"))
     }
 
     func testReasoningReportsAsThinkingSummary() {
@@ -736,7 +758,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     text: "レビュー可能",
                     isAssistant: true
                 ),
-                "「レビュー」は確認できるよ"
+                "「レビュー」は確認してよさそうだよ"
             )
         ]
 
