@@ -49,10 +49,9 @@ private struct ProductionBubbleStackView: View {
 
     var body: some View {
         let visible = Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit))
-        let rows = Array(visible.enumerated()).reversed()
 
-        VStack(spacing: CGFloat(PetSpeechBubbleLayout.productionRowSpacing)) {
-            ForEach(rows, id: \.element.id) { index, bubble in
+        ZStack(alignment: .bottom) {
+            ForEach(Array(visible.enumerated()), id: \.element.id) { index, bubble in
                 let placement = PetSpeechBubbleLayout.placement(
                     for: index,
                     role: bubble.role,
@@ -70,6 +69,10 @@ private struct ProductionBubbleStackView: View {
                     accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone)
                 )
                 .scaleEffect(CGFloat(placement.scale), anchor: .center)
+                .offset(
+                    x: CGFloat(placement.horizontalOffset),
+                    y: CGFloat(placement.verticalOffset)
+                )
                 .zIndex(placement.zIndex)
             }
         }

@@ -76,6 +76,18 @@ while time.time() < deadline:
             )
         if ("Debug Overlay" in titles) != expected:
             raise SystemExit(f"{label}: Debug Overlay title mismatch; titles={titles}")
+        states = row.get("itemStates", {})
+        if bool(row.get("clickThroughEnabled", True)):
+            raise SystemExit(f"{label}: Click Through should start disabled; row={row}")
+        if bool(states.get("Click Through", True)):
+            raise SystemExit(f"{label}: Click Through menu state should start off; states={states}")
+        debug_enabled = bool(row.get("debugOverlayEnabled", False))
+        debug_state = bool(states.get("Debug Overlay", False))
+        if label == "debug-overlay-opt-in":
+            if not debug_enabled or not debug_state:
+                raise SystemExit(f"{label}: Debug Overlay should start enabled; row={row}")
+        elif debug_enabled or debug_state:
+            raise SystemExit(f"{label}: Debug Overlay should start disabled; row={row}")
         print(f"{label} status menu observed.")
         raise SystemExit(0)
 

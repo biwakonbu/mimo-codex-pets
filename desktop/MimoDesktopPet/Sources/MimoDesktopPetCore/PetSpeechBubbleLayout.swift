@@ -136,13 +136,13 @@ public enum PetSpeechBubbleLayout {
         case 0:
             return 0
         case 1:
-            return 43
+            return 57
         case 2:
-            return 75
+            return 89
         case 3:
-            return 107
+            return 121
         default:
-            return 139
+            return 153
         }
     }
 }

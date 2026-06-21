@@ -129,9 +129,18 @@ final class StatusItemController: NSObject {
         let itemTitles = menu.items.compactMap { item in
             item.isSeparatorItem ? nil : item.title
         }
+        let itemStates = Dictionary(
+            uniqueKeysWithValues: menu.items.compactMap { item -> (String, Bool)? in
+                guard !item.isSeparatorItem else { return nil }
+                return (item.title, item.state == .on)
+            }
+        )
         let object: [String: Any] = [
             "buttonTitle": statusItem.button?.title ?? "",
             "menuTitles": itemTitles,
+            "itemStates": itemStates,
+            "clickThroughEnabled": clickThroughItem?.state == .on,
+            "debugOverlayEnabled": debugOverlayItem?.state == .on,
             "debugMenuVisible": itemTitles.contains("Debug Overlay")
         ]
         guard

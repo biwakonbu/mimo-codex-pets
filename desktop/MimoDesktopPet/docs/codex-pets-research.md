@@ -280,8 +280,9 @@ Conversation behavior:
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
   Secondary thread bubbles are smaller fixed-width context rows above it: they
   stay white, use compact accent markers, omit the longer `ご主人、...です`
-  phrase, and align into a centered stacked list so concurrent thread status is
-  readable without becoming a transcript panel. The fixed secondary widths keep
+  phrase, and align into a centered layered stack using the same tested row
+  offsets as `PetSpeechBubbleLayout`, so concurrent thread status is readable
+  without becoming a transcript panel. The fixed secondary widths keep
   short and long thread titles from making the bubble stack jitter as Codex
   notifications arrive. This keeps Codex Pets-like multi-thread awareness in
   the production surface without rendering a console, transcript feed, or debug
@@ -536,9 +537,11 @@ Manual or visual checks:
   launch.
 - Status-menu E2E launches the real app process and reads the assembled menu
   via `MIMO_STATUS_MENU_LOG`. Production must expose Show/Hide, Click Through,
-  Reconnect Codex, and Quit, but must not expose `Debug Overlay`. Separate
-  opt-in runs verify that `MIMO_DEBUG_MENU=1` and `MIMO_DEBUG_OVERLAY=1` both
-  expose the debug item for development.
+  Reconnect Codex, and Quit, must report Click Through as initially off, and
+  must not expose `Debug Overlay`. Separate opt-in runs verify that
+  `MIMO_DEBUG_MENU=1` and `MIMO_DEBUG_OVERLAY=1` both expose the debug item for
+  development, and that `MIMO_DEBUG_OVERLAY=1` reports the debug item as
+  checked.
 - State-matrix E2E launches against the fake app-server with autonomous motion
   disabled, waits for active, waiting, simultaneous multi-thread, review, and
   failed presentation states, captures the exact production window for each
