@@ -23,6 +23,10 @@ bundles, DMGs, screenshots, and notarization logs out of git; `dist/` is ignored
   `MIMO_NOTARY_KEYCHAIN_PROFILE=MimoDesktopPet`.
 - Use API key auth through `--asc-key <AuthKey.p8> --asc-key-id <key-id>
   --asc-issuer <issuer-uuid>` or the matching `MIMO_NOTARY_ASC_*` env vars.
+- For Slack deploy notifications, configure the GitHub Actions repository
+  secret `MIMO_DESKTOP_SLACK_WEBHOOK_URL`; the workflow and setup notes live in
+  `.github/workflows/release-slack-notify.yml` and
+  `desktop/MimoDesktopPet/docs/release-slack-notification.md`.
 
 ## Main Command
 
@@ -93,4 +97,5 @@ desktop/MimoDesktopPet/dist/release/v<version>/MimoDesktopPet-<version>.dmg.sha2
 ```
 
 Report the exact notarization, Gatekeeper, tag, and GitHub release state in the
-final answer.
+final answer. Also report whether the release Slack notification workflow was
+triggered or whether it still needs the `MIMO_DESKTOP_SLACK_WEBHOOK_URL` secret.

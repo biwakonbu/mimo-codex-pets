@@ -93,6 +93,11 @@ notarizes the DMG, staples the ticket, and verifies the final artifact with
 be tagged, pushed, and attached to a GitHub release. The project-local Codex
 skill for this flow is `skills/mimo-release/SKILL.md`.
 
+When a GitHub Release is published, `.github/workflows/release-slack-notify.yml`
+can post a polished deploy-success notification to the `#mimo-desktop` Slack
+channel. Configure the `MIMO_DESKTOP_SLACK_WEBHOOK_URL` GitHub Actions secret
+first; see `docs/release-slack-notification.md`.
+
 The same wrapper accepts App Store Connect API key flags:
 
 ```bash

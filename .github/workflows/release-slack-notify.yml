@@ -1,0 +1,68 @@
+name: Release Slack notification
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: GitHub Release tag to notify
+        required: true
+        default: v0.0.1
+
+permissions:
+  contents: read
+
+jobs:
+  notify-mimo-desktop:
+    name: Notify mimo-desktop
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Resolve release for manual dispatch
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_TAG" \
+            --json tagName,name,url,isDraft,isPrerelease,publishedAt,targetCommitish,assets \
+            > "$RUNNER_TEMP/release.json"
+
+      - name: Build Slack payload
+        run: |
+          set -euo pipefail
+          args=(
+            --repository "$GITHUB_REPOSITORY"
+            --repository-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+            --output "$RUNNER_TEMP/slack-payload.json"
+          )
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            args+=(--release-json "$RUNNER_TEMP/release.json")
+          else
+            args+=(--event-path "$GITHUB_EVENT_PATH")
+          fi
+
+          python3 desktop/MimoDesktopPet/script/build_release_slack_payload.py "${args[@]}"
+
+      - name: Send Slack notification
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.MIMO_DESKTOP_SLACK_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${SLACK_WEBHOOK_URL:-}" ]]; then
+            echo "::error::Missing required repository secret: MIMO_DESKTOP_SLACK_WEBHOOK_URL"
+            exit 1
+          fi
+
+          curl --fail --show-error --silent \
+            -X POST \
+            -H "Content-Type: application/json" \
+            --data @"$RUNNER_TEMP/slack-payload.json" \
+            "$SLACK_WEBHOOK_URL"
