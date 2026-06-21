@@ -30,16 +30,24 @@ Verified public protocol surface:
   - `thread/closed`
   - `thread/deleted`
   - `thread/unarchived`
+  - `thread/compacted`
   - `hook/started`
   - `hook/completed`
   - `turn/started`
   - `turn/completed`
   - `turn/diff/updated`
+  - `turn/moderationMetadata`
   - `item/started`
   - `item/completed`
   - `item/autoApprovalReview/started`
   - `item/autoApprovalReview/completed`
   - `serverRequest/resolved`
+  - `mcpServer/startupStatus/updated`
+  - `model/rerouted`
+  - `model/verification`
+  - `warning`
+  - `guardianWarning`
+  - `error`
 - `thread/read(includeTurns: true)` exposes recent `ThreadItem` values, including:
   - `userMessage`
   - `agentMessage`
@@ -76,13 +84,21 @@ Verified public protocol surface:
   `turn/diff/updated`, `item/autoApprovalReview/started`,
   `item/autoApprovalReview/completed`, `hook/started`, `hook/completed`,
   `serverRequest/resolved`, `thread/goal/updated`, and
-  `thread/goal/cleared` exist in the generated schema. Production bubbles treat
-  these as activity signals, not as text to quote directly. Terminal stdin,
-  process ids, patch paths, patch diffs, hook run payloads, server request ids,
-  approval actions/reasons, and thread goal objectives are never displayed;
-  Mimo reports only fixed summaries such as terminal input checking, diff
-  checking, approval review, hook checking, confirmation reflection, or goal
-  checking.
+  `thread/goal/cleared` exist in the generated schema. Thread-scoped system
+  notifications such as `thread/compacted`, `model/rerouted`,
+  `model/verification`, `turn/moderationMetadata`,
+  `mcpServer/startupStatus/updated`, `warning`, `guardianWarning`, and `error`
+  are also activity signals. Production bubbles do not quote their payloads
+  directly. Terminal stdin, process ids, patch paths, patch diffs, hook run
+  payloads, server request ids, approval actions/reasons, thread goal
+  objectives, model names, reroute reasons, verification payloads, moderation
+  metadata, warning/error text, and MCP server names are never displayed; Mimo
+  reports only fixed summaries such as terminal input checking, diff checking,
+  approval review, hook checking, confirmation reflection, goal checking,
+  context compaction, model adjustment, safety checking, warning checking, or
+  MCP status checking.
+  Realtime transcript/audio notifications stay intentionally ignored in v1
+  because they can contain raw transcript text or audio data.
 
 Verified runtime behavior:
 
@@ -292,6 +308,9 @@ Conversation behavior:
   clearer active-status chip. If a concrete notification arrives for that
   thread, such as diff, approval review, hook, server request, or goal progress,
   the notification summary should briefly replace the routine status chip.
+  The same applies to safe fixed summaries for context compaction, model
+  rerouting/verification, moderation metadata, warnings, guardian warnings,
+  errors, and MCP startup status.
 - Command and tool-call items are sanitized before bubble planning. Command
   executions are reduced to `テストを実行中` or `コマンドを実行中`, and MCP or
   dynamic tool calls are reduced to `ツールを使用中`, so debug/feed state and
@@ -397,11 +416,14 @@ Manual or visual checks:
   text guesses, while failure text still overrides the kind.
 - Fake app-server E2E also injects raw command/tool/delta, terminal-interaction,
   patch-update, turn-diff, approval-review, hook, server-request, thread-goal,
-  and sensitive conversation strings such as `swift test`, `get_app_state`, raw
-  streaming text, bearer-token shaped text, password/stdout fragments, terminal
-  stdin, patch diffs, process ids, hook run ids, approval actions, server
-  request ids, goal objectives, and local `.env` paths, then rejects any
-  production bubble log that leaks those fragments.
+  model reroute/verification, moderation metadata, warning, guardian-warning,
+  MCP startup-status, error, and sensitive conversation strings such as
+  `swift test`, `get_app_state`, raw streaming text, bearer-token shaped text,
+  password/stdout fragments, terminal stdin, patch diffs, process ids, hook run
+  ids, approval actions, server request ids, goal objectives, model names,
+  reroute reasons, verification payloads, moderation metadata, warning/error
+  text, MCP server names, and local `.env` paths, then rejects any production
+  bubble log that leaks those fragments.
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, `bubbleRoles`,
   `bubbleTones`, and `bubbleActivityKinds`; stacked bubble-only updates should
   be logged for deterministic E2E evidence. Fake production E2E also enforces

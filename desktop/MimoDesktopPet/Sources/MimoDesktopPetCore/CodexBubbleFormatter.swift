@@ -45,6 +45,22 @@ public enum CodexBubbleFormatter {
             return "レビュー完了"
         case "文脈を整理中です":
             return "文脈整理"
+        case "文脈を整理しました":
+            return "文脈整理済み"
+        case "モデルを調整中です":
+            return "モデル調整"
+        case "モデルを確認中です":
+            return "モデル確認"
+        case "安全を確認中です":
+            return "安全確認"
+        case "安全警告を確認中です":
+            return "安全警告"
+        case "問題を確認中です":
+            return "問題確認"
+        case "警告を確認中です":
+            return "警告確認"
+        case "MCP を確認中です":
+            return "MCP 確認"
         case "別作業を確認中です":
             return "別作業確認"
         case "スキルを確認中です":
@@ -144,6 +160,27 @@ public enum CodexBubbleFormatter {
             }
             return "フックを確認中です"
         }
+        if text.contains("問題") {
+            return "問題を確認中です"
+        }
+        if text.contains("安全警告") {
+            return "安全警告を確認中です"
+        }
+        if text.contains("警告") {
+            return "警告を確認中です"
+        }
+        if text.contains("安全") {
+            return "安全を確認中です"
+        }
+        if text.contains("モデル") {
+            if text.contains("確認") {
+                return "モデルを確認中です"
+            }
+            return "モデルを調整中です"
+        }
+        if text.contains("mcp") {
+            return "MCP を確認中です"
+        }
         if text.contains("確認を反映") {
             return "確認を反映中です"
         }
@@ -215,7 +252,12 @@ public enum CodexBubbleFormatter {
             return "依頼を確認しました"
         case .plan:
             return "計画を整理中です"
-        case .reasoning, .contextCompaction:
+        case .reasoning:
+            return "文脈を整理中です"
+        case .contextCompaction:
+            if text.contains("済み") || text.contains("完了") {
+                return "文脈を整理しました"
+            }
             return "文脈を整理中です"
         case .command:
             if text.contains("端末") || text.contains("入力") {
@@ -237,6 +279,9 @@ public enum CodexBubbleFormatter {
                     return "フックを確認しました"
                 }
                 return "フックを確認中です"
+            }
+            if text.contains("mcp") {
+                return "MCP を確認中です"
             }
             return "ツールで確認中です"
         case .subAgent:

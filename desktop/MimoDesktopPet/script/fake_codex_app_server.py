@@ -384,6 +384,76 @@ def state_sequence():
             },
         }
     )
+    secret_progress_notifications = [
+        {
+            "method": "thread/compacted",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+            },
+        },
+        {
+            "method": "model/rerouted",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "fromModel": "secret-model-before",
+                "toModel": "secret-model-after",
+                "reason": "secret reason should not be shown",
+            },
+        },
+        {
+            "method": "model/verification",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "verifications": ["secret verification should not be shown"],
+            },
+        },
+        {
+            "method": "turn/moderationMetadata",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "metadata": {"secret": "secret moderation should not be shown"},
+            },
+        },
+        {
+            "method": "warning",
+            "params": {
+                "threadId": "fake-docs",
+                "message": "secret warning should not be shown",
+            },
+        },
+        {
+            "method": "guardianWarning",
+            "params": {
+                "threadId": "fake-docs",
+                "message": "secret guardian should not be shown",
+            },
+        },
+        {
+            "method": "mcpServer/startupStatus/updated",
+            "params": {
+                "threadId": "fake-docs",
+                "name": "secret-mcp-server",
+                "status": "starting",
+                "message": "secret mcp startup should not be shown",
+            },
+        },
+        {
+            "method": "error",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "willRetry": True,
+                "error": {"message": "secret error should not be shown"},
+            },
+        },
+    ]
+    for notification in secret_progress_notifications:
+        write_message(notification)
+        time.sleep(0.04)
     write_message(
         {
             "method": "item/reasoning/summaryTextDelta",

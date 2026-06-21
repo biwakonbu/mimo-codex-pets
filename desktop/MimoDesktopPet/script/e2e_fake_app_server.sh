@@ -137,6 +137,14 @@ grep -Fq '承認確認済み' "$PRESENTATION_LOG"
 grep -Fq 'フック確認' "$PRESENTATION_LOG"
 grep -Fq '確認反映' "$PRESENTATION_LOG"
 grep -Fq '目標確認' "$PRESENTATION_LOG"
+grep -Fq '文脈整理済み' "$PRESENTATION_LOG"
+grep -Fq 'モデル調整' "$PRESENTATION_LOG"
+grep -Fq 'モデル確認' "$PRESENTATION_LOG"
+grep -Fq '安全確認' "$PRESENTATION_LOG"
+grep -Fq '問題確認' "$PRESENTATION_LOG"
+grep -Fq '警告確認' "$PRESENTATION_LOG"
+grep -Fq '安全警告' "$PRESENTATION_LOG"
+grep -Fq 'MCP 確認' "$PRESENTATION_LOG"
 grep -Eq 'Mimo runtime.*確認待ち' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 grep -Fq '「別スレッドの確認」作業中' "$PRESENTATION_LOG"
@@ -235,6 +243,15 @@ for row in rows:
         "secret server request",
         "secret goal",
         "raw reasoning",
+        "secret-model",
+        "secret reason",
+        "secret verification",
+        "secret moderation",
+        "secret warning",
+        "secret guardian",
+        "secret-mcp",
+        "secret mcp",
+        "secret error",
         "Authorization",
         "Bearer",
         "password=secret",
@@ -323,6 +340,14 @@ grep -Eq '"method":"hook/completed"' "$FAKE_LOG"
 grep -Eq '"method":"serverRequest/resolved"' "$FAKE_LOG"
 grep -Eq '"method":"thread/goal/updated"' "$FAKE_LOG"
 grep -Eq '"method":"thread/goal/cleared"' "$FAKE_LOG"
+grep -Eq '"method":"thread/compacted"' "$FAKE_LOG"
+grep -Eq '"method":"model/rerouted"' "$FAKE_LOG"
+grep -Eq '"method":"model/verification"' "$FAKE_LOG"
+grep -Eq '"method":"turn/moderationMetadata"' "$FAKE_LOG"
+grep -Eq '"method":"warning"' "$FAKE_LOG"
+grep -Eq '"method":"guardianWarning"' "$FAKE_LOG"
+grep -Eq '"method":"mcpServer/startupStatus/updated"' "$FAKE_LOG"
+grep -Eq '"method":"error"' "$FAKE_LOG"
 
 python3 - "$FAKE_LOG" <<'PY'
 import json

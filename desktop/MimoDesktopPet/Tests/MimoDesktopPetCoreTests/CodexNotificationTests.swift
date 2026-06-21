@@ -4,6 +4,7 @@ import XCTest
 final class CodexNotificationTests: XCTestCase {
     func testSupportedNotificationMethodNames() {
         XCTAssertEqual(CodexNotificationMethod.allCases.map(\.rawValue), [
+            "error",
             "thread/started",
             "thread/status/changed",
             "thread/name/updated",
@@ -13,12 +14,14 @@ final class CodexNotificationTests: XCTestCase {
             "thread/closed",
             "thread/deleted",
             "thread/unarchived",
+            "thread/compacted",
             "hook/started",
             "hook/completed",
             "turn/started",
             "turn/completed",
             "turn/plan/updated",
             "turn/diff/updated",
+            "turn/moderationMetadata",
             "item/started",
             "item/completed",
             "item/autoApprovalReview/started",
@@ -33,13 +36,17 @@ final class CodexNotificationTests: XCTestCase {
             "item/fileChange/outputDelta",
             "item/fileChange/patchUpdated",
             "item/mcpToolCall/progress",
-            "serverRequest/resolved"
+            "serverRequest/resolved",
+            "mcpServer/startupStatus/updated",
+            "model/rerouted",
+            "model/verification",
+            "warning",
+            "guardianWarning"
         ])
     }
 
     func testIntentionallyIgnoredNotificationMethodNames() {
         XCTAssertEqual(CodexIgnoredNotificationMethod.allCases.map(\.rawValue), [
-            "error",
             "skills/changed",
             "thread/settings/updated",
             "thread/tokenUsage/updated",
@@ -47,19 +54,12 @@ final class CodexNotificationTests: XCTestCase {
             "process/outputDelta",
             "process/exited",
             "mcpServer/oauthLogin/completed",
-            "mcpServer/startupStatus/updated",
             "account/updated",
             "account/rateLimits/updated",
             "app/list/updated",
             "remoteControl/status/changed",
             "externalAgentConfig/import/completed",
             "fs/changed",
-            "thread/compacted",
-            "model/rerouted",
-            "model/verification",
-            "turn/moderationMetadata",
-            "warning",
-            "guardianWarning",
             "deprecationNotice",
             "configWarning",
             "fuzzyFileSearch/sessionUpdated",
@@ -378,6 +378,129 @@ final class CodexNotificationTests: XCTestCase {
         XCTAssertEqual(approval.params.turnId, "turn-1")
         XCTAssertEqual(request.method, "serverRequest/resolved")
         XCTAssertEqual(request.params.threadId, "thread-1")
+    }
+
+    func testExpandedThreadScopedNotificationsDecodeThreadContext() throws {
+        let cases: [(String, String)] = [
+            (
+                "thread/compacted",
+                """
+                {
+                  "method": "thread/compacted",
+                  "params": {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1"
+                  }
+                }
+                """
+            ),
+            (
+                "model/rerouted",
+                """
+                {
+                  "method": "model/rerouted",
+                  "params": {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1",
+                    "fromModel": "secret-model-a",
+                    "toModel": "secret-model-b",
+                    "reason": "secret reason"
+                  }
+                }
+                """
+            ),
+            (
+                "model/verification",
+                """
+                {
+                  "method": "model/verification",
+                  "params": {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1",
+                    "verifications": ["secret verification"]
+                  }
+                }
+                """
+            ),
+            (
+                "turn/moderationMetadata",
+                """
+                {
+                  "method": "turn/moderationMetadata",
+                  "params": {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1",
+                    "metadata": { "secret": "do-not-show" }
+                  }
+                }
+                """
+            ),
+            (
+                "error",
+                """
+                {
+                  "method": "error",
+                  "params": {
+                    "threadId": "thread-1",
+                    "turnId": "turn-1",
+                    "willRetry": true,
+                    "error": { "message": "secret error" }
+                  }
+                }
+                """
+            )
+        ]
+
+        for (method, json) in cases {
+            let notification = try JSONDecoder().decode(
+                CodexJSONRPCNotification<ThreadTurnNotification>.self,
+                from: Data(json.utf8)
+            )
+
+            XCTAssertEqual(notification.method, method)
+            XCTAssertEqual(notification.params.threadId, "thread-1")
+            XCTAssertEqual(notification.params.turnId, "turn-1")
+        }
+    }
+
+    func testThreadScopedWarningsDecodeThreadIdWhenPresent() throws {
+        let warning = Data("""
+        {
+          "method": "warning",
+          "params": {
+            "threadId": "thread-1",
+            "message": "secret warning"
+          }
+        }
+        """.utf8)
+        let guardian = Data("""
+        {
+          "method": "guardianWarning",
+          "params": {
+            "threadId": "thread-1",
+            "message": "secret guardian warning"
+          }
+        }
+        """.utf8)
+        let mcp = Data("""
+        {
+          "method": "mcpServer/startupStatus/updated",
+          "params": {
+            "threadId": "thread-1",
+            "name": "secret-mcp",
+            "status": "running"
+          }
+        }
+        """.utf8)
+
+        for data in [warning, guardian, mcp] {
+            let notification = try JSONDecoder().decode(
+                CodexJSONRPCNotification<ThreadIdNotification>.self,
+                from: data
+            )
+
+            XCTAssertEqual(notification.params.threadId, "thread-1")
+        }
     }
 
     func testThreadNameNotificationDecodes() throws {

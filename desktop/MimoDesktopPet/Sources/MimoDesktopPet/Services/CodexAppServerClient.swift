@@ -655,6 +655,8 @@ final class CodexAppServerClient {
         }
 
         switch method {
+        case .error:
+            appendProgressLine(from: params, kind: "error")
         case .threadStarted:
             if let dict = params as? [String: Any],
                let threadObject = dict["thread"] as? [String: Any],
@@ -724,6 +726,8 @@ final class CodexAppServerClient {
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
+        case .threadCompacted:
+            appendProgressLine(from: params, kind: "threadCompacted")
         case .hookStarted:
             appendProgressLine(from: params, kind: "hookStarted")
         case .hookCompleted:
@@ -766,6 +770,8 @@ final class CodexAppServerClient {
             appendProgressLine(from: params, kind: "turnPlanUpdated")
         case .turnDiffUpdated:
             appendProgressLine(from: params, kind: "turnDiffUpdated")
+        case .turnModerationMetadata:
+            appendProgressLine(from: params, kind: "turnModerationMetadata")
         case .itemStarted:
             if let dict = params as? [String: Any],
                let threadId = dict["threadId"] as? String {
@@ -821,6 +827,16 @@ final class CodexAppServerClient {
             appendProgressLine(from: params, kind: "mcpToolCallProgress")
         case .serverRequestResolved:
             appendProgressLine(from: params, kind: "serverRequestResolved")
+        case .mcpServerStartupStatusUpdated:
+            appendProgressLine(from: params, kind: "mcpServerStartupStatusUpdated")
+        case .modelRerouted:
+            appendProgressLine(from: params, kind: "modelRerouted")
+        case .modelVerification:
+            appendProgressLine(from: params, kind: "modelVerification")
+        case .warning:
+            appendProgressLine(from: params, kind: "warning")
+        case .guardianWarning:
+            appendProgressLine(from: params, kind: "guardianWarning")
         }
     }
 

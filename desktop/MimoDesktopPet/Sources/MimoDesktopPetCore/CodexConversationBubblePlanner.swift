@@ -67,10 +67,13 @@ public enum CodexConversationBubblePlanner {
         if text.contains("失敗") || text.contains("エラー") || text.contains("failed") || text.contains("systemerror") {
             return 0
         }
+        if text.contains("問題") || text.contains("警告") {
+            return 0
+        }
         if text.contains("承認確認済み") {
             return 2
         }
-        if text.contains("確認待ち") || text.contains("待ち") || text.contains("入力") || text.contains("承認") {
+        if text.contains("確認待ち") || text.contains("待ち") || text.contains("入力") || text.contains("承認") || text.contains("安全") {
             return 1
         }
         if text.contains("レビュー可能") || text.contains("レビューでき") || text.contains("レビューを開始") {
@@ -100,10 +103,13 @@ public enum CodexConversationBubblePlanner {
         if lowered.contains("失敗") || lowered.contains("エラー") || lowered.contains("failed") || lowered.contains("systemerror") {
             return .failed
         }
+        if lowered.contains("問題") || lowered.contains("警告") {
+            return .failed
+        }
         if lowered.contains("承認確認済み") {
             return .review
         }
-        if lowered.contains("確認待ち") || lowered.contains("確認を待") || lowered.contains("入力") || lowered.contains("承認") {
+        if lowered.contains("確認待ち") || lowered.contains("確認を待") || lowered.contains("入力") || lowered.contains("承認") || lowered.contains("安全") {
             return .waiting
         }
         if lowered.contains("レビュー") || lowered.contains("完了") {

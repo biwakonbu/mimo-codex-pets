@@ -479,6 +479,14 @@ public enum CodexConversationExtractor {
             return "計画を更新中"
         case "turnDiffUpdated":
             return "差分を確認中"
+        case "threadCompacted":
+            return "文脈を整理済み"
+        case "modelRerouted":
+            return "モデルを調整中"
+        case "modelVerification":
+            return "モデルを確認中"
+        case "turnModerationMetadata":
+            return "安全を確認中"
         case "reasoningDelta":
             return "文脈を整理中"
         case "commandExecutionOutputDelta":
@@ -505,6 +513,14 @@ public enum CodexConversationExtractor {
             return "目標を確認中"
         case "threadGoalCleared":
             return "目標を整理済み"
+        case "error":
+            return "問題を確認中"
+        case "warning":
+            return "警告を確認中"
+        case "guardianWarning":
+            return "安全警告を確認中"
+        case "mcpServerStartupStatusUpdated":
+            return "MCP を確認中"
         default:
             return "進捗を確認中"
         }
@@ -514,8 +530,12 @@ public enum CodexConversationExtractor {
         switch kind {
         case "agentMessageDelta", "planDelta", "turnPlanUpdated":
             return "codex"
-        case "threadGoalUpdated", "threadGoalCleared", "serverRequestResolved":
+        case "threadGoalUpdated", "threadGoalCleared", "serverRequestResolved",
+             "threadCompacted", "modelRerouted", "modelVerification",
+             "turnModerationMetadata", "error", "warning", "guardianWarning":
             return "thread"
+        case "mcpServerStartupStatusUpdated":
+            return "tool"
         default:
             return "tool"
         }
@@ -529,17 +549,21 @@ public enum CodexConversationExtractor {
             return .plan
         case "reasoningDelta":
             return .reasoning
+        case "threadCompacted":
+            return .contextCompaction
         case "commandExecutionOutputDelta", "commandExecutionTerminalInteraction":
             return .command
         case "fileChangeOutputDelta", "fileChangePatchUpdated", "turnDiffUpdated":
             return .fileChange
         case "autoApprovalReviewStarted", "autoApprovalReviewCompleted":
             return .review
-        case "hookStarted", "hookCompleted":
+        case "hookStarted", "hookCompleted", "mcpServerStartupStatusUpdated":
             return .tool
         case "mcpToolCallProgress":
             return .tool
-        case "threadGoalUpdated", "threadGoalCleared", "serverRequestResolved":
+        case "threadGoalUpdated", "threadGoalCleared", "serverRequestResolved",
+             "modelRerouted", "modelVerification", "turnModerationMetadata",
+             "error", "warning", "guardianWarning":
             return .threadStatus
         default:
             return .threadStatus

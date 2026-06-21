@@ -445,6 +445,46 @@ final class CodexConversationExtractorTests: XCTestCase {
             threadTitle: "Delta QA",
             kind: "threadGoalUpdated"
         )
+        let compacted = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "threadCompacted"
+        )
+        let modelRerouted = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "modelRerouted"
+        )
+        let modelVerification = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "modelVerification"
+        )
+        let moderation = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "turnModerationMetadata"
+        )
+        let error = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "error"
+        )
+        let warning = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "warning"
+        )
+        let guardianWarning = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "guardianWarning"
+        )
+        let mcpStartup = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "mcpServerStartupStatusUpdated"
+        )
 
         XCTAssertEqual(plan.speaker, "codex")
         XCTAssertEqual(plan.text, "計画を更新中")
@@ -469,6 +509,24 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(goalUpdated.speaker, "thread")
         XCTAssertEqual(goalUpdated.text, "目標を確認中")
         XCTAssertEqual(goalUpdated.activityKind, .threadStatus)
+        XCTAssertEqual(compacted.speaker, "thread")
+        XCTAssertEqual(compacted.text, "文脈を整理済み")
+        XCTAssertEqual(compacted.activityKind, .contextCompaction)
+        XCTAssertEqual(modelRerouted.text, "モデルを調整中")
+        XCTAssertEqual(modelRerouted.activityKind, .threadStatus)
+        XCTAssertEqual(modelVerification.text, "モデルを確認中")
+        XCTAssertEqual(modelVerification.activityKind, .threadStatus)
+        XCTAssertEqual(moderation.text, "安全を確認中")
+        XCTAssertEqual(moderation.activityKind, .threadStatus)
+        XCTAssertEqual(error.text, "問題を確認中")
+        XCTAssertEqual(error.activityKind, .threadStatus)
+        XCTAssertEqual(warning.text, "警告を確認中")
+        XCTAssertEqual(warning.activityKind, .threadStatus)
+        XCTAssertEqual(guardianWarning.text, "安全警告を確認中")
+        XCTAssertEqual(guardianWarning.activityKind, .threadStatus)
+        XCTAssertEqual(mcpStartup.speaker, "tool")
+        XCTAssertEqual(mcpStartup.text, "MCP を確認中")
+        XCTAssertEqual(mcpStartup.activityKind, .tool)
     }
 
     func testBuildsStatusLinesFromThreadState() {
