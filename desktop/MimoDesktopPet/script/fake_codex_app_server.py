@@ -9,6 +9,13 @@ LOG_PATH = "/tmp/mimo-fake-codex.log"
 OUTPUT_FRAMING = os.environ.get("MIMO_FAKE_CODEX_FRAMING", "json-lines")
 HANG_DAEMON = os.environ.get("MIMO_FAKE_CODEX_HANG_DAEMON") == "1"
 FAIL_PROXY = os.environ.get("MIMO_FAKE_CODEX_FAIL_PROXY") == "1"
+try:
+    STATE_DELAY_MULTIPLIER = max(
+        0.1,
+        float(os.environ.get("MIMO_FAKE_CODEX_STATE_DELAY_MULTIPLIER", "1")),
+    )
+except ValueError:
+    STATE_DELAY_MULTIPLIER = 1
 STATE_LOCK = threading.Lock()
 CURRENT_STATUS = {"type": "idle"}
 CURRENT_TURNS = [
@@ -72,6 +79,10 @@ def write_message(message):
     else:
         sys.stdout.buffer.write(payload + b"\n")
     sys.stdout.flush()
+
+
+def state_sleep(seconds):
+    time.sleep(seconds * STATE_DELAY_MULTIPLIER)
 
 
 def lower_ascii(data):
@@ -177,7 +188,7 @@ def started_thread_snapshot():
 
 def state_sequence():
     global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS, STATUS_ONLY_THREAD_STATUS
-    time.sleep(2.0)
+    state_sleep(2.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": []}
         CURRENT_TURNS = [
@@ -453,7 +464,7 @@ def state_sequence():
     ]
     for notification in secret_progress_notifications:
         write_message(notification)
-        time.sleep(0.04)
+        state_sleep(0.04)
     write_message(
         {
             "method": "item/reasoning/summaryTextDelta",
@@ -466,7 +477,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(3.0)
+    state_sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}
         CURRENT_TURNS = [
@@ -488,7 +499,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(0.7)
+    state_sleep(0.7)
     with STATE_LOCK:
         SECOND_THREAD_STATUS = {"type": "active", "activeFlags": []}
         SECOND_THREAD_TURNS = [
@@ -510,7 +521,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(0.8)
+    state_sleep(0.8)
     with STATE_LOCK:
         SECOND_THREAD_NAME = "更新された別スレッド"
     write_message(
@@ -522,7 +533,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(0.8)
+    state_sleep(0.8)
     with STATE_LOCK:
         SECOND_THREAD_CLOSED = True
         SECOND_THREAD_STATUS = {"type": "idle"}
@@ -534,7 +545,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(0.7)
+    state_sleep(0.7)
     with STATE_LOCK:
         STATUS_ONLY_THREAD_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInput"]}
     write_message(
@@ -546,7 +557,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(0.7)
+    state_sleep(0.7)
     with STATE_LOCK:
         started_thread = started_thread_snapshot()
     write_message(
@@ -557,7 +568,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(3.0)
+    state_sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "idle"}
         CURRENT_TURNS = [
@@ -588,7 +599,7 @@ def state_sequence():
             },
         }
     )
-    time.sleep(3.0)
+    state_sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "idle"}
         CURRENT_TURNS = [

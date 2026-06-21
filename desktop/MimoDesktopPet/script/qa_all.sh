@@ -117,6 +117,7 @@ run_from_repo "python syntax checks" python3 -m py_compile \
   desktop/MimoDesktopPet/script/fake_recovering_codex_app_server.py \
   desktop/MimoDesktopPet/script/check_title_sanitizer_parity.py \
   desktop/MimoDesktopPet/script/check_qa_all_coverage.py \
+  desktop/MimoDesktopPet/script/check_docs_contract.py \
   desktop/MimoDesktopPet/script/live_app_server_smoke.py
 run_from_repo "swift script parse checks" bash -c '
   set -euo pipefail
@@ -125,6 +126,7 @@ run_from_repo "swift script parse checks" bash -c '
   swiftc -parse desktop/MimoDesktopPet/script/inspect_production_capture.swift
 '
 run_from_root "QA all E2E coverage check" ./script/check_qa_all_coverage.py
+run_from_root "docs contract check" ./script/check_docs_contract.py
 run_from_root "title sanitizer smoke parity check" ./script/check_title_sanitizer_parity.py
 run_from_root "live app-server smoke retry check" ./script/test_live_app_server_smoke_retry.sh
 run_from_root "live app-server smoke transport check" ./script/test_live_app_server_smoke_transport.sh

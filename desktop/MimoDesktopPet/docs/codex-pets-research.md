@@ -102,7 +102,8 @@ Verified public protocol surface:
 
 Verified runtime behavior:
 
-- `initialize` requires `clientInfo.name` and `clientInfo.version`; extra
+- `initialize` sends `clientInfo.name = "mimo_desktop_pet"`,
+  `clientInfo.version`, and `capabilities.experimentalApi = true`; extra
   JSON-RPC `jsonrpc` fields are tolerated but not required.
 - `codex app-server proxy` is the preferred companion transport after a bounded
   `codex app-server daemon start`. Direct `codex app-server --stdio` remains the
@@ -276,7 +277,7 @@ Conversation behavior:
   threads. The primary bubble stays lowest, widest, and visually attached to
   Mimo with the only speech tail. When it reports a focused conversation thread
   it uses the `focus` presentation role, a stronger accent marker, and the
-  Mimo-style thread report instead of a generic status such as
+  Mimo-style report for that thread instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
   Secondary thread bubbles are smaller fixed-width context rows above it: they
   stay white, use compact accent markers, omit the longer `ご主人、...です`
@@ -315,10 +316,11 @@ Conversation behavior:
   higher-priority failed/waiting/review/overflow state. This lets simultaneous
   thread bubbles distinguish plan, command/test, file, browser, image, skill,
   mention, and status work without showing raw commands or payload arguments.
-- The same visible bubble text is exposed through the production interaction
-  view's accessibility value when macOS accessibility tooling can attach to the
-  panel. This makes screen-reader and Computer Use-visible text match the
-  product bubble surface instead of introducing a second transcript channel.
+- The same visible bubble text is exposed through the
+  `MimoDesktopPet.productionSurface` interaction view's accessibility value
+  when macOS accessibility tooling can attach to the panel. This makes
+  screen-reader and Computer Use-visible text match the product bubble surface
+  instead of introducing a second transcript channel.
 - The multi-bubble production capture gate verifies more than raw bubble count:
   it requires four or five separated white bubble components, a larger primary
   bubble below the secondary thread rows, a centered stacked alignment, a single
@@ -374,8 +376,9 @@ cd desktop/MimoDesktopPet
 ```
 
 `./script/qa_all.sh` is the canonical local gate. It runs the unit suite,
-static syntax checks, generated app-server schema drift checks, live app-server
-read/presentation smoke checks, fake/content-length/proxy-fallback/empty-list/overflow/offline/disconnect/state-matrix
+static syntax checks, README/research contract checks, generated app-server
+schema drift checks, live app-server read/presentation smoke checks,
+fake/content-length/proxy-fallback/empty-list/overflow/offline/disconnect/state-matrix
 production E2E capture gates, and bundle verification. It also runs
 `script/check_qa_all_coverage.py`, which fails if any `script/e2e_*.sh` file is
 not present in both the shell-syntax check list and the canonical execution
@@ -383,10 +386,18 @@ steps. When a real Codex app-server is intentionally unavailable, run
 `./script/qa_all.sh fake-only` and then rerun full mode before accepting
 app-server integration changes.
 
+`script/check_docs_contract.py` keeps this research note from becoming stale
+documentation. It requires the README, this document, Swift app-server client,
+Swift notification enums, live smoke helper, stamina controller/tests, and
+canonical QA gate to keep the same public app-server transport, multi-bubble
+mimicry, raw-payload safety, Computer Use limitation, production accessibility
+surface, and autonomous stamina contract.
+
 The full gate expands to:
 
 ```bash
 swift test
+./script/check_docs_contract.py
 ./script/check_app_server_schema.sh
 ./script/test_live_app_server_smoke_retry.sh
 ./script/test_live_app_server_smoke_transport.sh

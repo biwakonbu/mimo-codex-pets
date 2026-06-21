@@ -25,6 +25,7 @@ rm -rf "$CAPTURE_DIR"
 mkdir -p "$CAPTURE_DIR"
 
 CODEX_BIN="$FAKE_CODEX" \
+MIMO_FAKE_CODEX_STATE_DELAY_MULTIPLIER=2 \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_DISABLED=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
@@ -92,6 +93,9 @@ while time.time() < deadline:
         continue
 
     last_rows = rows[-8:]
+    if not rows:
+        time.sleep(0.15)
+        continue
     for row in rows:
         if row.get("debugOverlay") is not False:
             raise SystemExit(f"{label}: production state unexpectedly enabled debug overlay")
@@ -115,22 +119,36 @@ while time.time() < deadline:
         unknown_activity_kinds = [kind for kind in activity_kinds if kind not in valid_activity_kinds]
         if unknown_activity_kinds:
             raise SystemExit(f"{label}: bubble activity kinds contained unknown values: {unknown_activity_kinds}")
-        joined = " ".join(str(item) for item in bubbles)
-        if row.get("animation") != animation:
+
+    row = rows[-1]
+    bubbles = row.get("bubbleTexts", [])
+    roles = row.get("bubbleRoles", [])
+    tones = row.get("bubbleTones", [])
+    activity_kinds = row.get("bubbleActivityKinds", [])
+    if not isinstance(bubbles, list):
+        time.sleep(0.15)
+        continue
+
+    joined = " ".join(str(item) for item in bubbles)
+    if row.get("animation") != animation:
+        time.sleep(0.15)
+        continue
+    if required_text not in joined:
+        time.sleep(0.15)
+        continue
+    if required_tone and required_tone not in tones:
+        time.sleep(0.15)
+        continue
+    if require_four_bubbles == "1":
+        if len(bubbles) < 4:
+            time.sleep(0.15)
             continue
-        if required_text not in joined:
-            continue
-        if required_tone and required_tone not in tones:
-            continue
-        if require_four_bubbles == "1":
-            if len(bubbles) < 4:
-                continue
-            if roles[0] != "focus" or roles.count("conversation") < 3:
-                raise SystemExit(f"{label}: unexpected multi-thread roles: {roles}")
-            if any(kind == "none" for kind, role in zip(activity_kinds, roles) if role != "overflow"):
-                raise SystemExit(f"{label}: multi-thread activity kinds were missing: {activity_kinds}")
-        print(f"{label} presentation observed.")
-        raise SystemExit(0)
+        if roles[0] != "focus" or roles.count("conversation") < 3:
+            raise SystemExit(f"{label}: unexpected multi-thread roles: {roles}")
+        if any(kind == "none" for kind, role in zip(activity_kinds, roles) if role != "overflow"):
+            raise SystemExit(f"{label}: multi-thread activity kinds were missing: {activity_kinds}")
+    print(f"{label} presentation observed.")
+    raise SystemExit(0)
 
 print(f"{label}: presentation was not observed", file=sys.stderr)
 print(f"recent_rows={last_rows}", file=sys.stderr)
@@ -141,10 +159,20 @@ PY
 capture_and_inspect() {
   local label="$1"
   local path="$CAPTURE_DIR/$label.png"
-  screencapture -x -o -l "$WINDOW_ID" "$path"
   if [[ "$label" == "multi-thread" ]]; then
-    swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$path"
+    local output=""
+    for _ in {1..20}; do
+      screencapture -x -o -l "$WINDOW_ID" "$path"
+      if output="$(swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$path" 2>&1)"; then
+        printf '%s\n' "$output"
+        return 0
+      fi
+      sleep 0.2
+    done
+    printf '%s\n' "$output" >&2
+    return 1
   else
+    screencapture -x -o -l "$WINDOW_ID" "$path"
     swift ./script/inspect_production_capture.swift "$path"
   fi
 }
@@ -158,7 +186,7 @@ capture_and_inspect "waiting"
 wait_for_presentation "multi-thread" "waiting" "資料整理" "1" "active"
 capture_and_inspect "multi-thread"
 
-wait_for_presentation "review" "review" "レビューできます" "0" "review"
+wait_for_presentation "review" "review" "レビュー可" "0" "review"
 capture_and_inspect "review"
 
 wait_for_presentation "failed" "failed" "失敗" "0" "failed"

@@ -28,6 +28,7 @@ Useful checks:
 ./script/qa_all.sh
 swift test
 ./script/check_app_server_schema.sh
+./script/check_docs_contract.py
 ./script/check_app_bundle_contract.sh
 ./script/live_app_server_smoke.py
 ./script/live_app_presentation_smoke.sh
@@ -52,8 +53,14 @@ override it. In `--verify` mode it only checks that the staged bundle can
 launch, then terminates the verification process so later E2E gates do not race
 the single-instance lock.
 
-Codex state sync tries `codex app-server daemon start` as a best-effort helper
-with a short timeout, then connects over JSON-RPC through
+Codex state sync initializes with `clientInfo.name = mimo_desktop_pet` and
+`capabilities.experimentalApi = true`, then reads public app-server thread
+state through `thread/loaded/list`, `thread/list`, and
+`thread/read(includeTurns: true)`. It reacts to thread/turn/item lifecycle
+notifications such as `thread/status/changed`, `turn/started`,
+`turn/completed`, `item/started`, and `item/completed` to refresh visible
+conversation bubbles promptly. Startup tries `codex app-server daemon start` as
+a best-effort helper with a short timeout, then connects over JSON-RPC through
 `codex app-server proxy`. If the daemon helper hangs, proxy startup fails, or
 the proxy does not complete the handshake, the companion falls back to direct
 `codex app-server --stdio`. If the local Codex app-server cannot be launched,
@@ -74,6 +81,10 @@ immediately.
 and cross-checks that every server notification is either handled by the Swift
 client or explicitly classified as intentionally ignored. It also keeps the
 thread active flags schema-backed.
+`./script/check_docs_contract.py` verifies that README, the Codex Pets research
+notes, the Swift protocol/client, the live smoke helper, the stamina controller,
+and the canonical QA gate still describe the same public app-server, production
+bubble, and autonomous stamina behavior.
 `./script/check_title_sanitizer_parity.py` verifies that the live smoke helper
 and Swift production formatter keep the same ambient title sanitization behavior
 for safe, unsafe, instruction-looking, machine-payload, stdout/env-marker,
@@ -135,8 +146,8 @@ Use the `Mimo` menu bar item to:
 - reconnect to Codex
 - quit the app
 
-The debug overlay with the conversation feed is a QA-only surface. Its menu item
-is hidden in normal production launches and appears only when
+The `Debug Overlay` with the conversation feed is a QA-only surface. Its menu
+item is hidden in normal production launches and appears only when
 `MIMO_DEBUG_MENU=1` or `MIMO_DEBUG_OVERLAY=1` is set.
 
 When click-through is off, drag Mimo directly to move it. During a drag, the app
@@ -164,17 +175,17 @@ thread dashboard rather than a transcript panel. Thread bubbles render
 `「thread title」summary` as a colored title plus one-line Mimo summary, so
 multiple bubbles can be scanned quickly. They do not repeat the longer
 `ご主人、...です` phrase, and they do not dump raw model output, commands, or
-payload text. Threads can be summarized from sanitized item activity or from
-thread/turn status alone. Bubble markers use semantic tone for urgent states
-and typed activity kind for ordinary Codex work such as plan, command, file,
-browser, image, skill, or mention activity. The stack favors thread coverage, so
-each visible thread appears at most once. If more threads are active than the
-compact stack can show, Mimo tracks up to six thread contexts and the last
-secondary bubble becomes a short overflow note such as `ほか2件も見ています`
-instead of silently dropping the extra context. If hidden threads include
-attention states, that overflow bubble keeps the strongest hidden tone and uses
-short text such as `ほか3件に確認待ち` or `ほか3件に失敗あり`, so urgent work is
-not flattened into a neutral counter.
+secret-looking payload text. Threads can be summarized from sanitized item
+activity or from thread/turn status alone. Bubble markers use semantic tone for
+urgent states and typed activity kind for ordinary Codex work such as plan,
+command, file, browser, image, skill, or mention activity. The stack favors
+thread coverage, so each visible thread appears at most once. If more threads
+are active than the compact stack can show, Mimo tracks up to six thread
+contexts and the last secondary bubble becomes a short overflow note such as
+`ほか2件も見ています` instead of silently dropping the extra context. If hidden
+threads include attention states, that overflow bubble keeps the strongest
+hidden tone and uses short text such as `ほか3件に確認待ち` or
+`ほか3件に失敗あり`, so urgent work is not flattened into a neutral counter.
 If another visible thread needs attention, such as a failure, confirmation
 wait, or review-ready state, that thread is promoted into the primary Mimo
 report ahead of a merely active focused thread. The active focused thread stays
