@@ -200,4 +200,11 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertTrue(secondary.allSatisfy { $0.fillOpacity < primary.fillOpacity })
         XCTAssertTrue(secondary.allSatisfy { $0.maxTextWidth <= 204 || $0.role == .overflow })
     }
+
+    func testClusterGuideStaysSubtleBehindMultipleThreadBubbles() {
+        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.clusterGuideOpacity, 0.06)
+        XCTAssertGreaterThan(PetSpeechBubbleLayout.clusterGuideOpacity, 0)
+        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.clusterGuideLineWidth, 1.25)
+        XCTAssertGreaterThan(PetSpeechBubbleLayout.clusterGuideLineWidth, 0)
+    }
 }

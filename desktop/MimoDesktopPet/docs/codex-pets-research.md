@@ -67,10 +67,12 @@ Verified runtime behavior:
   fallback when daemon startup, proxy launch, or proxy handshake is unavailable.
   The direct stdio transport returns a Codex Desktop user agent and can read local
   thread state.
-- Read-only live smoke checks use a fresh stdio app-server process per attempt
-  and retry transient response timeouts. This keeps the product gate resilient
-  to momentary local Codex stalls while still failing immediately on protocol
-  errors or malformed responses.
+- Read-only live smoke checks use production-like `auto` transport selection:
+  bounded daemon start, proxy first, then direct stdio fallback if proxy cannot
+  initialize. Each attempt uses a fresh selected transport and retries transient
+  response timeouts. This keeps the product gate resilient to momentary local
+  Codex stalls while still failing immediately on protocol errors or malformed
+  responses.
 - App-server responses and notifications may interleave on stdout; the client must dispatch by `method` vs `id`.
 - The client accepts both newline-delimited JSON and `Content-Length` JSON-RPC
   response framing. It auto-detects `Content-Length` on stdout and switches
@@ -265,6 +267,7 @@ The full gate expands to:
 swift test
 ./script/check_app_server_schema.sh
 ./script/test_live_app_server_smoke_retry.sh
+./script/test_live_app_server_smoke_transport.sh
 ./script/live_app_server_smoke.py
 ./script/live_app_presentation_smoke.sh
 ./script/e2e_fake_app_server.sh
@@ -338,6 +341,10 @@ Manual or visual checks:
   then verifies that the second fresh app-server process succeeds and writes
   the expected summary JSON. This protects the full gate from one-shot local
   app-server stalls without hiding deterministic protocol failures.
+- Live app-server smoke transport check launches the live-smoke client against a
+  fake daemon/proxy-capable app-server, verifies that auto transport uses proxy
+  when it initializes, then forces proxy startup failure and verifies direct
+  stdio fallback before initialize.
 - Proxy fallback E2E launches the app after a successful fake daemon start but
   forces `codex app-server proxy` to exit immediately. Mimo must then retry with
   direct `codex app-server --stdio`, reach connected thread-summary bubbles, and

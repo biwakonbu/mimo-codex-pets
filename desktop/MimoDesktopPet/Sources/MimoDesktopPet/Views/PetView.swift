@@ -54,8 +54,12 @@ private struct ProductionBubbleStackView: View {
             if visible.count > 1 {
                 BubbleClusterGuide(visibleCount: visible.count)
                     .stroke(
-                        Color(red: 0.35, green: 0.56, blue: 0.82).opacity(0.18),
-                        style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round)
+                        Color(red: 0.48, green: 0.62, blue: 0.78).opacity(PetSpeechBubbleLayout.clusterGuideOpacity),
+                        style: StrokeStyle(
+                            lineWidth: CGFloat(PetSpeechBubbleLayout.clusterGuideLineWidth),
+                            lineCap: .round,
+                            lineJoin: .round
+                        )
                     )
                     .frame(
                         width: CGFloat(PetSpeechBubbleLayout.productionStackWidth),

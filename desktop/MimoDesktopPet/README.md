@@ -56,9 +56,11 @@ the companion stays open and shows an offline/waiting status instead of crashing
 or waiting forever.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
-It retries transient response timeouts with a fresh stdio app-server process so
-momentary local Codex stalls do not make the full gate flaky; protocol errors
-still fail immediately.
+By default it mirrors production transport selection: bounded daemon start,
+proxy first, then direct stdio fallback if proxy cannot initialize. It retries
+transient response timeouts with a fresh selected transport so momentary local
+Codex stalls do not make the full gate flaky; protocol errors still fail
+immediately.
 `./script/check_app_server_schema.sh` verifies the generated app-server schema
 and cross-checks that the Swift notification enum and active flags remain
 schema-backed.

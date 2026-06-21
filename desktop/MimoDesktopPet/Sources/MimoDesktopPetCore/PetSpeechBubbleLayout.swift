@@ -43,6 +43,8 @@ public enum PetSpeechBubbleLayout {
     public static let focusTextLimit = 48
     public static let conversationTextLimit = 34
     public static let overflowTextLimit = 22
+    public static let clusterGuideOpacity = 0.045
+    public static let clusterGuideLineWidth = 1.0
 
     public static func textLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {

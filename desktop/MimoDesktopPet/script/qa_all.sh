@@ -64,6 +64,7 @@ run_from_repo "shell syntax checks" bash -n \
   desktop/MimoDesktopPet/script/check_app_server_schema.sh \
   desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh \
   desktop/MimoDesktopPet/script/test_live_app_server_smoke_retry.sh \
+  desktop/MimoDesktopPet/script/test_live_app_server_smoke_transport.sh \
   desktop/MimoDesktopPet/script/e2e_fake_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_content_length_app_server.sh \
   desktop/MimoDesktopPet/script/e2e_proxy_fallback_app_server.sh \
@@ -89,6 +90,7 @@ run_from_repo "python syntax checks" python3 -m py_compile \
   desktop/MimoDesktopPet/script/live_app_server_smoke.py
 run_from_root "title sanitizer smoke parity check" ./script/check_title_sanitizer_parity.py
 run_from_root "live app-server smoke retry check" ./script/test_live_app_server_smoke_retry.sh
+run_from_root "live app-server smoke transport check" ./script/test_live_app_server_smoke_transport.sh
 run_from_repo "git whitespace check" git diff --check
 
 if [[ "$RUN_LIVE" == "1" ]]; then
