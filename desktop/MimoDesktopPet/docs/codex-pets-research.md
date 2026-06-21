@@ -174,6 +174,12 @@ Conversation behavior:
   token-like strings, and credential/secret markers are skipped; if another
   safe title or preview exists it is used, otherwise the bubble falls back to
   `Codex`.
+- Raw conversation text uses the same ambient-display safety gate as thread
+  titles before it can become a `CodexConversationLine`. Instruction blocks,
+  JSON/YAML-like machine payloads, stdout/stderr/env fragments, local paths,
+  bearer tokens, email addresses, and credential markers are replaced by short
+  generic activity such as `応答を受信` or `ユーザー入力を受信` before bubble
+  planning.
 - The live app presentation smoke uses Python to preflight expected sanitized
   title candidates. `check_title_sanitizer_parity.py` and
   `title_sanitizer_fixtures.json` keep that helper aligned with the Swift
@@ -315,9 +321,11 @@ Manual or visual checks:
   streaming delta activity, plus simultaneous stacked bubbles for a second
   visible thread and a later secondary-thread update discovered immediately
   from notification-triggered thread reads.
-- Fake app-server E2E also injects raw command/tool/delta strings such as
-  `swift test`, `get_app_state`, and raw streaming text, then rejects any
-  production bubble log that leaks those fragments.
+- Fake app-server E2E also injects raw command/tool/delta and sensitive
+  conversation strings such as `swift test`, `get_app_state`, raw streaming
+  text, bearer-token shaped text, password/stdout fragments, and local
+  `.env` paths, then rejects any production bubble log that leaks those
+  fragments.
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, and
   `bubbleRoles`; stacked bubble-only updates should be logged for deterministic
   E2E evidence. Fake production E2E also enforces the four-bubble visible

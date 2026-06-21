@@ -426,7 +426,7 @@ public enum CodexConversationExtractor {
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
         guard !collapsed.isEmpty else { return nil }
-        guard !looksLikeMachinePayload(collapsed) else { return nil }
+        guard !CodexAmbientTextSafety.isUnsafeForAmbientDisplay(collapsed) else { return nil }
         if collapsed.count <= limit {
             return collapsed
         }
@@ -464,23 +464,6 @@ public enum CodexConversationExtractor {
             }
         }
         return nil
-    }
-
-    private static func looksLikeMachinePayload(_ text: String) -> Bool {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if (trimmed.hasPrefix("{") || trimmed.hasPrefix("[")) && trimmed.contains(":") {
-            return true
-        }
-        let payloadMarkers = [
-            "\"bundle_id\"",
-            "\"element_id\"",
-            "\"window_id\"",
-            "\"question\"",
-            "\"coordinate\"",
-            "\"arguments\"",
-            "\"method\""
-        ]
-        return payloadMarkers.contains { trimmed.contains($0) }
     }
 
     private static func itemFailed(_ item: [String: Any]) -> Bool {

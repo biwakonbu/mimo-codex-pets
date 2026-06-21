@@ -18,6 +18,9 @@ CURRENT_TURNS = [
         "items": [
             {"id": "u1", "type": "userMessage", "content": [{"type": "inputText", "text": "Mimo の動きを確認して"}]},
             {"id": "a1", "type": "agentMessage", "content": [{"type": "outputText", "text": "待機中です。会話を監視しています"}]},
+            {"id": "u-sensitive", "type": "userMessage", "content": "/Users/example/private/project/.env を見て"},
+            {"id": "a-sensitive-token", "type": "agentMessage", "text": "Authorization: Bearer abcdef0123456789abcdef0123456789"},
+            {"id": "a-sensitive-stdout", "type": "agentMessage", "text": "stdout: password=secret"},
         ],
     }
 ]

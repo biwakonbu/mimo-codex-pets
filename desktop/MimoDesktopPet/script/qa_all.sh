@@ -34,8 +34,27 @@ esac
 
 cleanup() {
   pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+  wait_for_app_exit >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
+
+wait_for_app_exit() {
+  for _ in {1..50}; do
+    if ! pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.1
+  done
+  return 1
+}
+
+terminate_existing_app() {
+  pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+  if ! wait_for_app_exit; then
+    echo "$APP_NAME did not exit before the next QA app gate" >&2
+    return 1
+  fi
+}
 
 run_step() {
   local label="$1"
@@ -54,6 +73,14 @@ run_from_root() {
   local label="$1"
   shift
   (cd "$ROOT_DIR" && run_step "$label" "$@")
+}
+
+run_app_from_root() {
+  local label="$1"
+  shift
+  terminate_existing_app
+  (cd "$ROOT_DIR" && run_step "$label" "$@")
+  terminate_existing_app
 }
 
 cd "$REPO_ROOT"
@@ -96,24 +123,24 @@ run_from_repo "git whitespace check" git diff --check
 if [[ "$RUN_LIVE" == "1" ]]; then
   run_from_root "app-server schema drift check" ./script/check_app_server_schema.sh
   run_from_root "live app-server read-only smoke" ./script/live_app_server_smoke.py
-  run_from_root "live app presentation production smoke" ./script/live_app_presentation_smoke.sh
+  run_app_from_root "live app presentation production smoke" ./script/live_app_presentation_smoke.sh
 else
   printf '\n==> skipping live app-server checks in fake-only mode\n'
 fi
 
-run_from_root "fake app-server production E2E" ./script/e2e_fake_app_server.sh
-run_from_root "content-length app-server production E2E" ./script/e2e_content_length_app_server.sh
-run_from_root "proxy fallback production E2E" ./script/e2e_proxy_fallback_app_server.sh
-run_from_root "hanging daemon start production E2E" ./script/e2e_hanging_daemon_start.sh
-run_from_root "empty thread-list production E2E" ./script/e2e_empty_thread_list.sh
-run_from_root "overflow thread-list production E2E" ./script/e2e_overflow_thread_list.sh
-run_from_root "thread-read timeout production E2E" ./script/e2e_thread_read_timeout.sh
-run_from_root "unavailable app-server production E2E" ./script/e2e_unavailable_app_server.sh
-run_from_root "disconnect production E2E" ./script/e2e_disconnect_app_server.sh
-run_from_root "reconnect production E2E" ./script/e2e_reconnect_app_server.sh
-run_from_root "single-instance production E2E" ./script/e2e_single_instance.sh
-run_from_root "status menu production E2E" ./script/e2e_status_menu.sh
-run_from_root "production state matrix E2E" ./script/e2e_state_matrix.sh
+run_app_from_root "fake app-server production E2E" ./script/e2e_fake_app_server.sh
+run_app_from_root "content-length app-server production E2E" ./script/e2e_content_length_app_server.sh
+run_app_from_root "proxy fallback production E2E" ./script/e2e_proxy_fallback_app_server.sh
+run_app_from_root "hanging daemon start production E2E" ./script/e2e_hanging_daemon_start.sh
+run_app_from_root "empty thread-list production E2E" ./script/e2e_empty_thread_list.sh
+run_app_from_root "overflow thread-list production E2E" ./script/e2e_overflow_thread_list.sh
+run_app_from_root "thread-read timeout production E2E" ./script/e2e_thread_read_timeout.sh
+run_app_from_root "unavailable app-server production E2E" ./script/e2e_unavailable_app_server.sh
+run_app_from_root "disconnect production E2E" ./script/e2e_disconnect_app_server.sh
+run_app_from_root "reconnect production E2E" ./script/e2e_reconnect_app_server.sh
+run_app_from_root "single-instance production E2E" ./script/e2e_single_instance.sh
+run_app_from_root "status menu production E2E" ./script/e2e_status_menu.sh
+run_app_from_root "production state matrix E2E" ./script/e2e_state_matrix.sh
 run_from_root "bundle verify" ./script/build_and_run.sh --verify
 
 printf '\nQA passed: mode=%s\n' "$MODE"

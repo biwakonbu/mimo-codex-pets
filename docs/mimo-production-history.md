@@ -197,6 +197,11 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - production speech bubbles summarize the current thread title and latest
   progress-like line as Mimo's report to the user instead of dumping speaker
   labels or tool output
+- thread titles and raw conversation text pass through a shared
+  ambient-display safety gate before production planning; instruction blocks,
+  machine payloads, stdout/stderr/env fragments, local paths, bearer tokens,
+  email addresses, and credential markers are replaced by safe generic activity
+  rather than copied into bubbles
 - the production bubble queue rotates the latest short report from each visible
   thread, deduplicating by thread, speaker, and sanitized text
 - the production surface can stack up to four speech bubbles at once: one

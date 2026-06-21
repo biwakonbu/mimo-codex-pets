@@ -8,8 +8,7 @@ public enum CodexThreadTitleFormatter {
                 .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !collapsed.isEmpty,
-                  !looksLikeInstructionTitle(collapsed),
-                  !looksUnsafeForAmbientDisplay(collapsed)
+                  !CodexAmbientTextSafety.isUnsafeForAmbientDisplay(collapsed)
             else { continue }
             guard collapsed.count > limit else { return collapsed }
             let index = collapsed.index(collapsed.startIndex, offsetBy: limit)
@@ -36,64 +35,5 @@ public enum CodexThreadTitleFormatter {
             }
         }
         return nil
-    }
-
-    private static func looksLikeInstructionTitle(_ title: String) -> Bool {
-        let lowercased = title.lowercased()
-        let blockedPrefixes = [
-            "you are ",
-            "knowledge cutoff",
-            "current date",
-            "<codex_internal_context",
-            "# instructions",
-            "system:"
-        ]
-        if blockedPrefixes.contains(where: { lowercased.hasPrefix($0) }) {
-            return true
-        }
-
-        let blockedFragments = [
-            "treat it as the task",
-            "higher-priority instructions",
-            "do not reveal",
-            "you are selected"
-        ]
-        return blockedFragments.contains { lowercased.contains($0) }
-    }
-
-    private static func looksUnsafeForAmbientDisplay(_ title: String) -> Bool {
-        let lowercased = title.lowercased()
-        let blockedFragments = [
-            "://",
-            "www.",
-            "localhost:",
-            "127.0.0.1",
-            "/users/",
-            "/private/",
-            "/volumes/",
-            "~/",
-            "\\users\\",
-            ".env",
-            "credentials",
-            "secret",
-            "api_key",
-            "apikey",
-            "access token",
-            "bearer ",
-            "password"
-        ]
-        if blockedFragments.contains(where: { lowercased.contains($0) }) {
-            return true
-        }
-
-        let blockedPatterns = [
-            #"(?:^|\s)/(?:tmp|var|etc|opt|usr|bin|sbin)/"#,
-            #"[A-Za-z]:\\"#,
-            #"[A-Fa-f0-9]{32,}"#,
-            #"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}"#
-        ]
-        return blockedPatterns.contains { pattern in
-            title.range(of: pattern, options: .regularExpression) != nil
-        }
     }
 }

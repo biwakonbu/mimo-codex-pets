@@ -327,6 +327,50 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(lines.map(\.text), ["応答を受信"])
     }
 
+    func testSuppressesSensitiveRawConversationText() {
+        let thread: [String: Any] = [
+            "id": "thread-sensitive-text",
+            "name": "sensitive-text",
+            "turns": [
+                [
+                    "id": "turn-1",
+                    "status": "completed",
+                    "items": [
+                        [
+                            "id": "user-path",
+                            "type": "userMessage",
+                            "content": "/Users/example/private/project/.env を見て"
+                        ],
+                        [
+                            "id": "agent-token",
+                            "type": "agentMessage",
+                            "text": "Authorization: Bearer abcdef0123456789abcdef0123456789"
+                        ],
+                        [
+                            "id": "agent-stdout",
+                            "type": "agentMessage",
+                            "text": "stdout: password=secret"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        let lines = CodexConversationExtractor.lines(from: thread, maxLines: 20)
+
+        XCTAssertEqual(lines.map(\.text), [
+            "ユーザー入力を受信",
+            "応答を受信",
+            "応答を受信"
+        ])
+
+        let joined = lines.map(\.text).joined(separator: " ")
+        XCTAssertFalse(joined.contains("/Users/example"))
+        XCTAssertFalse(joined.contains("Bearer"))
+        XCTAssertFalse(joined.contains("password"))
+        XCTAssertFalse(joined.contains("secret"))
+    }
+
     func testTruncatesLongTextForBubbleDisplay() {
         let longText = String(repeating: "長い本文", count: 40)
         let thread: [String: Any] = [
