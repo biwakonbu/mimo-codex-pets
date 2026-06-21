@@ -66,7 +66,8 @@ private struct ProductionBubbleStackView: View {
                     minTextWidth: placement.minTextWidth,
                     maxTextWidth: placement.maxTextWidth,
                     fillOpacity: placement.fillOpacity,
-                    accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone)
+                    accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone),
+                    accessibilityIndex: index
                 )
                 .scaleEffect(CGFloat(placement.scale), anchor: .center)
                 .offset(
@@ -117,6 +118,7 @@ struct BubbleView: View {
     var maxTextWidth: Double?
     var fillOpacity: Double?
     var accentColor: Color?
+    var accessibilityIndex: Int?
 
     var body: some View {
         let resolvedFillOpacity = fillOpacity ?? defaultFillOpacity
@@ -165,6 +167,24 @@ struct BubbleView: View {
                     .shadow(color: Color.black.opacity(0.06), radius: 2, x: 0, y: 1)
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityLabel)
+        .accessibilityValue(text)
+        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private var accessibilityIdentifier: String {
+        if let accessibilityIndex {
+            return PetSpeechBubbleAccessibility.bubbleIdentifier(index: accessibilityIndex, role: role)
+        }
+        return "\(PetSpeechBubbleAccessibility.identifier).bubble.debug.\(role.rawValue)"
+    }
+
+    private var accessibilityLabel: String {
+        if let accessibilityIndex {
+            return PetSpeechBubbleAccessibility.bubbleElementLabel(index: accessibilityIndex, role: role, text: text)
+        }
+        return "Mimo speech bubble: \(text)"
     }
 
     private var defaultFillOpacity: Double {

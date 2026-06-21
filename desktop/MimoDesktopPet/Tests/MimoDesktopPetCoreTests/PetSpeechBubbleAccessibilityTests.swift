@@ -61,4 +61,31 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
         XCTAssertTrue(value.contains("bubble-\(PetSpeechBubbleLayout.productionVisibleLimit - 1)"))
         XCTAssertFalse(value.contains("bubble-\(PetSpeechBubbleLayout.productionVisibleLimit)"))
     }
+
+    func testBubbleAccessibilityIdentifiersAndLabelsAreStable() {
+        XCTAssertEqual(
+            PetSpeechBubbleAccessibility.bubbleIdentifier(index: 0, role: .focus),
+            "MimoDesktopPet.productionSurface.bubble.0.focus"
+        )
+        XCTAssertEqual(
+            PetSpeechBubbleAccessibility.bubbleIdentifier(index: 4, role: .overflow),
+            "MimoDesktopPet.productionSurface.bubble.4.overflow"
+        )
+        XCTAssertEqual(
+            PetSpeechBubbleAccessibility.bubbleLabel(index: 0, role: .focus),
+            "Mimo primary thread bubble 1"
+        )
+        XCTAssertEqual(
+            PetSpeechBubbleAccessibility.bubbleLabel(index: 4, role: .overflow),
+            "Mimo overflow bubble 5"
+        )
+        XCTAssertEqual(
+            PetSpeechBubbleAccessibility.bubbleElementLabel(
+                index: 0,
+                role: .focus,
+                text: "ご主人、「実装」は作業中です"
+            ),
+            "Mimo primary thread bubble 1: ご主人、「実装」は作業中です"
+        )
+    }
 }

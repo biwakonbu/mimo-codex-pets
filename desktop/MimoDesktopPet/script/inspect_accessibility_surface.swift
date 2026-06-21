@@ -8,6 +8,9 @@ struct Options {
     var requiredValueFragments: [String] = []
     var requiredChildValues: [String] = []
     var requiredChildDescriptions: [String] = []
+    var requiredIdentifiers: [String] = []
+    var requiredIdentifierDescriptionFragments: [(identifier: String, fragment: String)] = []
+    var requiredIdentifierValueFragments: [(identifier: String, fragment: String)] = []
     var minimumRoleCounts: [String: Int] = [:]
 }
 
@@ -57,6 +60,26 @@ func parseOptions() -> Options {
         case "--child-description":
             guard let value = arguments.first else { fail("--child-description requires a value") }
             options.requiredChildDescriptions.append(value)
+            arguments.removeFirst()
+        case "--node-identifier":
+            guard let value = arguments.first else { fail("--node-identifier requires a value") }
+            options.requiredIdentifiers.append(value)
+            arguments.removeFirst()
+        case "--node-description-contains":
+            guard let value = arguments.first else { fail("--node-description-contains requires IDENTIFIER=FRAGMENT") }
+            let parts = value.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2, !parts[0].isEmpty, !parts[1].isEmpty else {
+                fail("--node-description-contains requires IDENTIFIER=FRAGMENT")
+            }
+            options.requiredIdentifierDescriptionFragments.append((identifier: parts[0], fragment: parts[1]))
+            arguments.removeFirst()
+        case "--node-value-contains":
+            guard let value = arguments.first else { fail("--node-value-contains requires IDENTIFIER=FRAGMENT") }
+            let parts = value.split(separator: "=", maxSplits: 1).map(String.init)
+            guard parts.count == 2, !parts[0].isEmpty, !parts[1].isEmpty else {
+                fail("--node-value-contains requires IDENTIFIER=FRAGMENT")
+            }
+            options.requiredIdentifierValueFragments.append((identifier: parts[0], fragment: parts[1]))
             arguments.removeFirst()
         case "--minimum-role-count":
             guard let value = arguments.first else { fail("--minimum-role-count requires ROLE:COUNT") }
@@ -155,6 +178,31 @@ while Date() < deadline {
         }
         if !missingChildDescriptions.isEmpty {
             fail("accessibility tree is missing child descriptions \(missingChildDescriptions):\n\(describe(allNodes))")
+        }
+
+        let missingIdentifiers = options.requiredIdentifiers.filter { required in
+            !allNodes.contains { $0.identifier == required }
+        }
+        if !missingIdentifiers.isEmpty {
+            fail("accessibility tree is missing identifiers \(missingIdentifiers):\n\(describe(allNodes))")
+        }
+
+        for requirement in options.requiredIdentifierDescriptionFragments {
+            guard let node = allNodes.first(where: { $0.identifier == requirement.identifier }) else {
+                fail("accessibility tree is missing identifier \(requirement.identifier):\n\(describe(allNodes))")
+            }
+            if !node.description.contains(requirement.fragment) {
+                fail("accessibility node \(requirement.identifier) description is missing fragment \(requirement.fragment): \(node.description)\n\(describe(allNodes))")
+            }
+        }
+
+        for requirement in options.requiredIdentifierValueFragments {
+            guard let node = allNodes.first(where: { $0.identifier == requirement.identifier }) else {
+                fail("accessibility tree is missing identifier \(requirement.identifier):\n\(describe(allNodes))")
+            }
+            if !node.value.contains(requirement.fragment) {
+                fail("accessibility node \(requirement.identifier) value is missing fragment \(requirement.fragment): \(node.value)\n\(describe(allNodes))")
+            }
         }
 
         for (role, minimumCount) in options.minimumRoleCounts {

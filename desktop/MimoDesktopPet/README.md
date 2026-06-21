@@ -111,9 +111,13 @@ debug-style surfaces.
 `script/inspect_accessibility_surface.swift` also inspects the running app's
 macOS accessibility tree. The empty-thread E2E verifies the production surface
 identifier, idle bubble text, and Mimo image node; the overflow-thread E2E
-requires the compact multi-thread bubble stack to expose multiple static-text
-nodes and the overflow summary from the same `MimoDesktopPet.productionSurface`
-box that Computer Use sees.
+requires the compact multi-thread bubble stack to expose stable per-bubble
+identifiers and the overflow summary from the same
+`MimoDesktopPet.productionSurface` box that Computer Use sees. Each production
+bubble is grouped into its own accessibility element such as
+`MimoDesktopPet.productionSurface.bubble.0.focus`, with the full bubble text in
+the label, so assistive tooling reads one bubble at a time instead of
+interleaving title, marker, and summary subviews.
 
 ## Controls
 

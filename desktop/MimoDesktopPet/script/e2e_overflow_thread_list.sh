@@ -98,7 +98,12 @@ swift ./script/inspect_accessibility_surface.swift \
   --value-contains "本番表示。" \
   --value-contains "ほか2件も見ています" \
   --child-description "Mimo" \
-  --minimum-role-count "AXStaticText:5"
+  --node-identifier "MimoDesktopPet.productionSurface.bubble.0.focus" \
+  --node-identifier "MimoDesktopPet.productionSurface.bubble.1.conversation" \
+  --node-identifier "MimoDesktopPet.productionSurface.bubble.2.conversation" \
+  --node-identifier "MimoDesktopPet.productionSurface.bubble.3.conversation" \
+  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.focus=ご主人" \
+  --node-description-contains "MimoDesktopPet.productionSurface.bubble.4.overflow=ほか2件も見ています"
 
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$SCREENSHOT_PATH"
