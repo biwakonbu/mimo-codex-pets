@@ -11,6 +11,9 @@ struct Options {
     var requiredIdentifiers: [String] = []
     var requiredIdentifierDescriptionFragments: [(identifier: String, fragment: String)] = []
     var requiredIdentifierValueFragments: [(identifier: String, fragment: String)] = []
+    var forbiddenIdentifiers: [String] = []
+    var forbiddenDescriptionFragments: [String] = []
+    var forbiddenValueFragments: [String] = []
     var orderedIdentifiers: [String] = []
     var minimumRoleCounts: [String: Int] = [:]
 }
@@ -81,6 +84,18 @@ func parseOptions() -> Options {
                 fail("--node-value-contains requires IDENTIFIER=FRAGMENT")
             }
             options.requiredIdentifierValueFragments.append((identifier: parts[0], fragment: parts[1]))
+            arguments.removeFirst()
+        case "--forbid-identifier":
+            guard let value = arguments.first else { fail("--forbid-identifier requires a value") }
+            options.forbiddenIdentifiers.append(value)
+            arguments.removeFirst()
+        case "--forbid-description-contains":
+            guard let value = arguments.first else { fail("--forbid-description-contains requires a value") }
+            options.forbiddenDescriptionFragments.append(value)
+            arguments.removeFirst()
+        case "--forbid-value-contains":
+            guard let value = arguments.first else { fail("--forbid-value-contains requires a value") }
+            options.forbiddenValueFragments.append(value)
             arguments.removeFirst()
         case "--ordered-identifiers":
             guard let value = arguments.first else { fail("--ordered-identifiers requires a comma-separated identifier list") }
@@ -162,82 +177,112 @@ func describe(_ nodes: [AXNode]) -> String {
     .joined(separator: "\n")
 }
 
+func inspectionError(surface: AXNode, allNodes: [AXNode], options: Options) -> String? {
+    let missingValueFragments = options.requiredValueFragments.filter { !surface.value.contains($0) }
+    if !missingValueFragments.isEmpty {
+        return "accessibility surface value is missing fragments \(missingValueFragments): \(surface.value)"
+    }
+
+    let missingChildValues = options.requiredChildValues.filter { required in
+        !allNodes.contains { $0.value == required }
+    }
+    if !missingChildValues.isEmpty {
+        return "accessibility tree is missing child values \(missingChildValues):\n\(describe(allNodes))"
+    }
+
+    let missingChildDescriptions = options.requiredChildDescriptions.filter { required in
+        !allNodes.contains { $0.description == required }
+    }
+    if !missingChildDescriptions.isEmpty {
+        return "accessibility tree is missing child descriptions \(missingChildDescriptions):\n\(describe(allNodes))"
+    }
+
+    let missingIdentifiers = options.requiredIdentifiers.filter { required in
+        !allNodes.contains { $0.identifier == required }
+    }
+    if !missingIdentifiers.isEmpty {
+        return "accessibility tree is missing identifiers \(missingIdentifiers):\n\(describe(allNodes))"
+    }
+
+    let presentForbiddenIdentifiers = options.forbiddenIdentifiers.filter { forbidden in
+        allNodes.contains { $0.identifier == forbidden }
+    }
+    if !presentForbiddenIdentifiers.isEmpty {
+        return "accessibility tree contained forbidden identifiers \(presentForbiddenIdentifiers):\n\(describe(allNodes))"
+    }
+
+    let presentForbiddenDescriptions = options.forbiddenDescriptionFragments.filter { fragment in
+        allNodes.contains { $0.description.contains(fragment) }
+    }
+    if !presentForbiddenDescriptions.isEmpty {
+        return "accessibility tree contained forbidden description fragments \(presentForbiddenDescriptions):\n\(describe(allNodes))"
+    }
+
+    let presentForbiddenValues = options.forbiddenValueFragments.filter { fragment in
+        allNodes.contains { $0.value.contains(fragment) }
+    }
+    if !presentForbiddenValues.isEmpty {
+        return "accessibility tree contained forbidden value fragments \(presentForbiddenValues):\n\(describe(allNodes))"
+    }
+
+    for requirement in options.requiredIdentifierDescriptionFragments {
+        guard let node = allNodes.first(where: { $0.identifier == requirement.identifier }) else {
+            return "accessibility tree is missing identifier \(requirement.identifier):\n\(describe(allNodes))"
+        }
+        if !node.description.contains(requirement.fragment) {
+            return "accessibility node \(requirement.identifier) description is missing fragment \(requirement.fragment): \(node.description)\n\(describe(allNodes))"
+        }
+    }
+
+    for requirement in options.requiredIdentifierValueFragments {
+        guard let node = allNodes.first(where: { $0.identifier == requirement.identifier }) else {
+            return "accessibility tree is missing identifier \(requirement.identifier):\n\(describe(allNodes))"
+        }
+        if !node.value.contains(requirement.fragment) {
+            return "accessibility node \(requirement.identifier) value is missing fragment \(requirement.fragment): \(node.value)\n\(describe(allNodes))"
+        }
+    }
+
+    if !options.orderedIdentifiers.isEmpty {
+        var searchStart = 0
+        for identifier in options.orderedIdentifiers {
+            guard let offset = allNodes[searchStart...].firstIndex(where: { $0.identifier == identifier }) else {
+                return "accessibility tree did not contain ordered identifier \(identifier) after index \(searchStart):\n\(describe(allNodes))"
+            }
+            searchStart = offset + 1
+        }
+    }
+
+    for (role, minimumCount) in options.minimumRoleCounts {
+        let count = allNodes.filter { $0.role == role }.count
+        if count < minimumCount {
+            return "accessibility tree role \(role) count \(count) was below \(minimumCount):\n\(describe(allNodes))"
+        }
+    }
+
+    return nil
+}
+
 let options = parseOptions()
 let pid = options.pid!
 let deadline = Date().addingTimeInterval(options.timeout)
 var lastNodes: [AXNode] = []
+var lastError = "accessibility surface \(options.identifier) was not found"
 
 while Date() < deadline {
     let allNodes = windows(for: pid).flatMap { nodes(from: $0) }
     lastNodes = allNodes
 
     if let surface = allNodes.first(where: { $0.identifier == options.identifier }) {
-        let missingValueFragments = options.requiredValueFragments.filter { !surface.value.contains($0) }
-        if !missingValueFragments.isEmpty {
-            fail("accessibility surface value is missing fragments \(missingValueFragments): \(surface.value)")
+        if let error = inspectionError(surface: surface, allNodes: allNodes, options: options) {
+            lastError = error
+        } else {
+            print("Accessibility surface inspection passed: id=\(surface.identifier), value=\(surface.value)")
+            exit(0)
         }
-
-        let missingChildValues = options.requiredChildValues.filter { required in
-            !allNodes.contains { $0.value == required }
-        }
-        if !missingChildValues.isEmpty {
-            fail("accessibility tree is missing child values \(missingChildValues):\n\(describe(allNodes))")
-        }
-
-        let missingChildDescriptions = options.requiredChildDescriptions.filter { required in
-            !allNodes.contains { $0.description == required }
-        }
-        if !missingChildDescriptions.isEmpty {
-            fail("accessibility tree is missing child descriptions \(missingChildDescriptions):\n\(describe(allNodes))")
-        }
-
-        let missingIdentifiers = options.requiredIdentifiers.filter { required in
-            !allNodes.contains { $0.identifier == required }
-        }
-        if !missingIdentifiers.isEmpty {
-            fail("accessibility tree is missing identifiers \(missingIdentifiers):\n\(describe(allNodes))")
-        }
-
-        for requirement in options.requiredIdentifierDescriptionFragments {
-            guard let node = allNodes.first(where: { $0.identifier == requirement.identifier }) else {
-                fail("accessibility tree is missing identifier \(requirement.identifier):\n\(describe(allNodes))")
-            }
-            if !node.description.contains(requirement.fragment) {
-                fail("accessibility node \(requirement.identifier) description is missing fragment \(requirement.fragment): \(node.description)\n\(describe(allNodes))")
-            }
-        }
-
-        for requirement in options.requiredIdentifierValueFragments {
-            guard let node = allNodes.first(where: { $0.identifier == requirement.identifier }) else {
-                fail("accessibility tree is missing identifier \(requirement.identifier):\n\(describe(allNodes))")
-            }
-            if !node.value.contains(requirement.fragment) {
-                fail("accessibility node \(requirement.identifier) value is missing fragment \(requirement.fragment): \(node.value)\n\(describe(allNodes))")
-            }
-        }
-
-        if !options.orderedIdentifiers.isEmpty {
-            var searchStart = 0
-            for identifier in options.orderedIdentifiers {
-                guard let offset = allNodes[searchStart...].firstIndex(where: { $0.identifier == identifier }) else {
-                    fail("accessibility tree did not contain ordered identifier \(identifier) after index \(searchStart):\n\(describe(allNodes))")
-                }
-                searchStart = offset + 1
-            }
-        }
-
-        for (role, minimumCount) in options.minimumRoleCounts {
-            let count = allNodes.filter { $0.role == role }.count
-            if count < minimumCount {
-                fail("accessibility tree role \(role) count \(count) was below \(minimumCount):\n\(describe(allNodes))")
-            }
-        }
-
-        print("Accessibility surface inspection passed: id=\(surface.identifier), value=\(surface.value)")
-        exit(0)
     }
 
     Thread.sleep(forTimeInterval: 0.15)
 }
 
-fail("accessibility surface \(options.identifier) was not found:\n\(describe(lastNodes))")
+fail("\(lastError):\n\(describe(lastNodes))")

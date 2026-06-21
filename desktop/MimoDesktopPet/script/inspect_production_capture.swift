@@ -175,8 +175,8 @@ if requiresMultiBubbleHierarchy {
     let secondaryCentersY = secondaryComponents.map(\.centerY)
     let secondaryHorizontalSpread = (secondaryCentersX.max() ?? 0) - (secondaryCentersX.min() ?? 0)
     let secondaryVerticalSpread = (secondaryCentersY.max() ?? 0) - (secondaryCentersY.min() ?? 0)
-    guard secondaryHorizontalSpread <= 36, secondaryVerticalSpread >= 64 else {
-        fail("secondary context bubbles are not aligned as a readable stacked thread list: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
+    guard (20...64).contains(secondaryHorizontalSpread), secondaryVerticalSpread >= 64 else {
+        fail("secondary context bubbles are not subtly staggered as a readable stacked thread list: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
     }
 
     guard hasCenteredTailTaper(mask: whiteMask, width: width, component: primary) else {

@@ -272,9 +272,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   for every tracked visible thread before applying the internal conversation
   line cap, so multi-thread bubbles do not collapse to only the most recently
   read sessions when `thread/read` returns several items per thread
-- production multi-thread bubbles use the same tested layered row offsets in
-  SwiftUI as the layout contract, keeping the focused Mimo report closest to the
-  sprite while secondary thread summaries and overflow stay in compact rows
+- production multi-thread bubbles use the same tested layered row offsets and
+  subtle horizontal staggering in SwiftUI as the layout contract, keeping the
+  focused Mimo report closest to the sprite while secondary thread summaries
+  and overflow stay in compact rows that still read as separate bubbles
 - `script/inspect_accessibility_surface.swift` checks the running app's macOS
   accessibility tree for `MimoDesktopPet.productionSurface`; empty-thread E2E
   verifies the idle production bubble and Mimo image node, while overflow E2E
@@ -286,6 +287,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   full bubble text; primary-first sort priority keeps Mimo's main report ahead
   of secondary context and prevents accessibility clients from interleaving
   marker, title, and summary subviews across adjacent bubbles
+- production accessibility E2Es reject debug-only bubble identifiers, labels,
+  and debug mode values so the normal multi-bubble surface cannot quietly
+  regress into the QA-only single speech bubble or conversation feed
 - `check_app_bundle_contract.sh` verifies the built production bundle contract,
   including `LSUIElement=true`, bundle identity, executable permissions, and
   bundled Mimo pet resources, so the companion cannot quietly regress into a

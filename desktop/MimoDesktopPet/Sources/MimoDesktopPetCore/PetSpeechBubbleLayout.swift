@@ -84,7 +84,7 @@ public enum PetSpeechBubbleLayout {
             role: role,
             maxTextWidth: maxTextWidth(role: role),
             minTextWidth: minTextWidth(role: role, isPrimary: isPrimary, visibleCount: count),
-            horizontalOffset: 0,
+            horizontalOffset: horizontalOffset(for: normalizedIndex, visibleCount: count),
             verticalOffset: -rowOffset(for: normalizedIndex),
             fillOpacity: fillOpacity(role: role),
             scale: 1,
@@ -128,6 +128,22 @@ public enum PetSpeechBubbleLayout {
             return 0.88
         case .overflow:
             return 0.88
+        }
+    }
+
+    private static func horizontalOffset(for index: Int, visibleCount: Int) -> Double {
+        guard visibleCount > 1 else { return 0 }
+        switch index {
+        case 0:
+            return 0
+        case 1:
+            return -22
+        case 2:
+            return 24
+        case 3:
+            return -14
+        default:
+            return 18
         }
     }
 

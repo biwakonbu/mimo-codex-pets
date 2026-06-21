@@ -70,8 +70,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(status.minTextWidth, 326)
         XCTAssertEqual(firstThread.verticalOffset, -57)
         XCTAssertEqual(secondThread.verticalOffset, -89)
-        XCTAssertEqual(firstThread.horizontalOffset, 0)
-        XCTAssertEqual(secondThread.horizontalOffset, 0)
+        XCTAssertEqual(firstThread.horizontalOffset, -22)
+        XCTAssertEqual(secondThread.horizontalOffset, 24)
         XCTAssertEqual(firstThread.maxTextWidth, 318)
         XCTAssertEqual(secondThread.maxTextWidth, 318)
         XCTAssertEqual(firstThread.minTextWidth, 302)
@@ -108,9 +108,9 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(firstThread.verticalOffset, -57)
         XCTAssertEqual(secondThread.verticalOffset, -89)
         XCTAssertEqual(thirdThread.verticalOffset, -121)
-        XCTAssertEqual(firstThread.horizontalOffset, 0)
-        XCTAssertEqual(secondThread.horizontalOffset, 0)
-        XCTAssertEqual(thirdThread.horizontalOffset, 0)
+        XCTAssertEqual(firstThread.horizontalOffset, -22)
+        XCTAssertEqual(secondThread.horizontalOffset, 24)
+        XCTAssertEqual(thirdThread.horizontalOffset, -14)
         XCTAssertEqual(firstThread.maxTextWidth, 318)
         XCTAssertEqual(secondThread.maxTextWidth, 318)
         XCTAssertEqual(thirdThread.maxTextWidth, 318)
@@ -132,7 +132,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         }
 
         XCTAssertEqual(placements.map(\.verticalOffset), [0, -57, -89, -121, -153])
-        XCTAssertEqual(placements.map(\.horizontalOffset), [0, 0, 0, 0, 0])
+        XCTAssertEqual(placements.map(\.horizontalOffset), [0, -22, 24, -14, 18])
         XCTAssertEqual(placements[0].maxTextWidth, 344)
         XCTAssertEqual(placements[0].minTextWidth, 326)
         XCTAssertEqual(placements[1].maxTextWidth, 318)
@@ -152,7 +152,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         )
 
         XCTAssertEqual(overflow.verticalOffset, -153)
-        XCTAssertEqual(overflow.horizontalOffset, 0)
+        XCTAssertEqual(overflow.horizontalOffset, 18)
         XCTAssertEqual(overflow.maxTextWidth, 288)
         XCTAssertEqual(overflow.minTextWidth, 238)
         XCTAssertEqual(overflow.fillOpacity, 0.88)
@@ -170,10 +170,10 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(placement.index, PetSpeechBubbleLayout.productionVisibleLimit - 1)
         XCTAssertEqual(placement.verticalOffset, -153)
-        XCTAssertEqual(placement.horizontalOffset, 0)
+        XCTAssertEqual(placement.horizontalOffset, 18)
     }
 
-    func testStackedThreadRowsFitInsideProductionStackWidth() {
+    func testStaggeredThreadRowsFitInsideProductionStackWidth() {
         for index in 0..<PetSpeechBubbleLayout.productionVisibleLimit {
             let role: PetSpeechBubbleRole = index == 0 ? .status : (
                 index == PetSpeechBubbleLayout.productionVisibleLimit - 1 ? .overflow : .conversation
@@ -237,5 +237,22 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.productionRowSpacing, 5)
         XCTAssertGreaterThan(PetSpeechBubbleLayout.productionRowSpacing, 0)
         XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.productionRowSpacing, 7)
+    }
+
+    func testSecondaryRowsAreSubtlyStaggeredForMultiThreadReadability() {
+        let placements = (0..<PetSpeechBubbleLayout.productionVisibleLimit).map { index in
+            PetSpeechBubbleLayout.placement(
+                for: index,
+                role: index == 0 ? .focus : (
+                    index == PetSpeechBubbleLayout.productionVisibleLimit - 1 ? .overflow : .conversation
+                ),
+                visibleCount: PetSpeechBubbleLayout.productionVisibleLimit
+            )
+        }
+
+        XCTAssertEqual(placements[0].horizontalOffset, 0)
+        XCTAssertTrue(placements.dropFirst().contains { $0.horizontalOffset < 0 })
+        XCTAssertTrue(placements.dropFirst().contains { $0.horizontalOffset > 0 })
+        XCTAssertTrue(placements.dropFirst().allSatisfy { abs($0.horizontalOffset) <= 24 })
     }
 }

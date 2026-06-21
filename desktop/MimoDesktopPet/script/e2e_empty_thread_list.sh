@@ -76,7 +76,11 @@ swift ./script/inspect_accessibility_surface.swift \
   --value-contains "本番表示。" \
   --value-contains "待機中" \
   --child-description "Mimo" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.status=待機中"
+  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.status=待機中" \
+  --forbid-identifier "MimoDesktopPet.productionSurface.bubble.debug.status" \
+  --forbid-description-contains "Mimo speech bubble:" \
+  --forbid-description-contains "Codex の会話を待っています" \
+  --forbid-value-contains "デバッグ表示"
 
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"

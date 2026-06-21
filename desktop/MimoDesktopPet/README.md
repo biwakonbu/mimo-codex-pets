@@ -103,8 +103,8 @@ falls back to direct stdio without exposing a debug surface or opaque window.
 waiting, multi-thread, review, and failed fake-Codex states, then runs the same
 transparent-surface inspection on every capture. The multi-thread capture also
 checks that the primary Mimo report is the largest, lowest bubble and that the
-secondary thread summaries remain smaller context bubbles above it without
-speech tails.
+secondary thread summaries remain smaller, subtly staggered context bubbles
+above it without speech tails.
 Production E2E scripts capture the exact Mimo window and run
 `script/inspect_production_capture.swift` to reject blank, fully opaque, or
 debug-style surfaces.
@@ -118,7 +118,9 @@ bubble is grouped into its own accessibility element such as
 `MimoDesktopPet.productionSurface.bubble.0.focus`, with the full bubble text in
 the label and a primary-first sort priority, so assistive tooling reads Mimo's
 main report before secondary context and does not interleave title, marker, and
-summary subviews.
+summary subviews. The same inspector can reject forbidden debug identifiers,
+labels, and values; production E2Es use that to ensure the QA-only single
+speech bubble and conversation feed are not exposed in normal launches.
 
 ## Controls
 
