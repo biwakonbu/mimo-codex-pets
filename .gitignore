@@ -5,3 +5,4 @@
 .build/
 .swiftpm/
 dist/
+*.p8

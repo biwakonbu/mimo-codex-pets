@@ -14,10 +14,14 @@ bundles, DMGs, screenshots, and notarization logs out of git; `dist/` is ignored
 - Keep the worktree clean before a release command.
 - Ensure a `Developer ID Application` certificate is available:
   `security find-identity -p codesigning -v`.
-- Store Apple notary credentials once before submitting:
+- Either store Apple notary credentials once before submitting:
   `xcrun notarytool store-credentials MimoDesktopPet --apple-id <apple-id> --team-id DZZW99M6D8`.
+- Or create/download an App Store Connect API team key and keep the `.p8` file
+  outside this repository.
 - Use the stored profile name through `--notary-profile MimoDesktopPet` or
   `MIMO_NOTARY_KEYCHAIN_PROFILE=MimoDesktopPet`.
+- Use API key auth through `--asc-key <AuthKey.p8> --asc-key-id <key-id>
+  --asc-issuer <issuer-uuid>` or the matching `MIMO_NOTARY_ASC_*` env vars.
 
 ## Main Command
 
@@ -25,6 +29,15 @@ For a notarized local artifact:
 
 ```bash
 desktop/MimoDesktopPet/script/version_and_notarize.sh 0.0.1 --notary-profile MimoDesktopPet
+```
+
+For a notarized local artifact using App Store Connect API key auth:
+
+```bash
+desktop/MimoDesktopPet/script/version_and_notarize.sh 0.0.1 \
+  --asc-key /secure/path/AuthKey_XXXXXXXXXX.p8 \
+  --asc-key-id XXXXXXXXXX \
+  --asc-issuer <issuer-uuid>
 ```
 
 For a full GitHub-ready release after notarization:
@@ -42,7 +55,7 @@ gate in the current turn.
 ## What The Command Does
 
 1. Verifies the worktree is clean.
-2. Validates the notarytool keychain profile.
+2. Validates the notarytool keychain profile or App Store Connect API key.
 3. Runs `swift test --quiet`, docs contract, and `git diff --check` unless
    `--skip-qa` is used.
 4. Calls `desktop/MimoDesktopPet/script/package_release.sh <version> --notarize`.
@@ -60,7 +73,10 @@ gate in the current turn.
 - `Unnotarized Developer ID`: notarization did not run or did not staple; rerun
   `version_and_notarize.sh` with a valid notary profile.
 - `No Keychain password item found`: create the profile with `notarytool
-  store-credentials`.
+  store-credentials` or use `--asc-key` API key auth instead.
+- `401 Unauthorized` with API key auth: confirm key ID, issuer ID, team access,
+  and whether the key is a team key. Team keys need `--asc-issuer`; individual
+  keys should omit issuer.
 - Existing tag points elsewhere: stop and ask before deleting or moving tags.
 - GitHub release already exists: do not overwrite automatically; inspect with
   `gh release view v<version>`.

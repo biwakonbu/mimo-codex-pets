@@ -12,15 +12,22 @@ BUILD_NUMBER="${MIMO_APP_BUILD:-1}"
 IDENTITY="${MIMO_CODESIGN_IDENTITY:-}"
 NOTARIZE=0
 NOTARY_PROFILE="${MIMO_NOTARY_KEYCHAIN_PROFILE:-${MIMO_NOTARY_PROFILE:-}}"
+ASC_KEY_PATH="${MIMO_NOTARY_ASC_KEY_PATH:-${MIMO_ASC_KEY_PATH:-}}"
+ASC_KEY_ID="${MIMO_NOTARY_ASC_KEY_ID:-${MIMO_ASC_KEY_ID:-}}"
+ASC_ISSUER_ID="${MIMO_NOTARY_ASC_ISSUER_ID:-${MIMO_ASC_ISSUER_ID:-}}"
 
 usage() {
   cat >&2 <<USAGE
 usage: $0 <version> [--notarize] [--notary-profile <profile>]
+       $0 <version> --notarize --asc-key <AuthKey.p8> --asc-key-id <key-id> [--asc-issuer <issuer-id>]
 
 Environment:
   MIMO_CODESIGN_IDENTITY          Developer ID Application identity override
   MIMO_APP_BUILD                  CFBundleVersion override (default: 1)
   MIMO_NOTARY_KEYCHAIN_PROFILE    notarytool keychain profile name
+  MIMO_NOTARY_ASC_KEY_PATH        App Store Connect API key .p8 path
+  MIMO_NOTARY_ASC_KEY_ID          App Store Connect API key ID
+  MIMO_NOTARY_ASC_ISSUER_ID       App Store Connect issuer ID for team keys
 USAGE
 }
 
@@ -36,6 +43,30 @@ while [[ $# -gt 0 ]]; do
         exit 2
       fi
       NOTARY_PROFILE="$2"
+      shift 2
+      ;;
+    --asc-key)
+      if [[ $# -lt 2 ]]; then
+        usage
+        exit 2
+      fi
+      ASC_KEY_PATH="$2"
+      shift 2
+      ;;
+    --asc-key-id)
+      if [[ $# -lt 2 ]]; then
+        usage
+        exit 2
+      fi
+      ASC_KEY_ID="$2"
+      shift 2
+      ;;
+    --asc-issuer)
+      if [[ $# -lt 2 ]]; then
+        usage
+        exit 2
+      fi
+      ASC_ISSUER_ID="$2"
       shift 2
       ;;
     --help|-h)
@@ -64,10 +95,33 @@ if [[ ! "$VERSION" =~ ^[0-9]+[.][0-9]+[.][0-9]+([.-][A-Za-z0-9]+)?$ ]]; then
   exit 2
 fi
 
-if [[ "$NOTARIZE" == "1" && -z "$NOTARY_PROFILE" ]]; then
-  echo "notarization requested but no notary profile was supplied" >&2
-  echo "set MIMO_NOTARY_KEYCHAIN_PROFILE or pass --notary-profile <profile>" >&2
-  exit 2
+declare -a NOTARY_AUTH_ARGS=()
+if [[ "$NOTARIZE" == "1" ]]; then
+  if [[ -n "$NOTARY_PROFILE" && ( -n "$ASC_KEY_PATH" || -n "$ASC_KEY_ID" || -n "$ASC_ISSUER_ID" ) ]]; then
+    echo "choose either --notary-profile or App Store Connect API key options, not both" >&2
+    exit 2
+  fi
+
+  if [[ -n "$NOTARY_PROFILE" ]]; then
+    NOTARY_AUTH_ARGS=(--keychain-profile "$NOTARY_PROFILE")
+  elif [[ -n "$ASC_KEY_PATH" || -n "$ASC_KEY_ID" || -n "$ASC_ISSUER_ID" ]]; then
+    if [[ -z "$ASC_KEY_PATH" || -z "$ASC_KEY_ID" ]]; then
+      echo "App Store Connect API notarization requires --asc-key and --asc-key-id" >&2
+      exit 2
+    fi
+    if [[ ! -f "$ASC_KEY_PATH" ]]; then
+      echo "App Store Connect API key file not found: $ASC_KEY_PATH" >&2
+      exit 1
+    fi
+    NOTARY_AUTH_ARGS=(--key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID")
+    if [[ -n "$ASC_ISSUER_ID" ]]; then
+      NOTARY_AUTH_ARGS+=(--issuer "$ASC_ISSUER_ID")
+    fi
+  else
+    echo "notarization requested but no notary authentication was supplied" >&2
+    echo "pass --notary-profile <profile> or --asc-key <AuthKey.p8> --asc-key-id <key-id> [--asc-issuer <issuer-id>]" >&2
+    exit 2
+  fi
 fi
 
 DIST_DIR="$ROOT_DIR/dist"
@@ -168,12 +222,16 @@ codesign --force --timestamp --sign "$IDENTITY" "$DMG_PATH"
 codesign --verify --verbose=2 "$DMG_PATH"
 
 if [[ "$NOTARIZE" == "1" ]]; then
-  echo "Submitting DMG for notarization with profile: $NOTARY_PROFILE"
-  xcrun notarytool submit "$DMG_PATH" --keychain-profile "$NOTARY_PROFILE" --wait
+  if [[ -n "$NOTARY_PROFILE" ]]; then
+    echo "Submitting DMG for notarization with profile: $NOTARY_PROFILE"
+  else
+    echo "Submitting DMG for notarization with App Store Connect API key: $ASC_KEY_ID"
+  fi
+  xcrun notarytool submit "$DMG_PATH" "${NOTARY_AUTH_ARGS[@]}" --wait
   xcrun stapler staple "$DMG_PATH"
   xcrun stapler validate "$DMG_PATH"
 else
-  echo "Skipping notarization. Pass --notarize with a notarytool keychain profile to staple a ticket."
+  echo "Skipping notarization. Pass --notarize with a notarytool profile or App Store Connect API key to staple a ticket."
 fi
 
 shasum -a 256 "$DMG_PATH" >"$CHECKSUM_PATH"

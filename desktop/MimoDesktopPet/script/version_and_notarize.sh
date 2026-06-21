@@ -7,6 +7,9 @@ REPO_ROOT="$(cd "$ROOT_DIR/../.." && pwd)"
 
 VERSION=""
 NOTARY_PROFILE="${MIMO_NOTARY_KEYCHAIN_PROFILE:-${MIMO_NOTARY_PROFILE:-}}"
+ASC_KEY_PATH="${MIMO_NOTARY_ASC_KEY_PATH:-${MIMO_ASC_KEY_PATH:-}}"
+ASC_KEY_ID="${MIMO_NOTARY_ASC_KEY_ID:-${MIMO_ASC_KEY_ID:-}}"
+ASC_ISSUER_ID="${MIMO_NOTARY_ASC_ISSUER_ID:-${MIMO_ASC_ISSUER_ID:-}}"
 RUN_QA=1
 CREATE_TAG=0
 PUSH_TAG=0
@@ -17,12 +20,16 @@ ALLOW_DIRTY="${MIMO_RELEASE_ALLOW_DIRTY:-0}"
 usage() {
   cat >&2 <<USAGE
 usage: $0 <version> --notary-profile <profile> [options]
+       $0 <version> --asc-key <AuthKey.p8> --asc-key-id <key-id> [--asc-issuer <issuer-id>] [options]
 
 Build a versioned Mimo Desktop Pet DMG, submit it to Apple notarization,
 staple the ticket, and verify the final artifact.
 
 Options:
   --notary-profile <profile>   notarytool keychain profile name
+  --asc-key <AuthKey.p8>       App Store Connect API key file path
+  --asc-key-id <key-id>        App Store Connect API key ID
+  --asc-issuer <issuer-id>     App Store Connect issuer ID for team keys
   --skip-qa                    skip pre-release unit/docs checks
   --tag                        create annotated git tag v<version> after notarization
   --push-tag                   push v<version> after creating/validating the tag
@@ -32,12 +39,18 @@ Options:
 
 Environment:
   MIMO_NOTARY_KEYCHAIN_PROFILE notarytool keychain profile fallback
+  MIMO_NOTARY_ASC_KEY_PATH     App Store Connect API key .p8 path
+  MIMO_NOTARY_ASC_KEY_ID       App Store Connect API key ID
+  MIMO_NOTARY_ASC_ISSUER_ID    App Store Connect issuer ID for team keys
   MIMO_APP_BUILD               forwarded to package_release.sh as CFBundleVersion
   MIMO_CODESIGN_IDENTITY       forwarded Developer ID Application identity override
   MIMO_RELEASE_ALLOW_DIRTY=1   allow a dirty worktree
 
 Before first use, store credentials once:
   xcrun notarytool store-credentials <profile> --apple-id <apple-id> --team-id DZZW99M6D8
+
+Or avoid keychain login by using an App Store Connect API key:
+  $0 0.0.1 --asc-key /secure/path/AuthKey_XXXXXXXXXX.p8 --asc-key-id XXXXXXXXXX --asc-issuer <issuer-uuid>
 USAGE
 }
 
@@ -49,6 +62,30 @@ while [[ $# -gt 0 ]]; do
         exit 2
       fi
       NOTARY_PROFILE="$2"
+      shift 2
+      ;;
+    --asc-key)
+      if [[ $# -lt 2 ]]; then
+        usage
+        exit 2
+      fi
+      ASC_KEY_PATH="$2"
+      shift 2
+      ;;
+    --asc-key-id)
+      if [[ $# -lt 2 ]]; then
+        usage
+        exit 2
+      fi
+      ASC_KEY_ID="$2"
+      shift 2
+      ;;
+    --asc-issuer)
+      if [[ $# -lt 2 ]]; then
+        usage
+        exit 2
+      fi
+      ASC_ISSUER_ID="$2"
       shift 2
       ;;
     --skip-qa)
@@ -90,7 +127,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ -z "$VERSION" || -z "$NOTARY_PROFILE" ]]; then
+if [[ -z "$VERSION" ]]; then
   usage
   exit 2
 fi
@@ -106,6 +143,36 @@ APP_BUNDLE="$RELEASE_DIR/$APP_NAME.app"
 DMG_PATH="$RELEASE_DIR/$APP_NAME-$VERSION.dmg"
 CHECKSUM_PATH="$DMG_PATH.sha256"
 RELEASE_NOTES="$RELEASE_DIR/github-release-notes.md"
+
+declare -a NOTARY_AUTH_ARGS=()
+declare -a PACKAGE_NOTARY_ARGS=()
+if [[ -n "$NOTARY_PROFILE" && ( -n "$ASC_KEY_PATH" || -n "$ASC_KEY_ID" || -n "$ASC_ISSUER_ID" ) ]]; then
+  echo "choose either --notary-profile or App Store Connect API key options, not both" >&2
+  exit 2
+fi
+
+if [[ -n "$NOTARY_PROFILE" ]]; then
+  NOTARY_AUTH_ARGS=(--keychain-profile "$NOTARY_PROFILE")
+  PACKAGE_NOTARY_ARGS=(--notary-profile "$NOTARY_PROFILE")
+elif [[ -n "$ASC_KEY_PATH" || -n "$ASC_KEY_ID" || -n "$ASC_ISSUER_ID" ]]; then
+  if [[ -z "$ASC_KEY_PATH" || -z "$ASC_KEY_ID" ]]; then
+    echo "App Store Connect API notarization requires --asc-key and --asc-key-id" >&2
+    exit 2
+  fi
+  if [[ ! -f "$ASC_KEY_PATH" ]]; then
+    echo "App Store Connect API key file not found: $ASC_KEY_PATH" >&2
+    exit 1
+  fi
+  NOTARY_AUTH_ARGS=(--key "$ASC_KEY_PATH" --key-id "$ASC_KEY_ID")
+  PACKAGE_NOTARY_ARGS=(--asc-key "$ASC_KEY_PATH" --asc-key-id "$ASC_KEY_ID")
+  if [[ -n "$ASC_ISSUER_ID" ]]; then
+    NOTARY_AUTH_ARGS+=(--issuer "$ASC_ISSUER_ID")
+    PACKAGE_NOTARY_ARGS+=(--asc-issuer "$ASC_ISSUER_ID")
+  fi
+else
+  usage
+  exit 2
+fi
 
 cd "$REPO_ROOT"
 
@@ -126,8 +193,12 @@ if [[ "$CREATE_TAG" == "1" ]]; then
   fi
 fi
 
-echo "Validating notary keychain profile: $NOTARY_PROFILE"
-xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null
+if [[ -n "$NOTARY_PROFILE" ]]; then
+  echo "Validating notary keychain profile: $NOTARY_PROFILE"
+else
+  echo "Validating App Store Connect API key: $ASC_KEY_ID"
+fi
+xcrun notarytool history "${NOTARY_AUTH_ARGS[@]}" >/dev/null
 
 if [[ "$RUN_QA" == "1" ]]; then
   echo "Running pre-release checks..."
@@ -140,7 +211,7 @@ if [[ "$RUN_QA" == "1" ]]; then
 fi
 
 echo "Building and submitting notarization for $TAG..."
-"$ROOT_DIR/script/package_release.sh" "$VERSION" --notarize --notary-profile "$NOTARY_PROFILE"
+"$ROOT_DIR/script/package_release.sh" "$VERSION" --notarize "${PACKAGE_NOTARY_ARGS[@]}"
 
 echo "Verifying notarized release artifact..."
 hdiutil verify "$DMG_PATH"

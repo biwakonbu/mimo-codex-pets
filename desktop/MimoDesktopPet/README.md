@@ -67,6 +67,18 @@ keychain with `xcrun notarytool store-credentials`, then run:
 Without notarization, the DMG can still be attached to a GitHub release, but
 macOS Gatekeeper may warn users when opening an internet-downloaded copy.
 
+You can also notarize without Apple ID login prompts by using an App Store
+Connect API key. Create/download a team API key from App Store Connect, keep the
+`.p8` file outside this repository, then pass its key path, key ID, and issuer
+ID:
+
+```bash
+./script/package_release.sh 0.0.1 --notarize \
+  --asc-key /secure/path/AuthKey_XXXXXXXXXX.p8 \
+  --asc-key-id XXXXXXXXXX \
+  --asc-issuer <issuer-uuid>
+```
+
 For the normal release path, use the versioned notarization wrapper:
 
 ```bash
@@ -79,6 +91,16 @@ notarizes the DMG, staples the ticket, and verifies the final artifact with
 `--github-release` after the notary profile when the notarized DMG should also
 be tagged, pushed, and attached to a GitHub release. The project-local Codex
 skill for this flow is `skills/mimo-release/SKILL.md`.
+
+The same wrapper accepts App Store Connect API key flags:
+
+```bash
+./script/version_and_notarize.sh 0.0.1 \
+  --asc-key /secure/path/AuthKey_XXXXXXXXXX.p8 \
+  --asc-key-id XXXXXXXXXX \
+  --asc-issuer <issuer-uuid> \
+  --github-release
+```
 
 `./script/qa_all.sh` is the pre-acceptance gate for companion behavior changes.
 It runs unit tests, static checks, schema/live app-server smoke checks, and all
