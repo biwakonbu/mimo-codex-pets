@@ -199,6 +199,128 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertFalse(joined.contains("private-thread"))
     }
 
+    func testExtractsWebSearchActionsFromSchemaShapeWithoutDumpingArguments() {
+        let thread: [String: Any] = [
+            "id": "thread-web-actions",
+            "name": "web-actions",
+            "turns": [
+                [
+                    "id": "turn-1",
+                    "status": "inProgress",
+                    "items": [
+                        [
+                            "id": "web-search",
+                            "type": "webSearch",
+                            "query": "private query should not show",
+                            "action": [
+                                "type": "search",
+                                "query": "secret launch plan"
+                            ]
+                        ],
+                        [
+                            "id": "web-open",
+                            "type": "webSearch",
+                            "query": "private URL should not show",
+                            "action": [
+                                "type": "openPage",
+                                "url": "https://example.com/private-path"
+                            ]
+                        ],
+                        [
+                            "id": "web-find",
+                            "type": "webSearch",
+                            "query": "private in-page query should not show",
+                            "action": [
+                                "type": "findInPage",
+                                "pattern": "secret phrase",
+                                "url": "https://example.com/private-page"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        let lines = CodexConversationExtractor.lines(from: thread, maxLines: 20)
+
+        XCTAssertEqual(lines.map(\.text), [
+            "Web 検索中",
+            "ページを確認中",
+            "ページ内を検索中"
+        ])
+        XCTAssertEqual(lines.map(\.activityKind), [
+            .webSearch,
+            .browser,
+            .browser
+        ])
+
+        let joined = lines.map(\.text).joined(separator: " ")
+        XCTAssertFalse(joined.contains("private query"))
+        XCTAssertFalse(joined.contains("secret launch plan"))
+        XCTAssertFalse(joined.contains("example.com"))
+        XCTAssertFalse(joined.contains("secret phrase"))
+    }
+
+    func testExtractsCommandActionsFromSchemaShapeWithoutDumpingArguments() {
+        let thread: [String: Any] = [
+            "id": "thread-command-actions",
+            "name": "command-actions",
+            "turns": [
+                [
+                    "id": "turn-1",
+                    "status": "inProgress",
+                    "items": [
+                        [
+                            "id": "command-read",
+                            "type": "commandExecution",
+                            "command": [
+                                "type": "read",
+                                "command": "cat /Users/example/private/file.swift",
+                                "path": "/Users/example/private/file.swift"
+                            ]
+                        ],
+                        [
+                            "id": "command-list",
+                            "type": "commandExecution",
+                            "command": [
+                                "type": "listFiles",
+                                "command": "ls /Users/example/private",
+                                "path": "/Users/example/private"
+                            ]
+                        ],
+                        [
+                            "id": "command-search",
+                            "type": "commandExecution",
+                            "command": [
+                                "type": "search",
+                                "command": "rg secret-symbol /Users/example/private",
+                                "query": "secret-symbol"
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        let lines = CodexConversationExtractor.lines(from: thread, maxLines: 20)
+
+        XCTAssertEqual(lines.map(\.text), [
+            "ファイルを確認中",
+            "ファイル一覧を確認中",
+            "検索中"
+        ])
+        XCTAssertEqual(lines.map(\.activityKind), [
+            .fileRead,
+            .fileRead,
+            .search
+        ])
+
+        let joined = lines.map(\.text).joined(separator: " ")
+        XCTAssertFalse(joined.contains("/Users/example"))
+        XCTAssertFalse(joined.contains("secret-symbol"))
+        XCTAssertFalse(joined.contains("file.swift"))
+    }
+
     func testCommandAndToolItemsAreSanitizedBeforeBubblePlanning() {
         let thread: [String: Any] = [
             "id": "thread-sensitive-tools",

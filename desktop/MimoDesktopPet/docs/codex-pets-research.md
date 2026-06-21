@@ -14,7 +14,10 @@ Verified public protocol surface:
 - `script/check_app_server_schema.sh` regenerates this schema and verifies that
   the Swift `CodexNotificationMethod` and `CodexThreadActiveFlag` cases are
   still present in the schema, so client-side protocol coverage cannot silently
-  drift from the public app-server surface.
+  drift from the public app-server surface. It also verifies the required
+  payload keys Mimo depends on for live bubble updates, including `threadId`,
+  `turnId`, `itemId`, `delta`, `message`, `item`, and `plan` on the supported
+  lifecycle and streaming notification shapes.
 - The same schema exposes the server notifications used by the companion:
   - `thread/status/changed`
   - `thread/name/updated`
@@ -35,18 +38,21 @@ Verified public protocol surface:
   - `fileChange`
   - `mcpToolCall`
   - `dynamicToolCall`
+  - `collabAgentToolCall`
+  - `subAgentActivity`
   - `webSearch`
-  - `openPage`
-  - `findInPage`
-  - `listFiles`
-  - `read`
-  - `search`
   - `imageView`
-  - `localImage`
+  - `sleep`
   - `imageGeneration`
-  - `skill`
-  - `mention`
+  - `enteredReviewMode`
+  - `exitedReviewMode`
   - `contextCompaction`
+- The same response schema includes nested activity shapes that production
+  bubbles summarize without showing arguments: `webSearch.action.type` can be
+  `search`, `openPage`, or `findInPage`; `commandExecution.command.type` can be
+  `read`, `listFiles`, or `search`. These are treated as generic search, page,
+  file, or command activity rather than exposing queries, URLs, paths, or raw
+  commands.
 - `item/started` and `item/completed` notifications include a schema-backed
   `item` payload. Production bubbles use this to report in-progress tool or
   command activity before the next poll completes.
@@ -258,6 +264,11 @@ Conversation behavior:
   dynamic tool calls are reduced to `ツールを使用中`, so debug/feed state and
   production bubbles do not carry raw commands, tool names, paths, or
   arguments.
+- Schema-shaped command and web actions get slightly more specific generic
+  summaries: command `read` / `listFiles` / `search` actions become file or
+  search review, while web `search` / `openPage` / `findInPage` actions become
+  search or page review. The formatter still never shows the raw command, path,
+  URL, query, or page pattern.
 - Tool activity should be summarized, not dumped.
 - Browser, file, image, skill, and mention activity should be reported as short
   generic activity such as page review, file review, image review, or skill

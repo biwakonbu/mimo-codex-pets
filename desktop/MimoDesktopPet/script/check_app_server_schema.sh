@@ -65,6 +65,7 @@ require_pattern "v2/ThreadReadResponse.json" '"fileChange"'
 require_pattern "v2/ThreadReadResponse.json" '"mcpToolCall"'
 require_pattern "v2/ThreadReadResponse.json" '"dynamicToolCall"'
 require_pattern "v2/ThreadReadResponse.json" '"webSearch"'
+require_pattern "v2/ThreadReadResponse.json" '"action"'
 require_pattern "v2/ThreadReadResponse.json" '"openPage"'
 require_pattern "v2/ThreadReadResponse.json" '"findInPage"'
 require_pattern "v2/ThreadReadResponse.json" '"listFiles"'
@@ -88,6 +89,20 @@ swift_path = Path(sys.argv[2])
 swift = swift_path.read_text(encoding="utf-8")
 server_notification = (schema_dir / "ServerNotification.json").read_text(encoding="utf-8")
 thread_status_changed = (schema_dir / "v2" / "ThreadStatusChangedNotification.json").read_text(encoding="utf-8")
+
+
+def schema_json(relative_path):
+    return json.loads((schema_dir / relative_path).read_text(encoding="utf-8"))
+
+
+def require_required_fields(relative_path, fields):
+    data = schema_json(relative_path)
+    required = set(data.get("required", []))
+    missing = [field for field in fields if field not in required]
+    if missing:
+        raise SystemExit(
+            f"schema missing required field(s) in {relative_path}: {', '.join(missing)}"
+        )
 
 
 def enum_body(name):
@@ -124,7 +139,26 @@ for method in raw_string_cases("CodexNotificationMethod"):
 for flag in implicit_string_cases("CodexThreadActiveFlag"):
     require_schema_text(thread_status_changed, f'"{flag}"', "CodexThreadActiveFlag")
 
+for relative_path, fields in {
+    "v2/ThreadStatusChangedNotification.json": ["threadId", "status"],
+    "v2/ThreadNameUpdatedNotification.json": ["threadId"],
+    "v2/TurnStartedNotification.json": ["threadId", "turn"],
+    "v2/TurnCompletedNotification.json": ["threadId", "turn"],
+    "v2/TurnPlanUpdatedNotification.json": ["plan", "threadId", "turnId"],
+    "v2/ItemStartedNotification.json": ["item", "threadId", "turnId"],
+    "v2/ItemCompletedNotification.json": ["item", "threadId", "turnId"],
+    "v2/AgentMessageDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
+    "v2/PlanDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
+    "v2/ReasoningSummaryPartAddedNotification.json": ["itemId", "summaryIndex", "threadId", "turnId"],
+    "v2/ReasoningSummaryTextDeltaNotification.json": ["delta", "itemId", "summaryIndex", "threadId", "turnId"],
+    "v2/ReasoningTextDeltaNotification.json": ["contentIndex", "delta", "itemId", "threadId", "turnId"],
+    "v2/CommandExecutionOutputDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
+    "v2/FileChangeOutputDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
+    "v2/McpToolCallProgressNotification.json": ["itemId", "message", "threadId", "turnId"],
+}.items():
+    require_required_fields(relative_path, fields)
+
 print("Schema-to-client check passed: Swift notification methods and active flags are present.")
 PY
 
-echo "Schema check passed: required app-server methods, client notification cases, and thread item types are present."
+echo "Schema check passed: required app-server methods, notification payload keys, client cases, and thread item types are present."

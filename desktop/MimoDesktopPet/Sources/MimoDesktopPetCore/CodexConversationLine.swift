@@ -201,13 +201,14 @@ public enum CodexConversationExtractor {
                 text: itemFailed(item) ? "サブエージェントに失敗" : "サブエージェントを確認中"
             )
         case "webSearch":
+            let activity = webSearchActivity(from: item["action"])
             return makeLine(
                 threadId: threadId,
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
-                activityKind: .webSearch,
-                text: "Web 検索中"
+                activityKind: activity.kind,
+                text: activity.text
             )
         case "openPage":
             return makeLine(
@@ -518,6 +519,20 @@ public enum CodexConversationExtractor {
     }
 
     private static func commandActivity(from command: Any?) -> (text: String, kind: CodexConversationActivityKind) {
+        if let action = command as? [String: Any],
+           let type = action["type"] as? String {
+            switch type {
+            case "read":
+                return ("ファイルを確認中", .fileRead)
+            case "listFiles":
+                return ("ファイル一覧を確認中", .fileRead)
+            case "search":
+                return ("検索中", .search)
+            default:
+                break
+            }
+        }
+
         let raw = rawText(from: command)?.lowercased() ?? ""
         if raw.contains(" test") ||
             raw.hasSuffix("test") ||
@@ -527,6 +542,25 @@ public enum CodexConversationExtractor {
             return ("テストを実行中", .test)
         }
         return ("コマンドを実行中", .command)
+    }
+
+    private static func webSearchActivity(from action: Any?) -> (text: String, kind: CodexConversationActivityKind) {
+        guard let action = action as? [String: Any],
+              let type = action["type"] as? String
+        else {
+            return ("Web 検索中", .webSearch)
+        }
+
+        switch type {
+        case "openPage":
+            return ("ページを確認中", .browser)
+        case "findInPage":
+            return ("ページ内を検索中", .browser)
+        case "search":
+            return ("Web 検索中", .webSearch)
+        default:
+            return ("Web 操作を確認中", .webSearch)
+        }
     }
 
     private static func rawText(from value: Any?) -> String? {
