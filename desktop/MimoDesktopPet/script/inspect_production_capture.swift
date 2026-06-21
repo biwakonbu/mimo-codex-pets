@@ -25,6 +25,8 @@ struct WhiteComponent {
 
     var width: Int { maxX - minX + 1 }
     var height: Int { maxY - minY + 1 }
+    var centerX: Double { Double(minX + maxX) / 2.0 }
+    var centerY: Double { Double(minY + maxY) / 2.0 }
 }
 
 func fail(_ message: String) -> Never {
@@ -168,6 +170,19 @@ if requiresMultiBubbleHierarchy {
     }
     guard primary.minY >= lowestSecondaryBottom + 12 else {
         fail("primary bubble is not separated below the secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    }
+    let secondaryCentersX = secondaryComponents.map(\.centerX)
+    let secondaryCentersY = secondaryComponents.map(\.centerY)
+    guard
+        secondaryCentersX.contains(where: { $0 <= primary.centerX - 36 }),
+        secondaryCentersX.contains(where: { $0 >= primary.centerX + 36 })
+    else {
+        fail("secondary context chips are not fanned to both sides of the primary bubble: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    }
+    let secondaryHorizontalSpread = (secondaryCentersX.max() ?? 0) - (secondaryCentersX.min() ?? 0)
+    let secondaryVerticalSpread = (secondaryCentersY.max() ?? 0) - (secondaryCentersY.min() ?? 0)
+    guard secondaryHorizontalSpread >= 120, secondaryVerticalSpread >= 70 else {
+        fail("secondary context chips look like a collapsed feed instead of a fanned bubble cluster: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
     }
 
     guard hasCenteredTailTaper(mask: whiteMask, width: width, component: primary) else {

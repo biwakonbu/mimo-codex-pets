@@ -332,7 +332,10 @@ Manual or visual checks:
   primary Mimo report must be widest, visually largest, and separated below the
   three secondary context bubbles. The same hierarchy check verifies that only
   the primary Mimo report has a speech tail; secondary thread context chips
-  must stay tailless.
+  must stay tailless. Secondary thread chips must also fan out to both sides of
+  the primary bubble with enough horizontal and vertical spread, so the UI
+  cannot regress into a single stacked feed panel while still passing a raw
+  bubble-count check.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
