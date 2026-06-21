@@ -18,20 +18,28 @@ Verified public protocol surface:
   silently drift from the public app-server surface. It also verifies
   `CodexThreadActiveFlag` cases and the required payload keys Mimo depends on
   for live bubble updates, including `threadId`, `turnId`, `itemId`, `delta`,
-  `message`, `item`, and `plan` on the supported lifecycle and streaming
-  notification shapes.
+  `message`, `item`, `plan`, `diff`, `run`, `review`, `requestId`, and `goal`
+  on the supported lifecycle and streaming notification shapes.
 - The same schema exposes the server notifications used by the companion:
   - `thread/started`
   - `thread/status/changed`
   - `thread/name/updated`
+  - `thread/goal/updated`
+  - `thread/goal/cleared`
   - `thread/archived`
   - `thread/closed`
   - `thread/deleted`
   - `thread/unarchived`
+  - `hook/started`
+  - `hook/completed`
   - `turn/started`
   - `turn/completed`
+  - `turn/diff/updated`
   - `item/started`
   - `item/completed`
+  - `item/autoApprovalReview/started`
+  - `item/autoApprovalReview/completed`
+  - `serverRequest/resolved`
 - `thread/read(includeTurns: true)` exposes recent `ThreadItem` values, including:
   - `userMessage`
   - `agentMessage`
@@ -64,11 +72,17 @@ Verified public protocol surface:
   `item/reasoning/summaryPartAdded`, `item/reasoning/summaryTextDelta`,
   `item/reasoning/textDelta`, `item/commandExecution/outputDelta`,
   `item/commandExecution/terminalInteraction`, `item/fileChange/outputDelta`,
-  `item/fileChange/patchUpdated`, and `item/mcpToolCall/progress` exist in the
-  generated schema. Production bubbles treat these as activity signals, not as
-  text to quote directly. Terminal stdin, process ids, patch paths, and patch
-  diffs are never displayed; Mimo reports only fixed summaries such as terminal
-  input checking or diff checking.
+  `item/fileChange/patchUpdated`, `item/mcpToolCall/progress`,
+  `turn/diff/updated`, `item/autoApprovalReview/started`,
+  `item/autoApprovalReview/completed`, `hook/started`, `hook/completed`,
+  `serverRequest/resolved`, `thread/goal/updated`, and
+  `thread/goal/cleared` exist in the generated schema. Production bubbles treat
+  these as activity signals, not as text to quote directly. Terminal stdin,
+  process ids, patch paths, patch diffs, hook run payloads, server request ids,
+  approval actions/reasons, and thread goal objectives are never displayed;
+  Mimo reports only fixed summaries such as terminal input checking, diff
+  checking, approval review, hook checking, confirmation reflection, or goal
+  checking.
 
 Verified runtime behavior:
 
@@ -272,6 +286,12 @@ Conversation behavior:
   plan updates, reasoning summary updates, command output review, file-change
   review, or tool progress. Do not display raw delta strings in production
   bubbles.
+- Secondary thread progress from notifications should be able to outrank a
+  routine synthesized `作業中` status line, but static previews should not. If
+  a secondary thread only has a preview plus active status, Mimo should keep the
+  clearer active-status chip. If a concrete notification arrives for that
+  thread, such as diff, approval review, hook, server request, or goal progress,
+  the notification summary should briefly replace the routine status chip.
 - Command and tool-call items are sanitized before bubble planning. Command
   executions are reduced to `テストを実行中` or `コマンドを実行中`, and MCP or
   dynamic tool calls are reduced to `ツールを使用中`, so debug/feed state and
@@ -376,11 +396,12 @@ Manual or visual checks:
   activity kinds and that bubble summaries prefer those kinds over brittle raw
   text guesses, while failure text still overrides the kind.
 - Fake app-server E2E also injects raw command/tool/delta, terminal-interaction,
-  patch-update, and sensitive conversation strings such as `swift test`,
-  `get_app_state`, raw streaming text, bearer-token shaped text,
-  password/stdout fragments, terminal stdin, patch diffs, process ids, and local
-  `.env` paths, then rejects any production bubble log that leaks those
-  fragments.
+  patch-update, turn-diff, approval-review, hook, server-request, thread-goal,
+  and sensitive conversation strings such as `swift test`, `get_app_state`, raw
+  streaming text, bearer-token shaped text, password/stdout fragments, terminal
+  stdin, patch diffs, process ids, hook run ids, approval actions, server
+  request ids, goal objectives, and local `.env` paths, then rejects any
+  production bubble log that leaks those fragments.
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, `bubbleRoles`,
   `bubbleTones`, and `bubbleActivityKinds`; stacked bubble-only updates should
   be logged for deterministic E2E evidence. Fake production E2E also enforces

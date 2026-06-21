@@ -366,7 +366,7 @@ public enum CodexConversationExtractor {
         CodexConversationLine(
             threadId: threadId,
             threadTitle: threadTitle,
-            speaker: ["agentMessageDelta", "planDelta", "turnPlanUpdated"].contains(kind) ? "codex" : "tool",
+            speaker: progressSpeaker(for: kind),
             text: progressText(for: kind),
             isAssistant: true,
             activityKind: progressActivityKind(for: kind)
@@ -477,6 +477,8 @@ public enum CodexConversationExtractor {
             return "計画を整理中"
         case "turnPlanUpdated":
             return "計画を更新中"
+        case "turnDiffUpdated":
+            return "差分を確認中"
         case "reasoningDelta":
             return "文脈を整理中"
         case "commandExecutionOutputDelta":
@@ -489,8 +491,33 @@ public enum CodexConversationExtractor {
             return "変更差分を確認中"
         case "mcpToolCallProgress":
             return "ツールで確認中"
+        case "autoApprovalReviewStarted":
+            return "承認を確認中"
+        case "autoApprovalReviewCompleted":
+            return "承認確認済み"
+        case "hookStarted":
+            return "フックを確認中"
+        case "hookCompleted":
+            return "フックを確認済み"
+        case "serverRequestResolved":
+            return "確認を反映中"
+        case "threadGoalUpdated":
+            return "目標を確認中"
+        case "threadGoalCleared":
+            return "目標を整理済み"
         default:
             return "進捗を確認中"
+        }
+    }
+
+    private static func progressSpeaker(for kind: String) -> String {
+        switch kind {
+        case "agentMessageDelta", "planDelta", "turnPlanUpdated":
+            return "codex"
+        case "threadGoalUpdated", "threadGoalCleared", "serverRequestResolved":
+            return "thread"
+        default:
+            return "tool"
         }
     }
 
@@ -504,10 +531,16 @@ public enum CodexConversationExtractor {
             return .reasoning
         case "commandExecutionOutputDelta", "commandExecutionTerminalInteraction":
             return .command
-        case "fileChangeOutputDelta", "fileChangePatchUpdated":
+        case "fileChangeOutputDelta", "fileChangePatchUpdated", "turnDiffUpdated":
             return .fileChange
+        case "autoApprovalReviewStarted", "autoApprovalReviewCompleted":
+            return .review
+        case "hookStarted", "hookCompleted":
+            return .tool
         case "mcpToolCallProgress":
             return .tool
+        case "threadGoalUpdated", "threadGoalCleared", "serverRequestResolved":
+            return .threadStatus
         default:
             return .threadStatus
         }

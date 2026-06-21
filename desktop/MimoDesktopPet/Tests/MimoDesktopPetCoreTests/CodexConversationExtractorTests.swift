@@ -415,6 +415,36 @@ final class CodexConversationExtractorTests: XCTestCase {
             threadTitle: "Delta QA",
             kind: "fileChangePatchUpdated"
         )
+        let turnDiff = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "turnDiffUpdated"
+        )
+        let approvalStarted = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "autoApprovalReviewStarted"
+        )
+        let approvalCompleted = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "autoApprovalReviewCompleted"
+        )
+        let hookStarted = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "hookStarted"
+        )
+        let serverRequest = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "serverRequestResolved"
+        )
+        let goalUpdated = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "threadGoalUpdated"
+        )
 
         XCTAssertEqual(plan.speaker, "codex")
         XCTAssertEqual(plan.text, "計画を更新中")
@@ -425,6 +455,20 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(terminalInteraction.activityKind, .command)
         XCTAssertEqual(patchUpdated.text, "変更差分を確認中")
         XCTAssertEqual(patchUpdated.activityKind, .fileChange)
+        XCTAssertEqual(turnDiff.text, "差分を確認中")
+        XCTAssertEqual(turnDiff.activityKind, .fileChange)
+        XCTAssertEqual(approvalStarted.text, "承認を確認中")
+        XCTAssertEqual(approvalStarted.activityKind, .review)
+        XCTAssertEqual(approvalCompleted.text, "承認確認済み")
+        XCTAssertEqual(approvalCompleted.activityKind, .review)
+        XCTAssertEqual(hookStarted.text, "フックを確認中")
+        XCTAssertEqual(hookStarted.activityKind, .tool)
+        XCTAssertEqual(serverRequest.speaker, "thread")
+        XCTAssertEqual(serverRequest.text, "確認を反映中")
+        XCTAssertEqual(serverRequest.activityKind, .threadStatus)
+        XCTAssertEqual(goalUpdated.speaker, "thread")
+        XCTAssertEqual(goalUpdated.text, "目標を確認中")
+        XCTAssertEqual(goalUpdated.activityKind, .threadStatus)
     }
 
     func testBuildsStatusLinesFromThreadState() {

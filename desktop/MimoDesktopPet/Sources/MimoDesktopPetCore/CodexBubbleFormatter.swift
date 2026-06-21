@@ -71,6 +71,20 @@ public enum CodexBubbleFormatter {
             return "変更反映"
         case "差分を確認中です":
             return "差分確認"
+        case "承認を確認中です":
+            return "承認確認"
+        case "承認を確認しました":
+            return "承認確認済み"
+        case "フックを確認中です":
+            return "フック確認"
+        case "フックを確認しました":
+            return "フック確認済み"
+        case "確認を反映中です":
+            return "確認反映"
+        case "目標を確認中です":
+            return "目標確認"
+        case "目標を整理しました":
+            return "目標整理済み"
         case "端末入力を確認中です":
             return "端末確認"
         case "コマンドを実行中です":
@@ -117,6 +131,27 @@ public enum CodexBubbleFormatter {
         }
         if text.contains("レビューを終了") {
             return "レビューを終えました"
+        }
+        if text.contains("承認確認済み") {
+            return "承認を確認しました"
+        }
+        if text.contains("承認") {
+            return "承認を確認中です"
+        }
+        if text.contains("フック") {
+            if text.contains("確認済み") || text.contains("完了") {
+                return "フックを確認しました"
+            }
+            return "フックを確認中です"
+        }
+        if text.contains("確認を反映") {
+            return "確認を反映中です"
+        }
+        if text.contains("目標") {
+            if text.contains("整理済み") || text.contains("解除") || text.contains("clear") {
+                return "目標を整理しました"
+            }
+            return "目標を確認中です"
         }
         if text.contains("文脈") {
             return "文脈を整理中です"
@@ -197,6 +232,12 @@ public enum CodexBubbleFormatter {
         case .fileRead:
             return "ファイルを確認中です"
         case .tool:
+            if text.contains("フック") {
+                if text.contains("確認済み") || text.contains("完了") {
+                    return "フックを確認しました"
+                }
+                return "フックを確認中です"
+            }
             return "ツールで確認中です"
         case .subAgent:
             return "別作業を確認中です"
@@ -211,6 +252,12 @@ public enum CodexBubbleFormatter {
         case .sleep:
             return "少し待機しています"
         case .review:
+            if text.contains("承認確認済み") {
+                return "承認を確認しました"
+            }
+            if text.contains("承認") {
+                return "承認を確認中です"
+            }
             if text.contains("終了") {
                 return "レビューを終えました"
             }

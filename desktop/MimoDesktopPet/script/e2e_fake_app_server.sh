@@ -132,7 +132,12 @@ grep -Fq 'ご主人、「Mimo runtime QA」は文脈を整理中です' "$PRESEN
 grep -Fq 'ご主人、「Mimo runtime QA」はコマンドを実行中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は端末入力を確認中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は差分を確認中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
+grep -Fq '承認確認' "$PRESENTATION_LOG"
+grep -Fq '承認確認済み' "$PRESENTATION_LOG"
+grep -Fq 'フック確認' "$PRESENTATION_LOG"
+grep -Fq '確認反映' "$PRESENTATION_LOG"
+grep -Fq '目標確認' "$PRESENTATION_LOG"
+grep -Eq 'Mimo runtime.*確認待ち' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 grep -Fq '「別スレッドの確認」作業中' "$PRESENTATION_LOG"
 grep -Fq '「更新された別スレッド」作業中' "$PRESENTATION_LOG"
@@ -222,6 +227,13 @@ for row in rows:
         "secret terminal input",
         "process-secret-id",
         "secret diff",
+        "secret turn diff",
+        "secret approval",
+        "review-secret-id",
+        "automatic-secret-source",
+        "secret hook",
+        "secret server request",
+        "secret goal",
         "raw reasoning",
         "Authorization",
         "Bearer",
@@ -303,6 +315,14 @@ grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"item/commandExecution/terminalInteraction"' "$FAKE_LOG"
 grep -Eq '"method":"item/fileChange/patchUpdated"' "$FAKE_LOG"
+grep -Eq '"method":"turn/diff/updated"' "$FAKE_LOG"
+grep -Eq '"method":"item/autoApprovalReview/started"' "$FAKE_LOG"
+grep -Eq '"method":"item/autoApprovalReview/completed"' "$FAKE_LOG"
+grep -Eq '"method":"hook/started"' "$FAKE_LOG"
+grep -Eq '"method":"hook/completed"' "$FAKE_LOG"
+grep -Eq '"method":"serverRequest/resolved"' "$FAKE_LOG"
+grep -Eq '"method":"thread/goal/updated"' "$FAKE_LOG"
+grep -Eq '"method":"thread/goal/cleared"' "$FAKE_LOG"
 
 python3 - "$FAKE_LOG" <<'PY'
 import json

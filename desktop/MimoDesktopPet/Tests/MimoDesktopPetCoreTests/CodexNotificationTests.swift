@@ -7,15 +7,22 @@ final class CodexNotificationTests: XCTestCase {
             "thread/started",
             "thread/status/changed",
             "thread/name/updated",
+            "thread/goal/updated",
+            "thread/goal/cleared",
             "thread/archived",
             "thread/closed",
             "thread/deleted",
             "thread/unarchived",
+            "hook/started",
+            "hook/completed",
             "turn/started",
             "turn/completed",
             "turn/plan/updated",
+            "turn/diff/updated",
             "item/started",
             "item/completed",
+            "item/autoApprovalReview/started",
+            "item/autoApprovalReview/completed",
             "item/agentMessage/delta",
             "item/plan/delta",
             "item/reasoning/summaryPartAdded",
@@ -25,7 +32,8 @@ final class CodexNotificationTests: XCTestCase {
             "item/commandExecution/terminalInteraction",
             "item/fileChange/outputDelta",
             "item/fileChange/patchUpdated",
-            "item/mcpToolCall/progress"
+            "item/mcpToolCall/progress",
+            "serverRequest/resolved"
         ])
     }
 
@@ -33,19 +41,11 @@ final class CodexNotificationTests: XCTestCase {
         XCTAssertEqual(CodexIgnoredNotificationMethod.allCases.map(\.rawValue), [
             "error",
             "skills/changed",
-            "thread/goal/updated",
-            "thread/goal/cleared",
             "thread/settings/updated",
             "thread/tokenUsage/updated",
-            "hook/started",
-            "hook/completed",
-            "turn/diff/updated",
-            "item/autoApprovalReview/started",
-            "item/autoApprovalReview/completed",
             "command/exec/outputDelta",
             "process/outputDelta",
             "process/exited",
-            "serverRequest/resolved",
             "mcpServer/oauthLogin/completed",
             "mcpServer/startupStatus/updated",
             "account/updated",
@@ -297,6 +297,87 @@ final class CodexNotificationTests: XCTestCase {
 
         XCTAssertEqual(notification.method, "item/mcpToolCall/progress")
         XCTAssertEqual(notification.params.message, "Fetching UI tree")
+    }
+
+    func testThreadTurnProgressNotificationsDecodeThreadContext() throws {
+        let diffData = Data("""
+        {
+          "method": "turn/diff/updated",
+          "params": {
+            "threadId": "thread-1",
+            "turnId": "turn-1",
+            "diff": "raw diff must not be displayed"
+          }
+        }
+        """.utf8)
+        let hookData = Data("""
+        {
+          "method": "hook/started",
+          "params": {
+            "threadId": "thread-1",
+            "turnId": null,
+            "run": { "id": "hook-run" }
+          }
+        }
+        """.utf8)
+
+        let diff = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadTurnNotification>.self,
+            from: diffData
+        )
+        let hook = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadTurnNotification>.self,
+            from: hookData
+        )
+
+        XCTAssertEqual(diff.method, "turn/diff/updated")
+        XCTAssertEqual(diff.params.threadId, "thread-1")
+        XCTAssertEqual(diff.params.turnId, "turn-1")
+        XCTAssertEqual(hook.method, "hook/started")
+        XCTAssertEqual(hook.params.threadId, "thread-1")
+        XCTAssertNil(hook.params.turnId)
+    }
+
+    func testApprovalAndServerRequestNotificationsDecodeThreadContext() throws {
+        let approvalData = Data("""
+        {
+          "method": "item/autoApprovalReview/completed",
+          "params": {
+            "threadId": "thread-1",
+            "turnId": "turn-1",
+            "reviewId": "review-1",
+            "startedAtMs": 100,
+            "completedAtMs": 200,
+            "decisionSource": "auto",
+            "action": { "type": "command", "command": "secret command" },
+            "review": { "type": "approved" }
+          }
+        }
+        """.utf8)
+        let requestData = Data("""
+        {
+          "method": "serverRequest/resolved",
+          "params": {
+            "threadId": "thread-1",
+            "requestId": "request-1"
+          }
+        }
+        """.utf8)
+
+        let approval = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadTurnNotification>.self,
+            from: approvalData
+        )
+        let request = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadIdNotification>.self,
+            from: requestData
+        )
+
+        XCTAssertEqual(approval.method, "item/autoApprovalReview/completed")
+        XCTAssertEqual(approval.params.threadId, "thread-1")
+        XCTAssertEqual(approval.params.turnId, "turn-1")
+        XCTAssertEqual(request.method, "serverRequest/resolved")
+        XCTAssertEqual(request.params.threadId, "thread-1")
     }
 
     func testThreadNameNotificationDecodes() throws {

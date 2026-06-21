@@ -97,15 +97,22 @@ public enum CodexNotificationMethod: String, CaseIterable, Equatable, Sendable {
     case threadStarted = "thread/started"
     case threadStatusChanged = "thread/status/changed"
     case threadNameUpdated = "thread/name/updated"
+    case threadGoalUpdated = "thread/goal/updated"
+    case threadGoalCleared = "thread/goal/cleared"
     case threadArchived = "thread/archived"
     case threadClosed = "thread/closed"
     case threadDeleted = "thread/deleted"
     case threadUnarchived = "thread/unarchived"
+    case hookStarted = "hook/started"
+    case hookCompleted = "hook/completed"
     case turnStarted = "turn/started"
     case turnCompleted = "turn/completed"
     case turnPlanUpdated = "turn/plan/updated"
+    case turnDiffUpdated = "turn/diff/updated"
     case itemStarted = "item/started"
     case itemCompleted = "item/completed"
+    case autoApprovalReviewStarted = "item/autoApprovalReview/started"
+    case autoApprovalReviewCompleted = "item/autoApprovalReview/completed"
     case agentMessageDelta = "item/agentMessage/delta"
     case planDelta = "item/plan/delta"
     case reasoningSummaryPartAdded = "item/reasoning/summaryPartAdded"
@@ -116,24 +123,17 @@ public enum CodexNotificationMethod: String, CaseIterable, Equatable, Sendable {
     case fileChangeOutputDelta = "item/fileChange/outputDelta"
     case fileChangePatchUpdated = "item/fileChange/patchUpdated"
     case mcpToolCallProgress = "item/mcpToolCall/progress"
+    case serverRequestResolved = "serverRequest/resolved"
 }
 
 public enum CodexIgnoredNotificationMethod: String, CaseIterable, Equatable, Sendable {
     case error = "error"
     case skillsChanged = "skills/changed"
-    case threadGoalUpdated = "thread/goal/updated"
-    case threadGoalCleared = "thread/goal/cleared"
     case threadSettingsUpdated = "thread/settings/updated"
     case threadTokenUsageUpdated = "thread/tokenUsage/updated"
-    case hookStarted = "hook/started"
-    case hookCompleted = "hook/completed"
-    case turnDiffUpdated = "turn/diff/updated"
-    case autoApprovalReviewStarted = "item/autoApprovalReview/started"
-    case autoApprovalReviewCompleted = "item/autoApprovalReview/completed"
     case commandExecOutputDelta = "command/exec/outputDelta"
     case processOutputDelta = "process/outputDelta"
     case processExited = "process/exited"
-    case serverRequestResolved = "serverRequest/resolved"
     case mcpServerOAuthLoginCompleted = "mcpServer/oauthLogin/completed"
     case mcpServerStartupStatusUpdated = "mcpServer/startupStatus/updated"
     case accountUpdated = "account/updated"
@@ -191,6 +191,11 @@ public struct ThreadNameUpdatedNotification: Decodable, Equatable, Sendable {
 public struct TurnNotification: Decodable, Equatable, Sendable {
     public let threadId: String
     public let turn: CodexTurnSnapshot
+}
+
+public struct ThreadTurnNotification: Decodable, Equatable, Sendable {
+    public let threadId: String
+    public let turnId: String?
 }
 
 public struct ItemLifecycleNotification: Decodable, Equatable, Sendable {

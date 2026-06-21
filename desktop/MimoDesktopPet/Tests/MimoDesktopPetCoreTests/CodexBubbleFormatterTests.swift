@@ -110,6 +110,76 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.contextText(for: patch), "「差分確認」差分確認")
     }
 
+    func testSummarizesExpandedProgressNotificationsAsMimoReports() {
+        let cases: [(CodexConversationLine, String, String)] = [
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "承認",
+                    speaker: "tool",
+                    text: "承認を確認中",
+                    isAssistant: true,
+                    activityKind: .review
+                ),
+                "ご主人、「承認」は承認を確認中です",
+                "「承認」承認確認"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "承認",
+                    speaker: "tool",
+                    text: "承認確認済み",
+                    isAssistant: true,
+                    activityKind: .review
+                ),
+                "ご主人、「承認」は承認を確認しました",
+                "「承認」承認確認済み"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "Hook",
+                    speaker: "tool",
+                    text: "フックを確認中",
+                    isAssistant: true,
+                    activityKind: .tool
+                ),
+                "ご主人、「Hook」はフックを確認中です",
+                "「Hook」フック確認"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "目標",
+                    speaker: "thread",
+                    text: "目標を確認中",
+                    isAssistant: true,
+                    activityKind: .threadStatus
+                ),
+                "ご主人、「目標」は目標を確認中です",
+                "「目標」目標確認"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "確認",
+                    speaker: "thread",
+                    text: "確認を反映中",
+                    isAssistant: true,
+                    activityKind: .threadStatus
+                ),
+                "ご主人、「確認」は確認を反映中です",
+                "「確認」確認反映"
+            )
+        ]
+
+        for (line, expectedPrimary, expectedContext) in cases {
+            XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), expectedPrimary)
+            XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), expectedContext)
+        }
+    }
+
     func testSummarizesStreamingProgressWithoutQuotingDelta() {
         let agent = CodexConversationLine(
             threadId: "thread",

@@ -67,6 +67,9 @@ public enum CodexConversationBubblePlanner {
         if text.contains("失敗") || text.contains("エラー") || text.contains("failed") || text.contains("systemerror") {
             return 0
         }
+        if text.contains("承認確認済み") {
+            return 2
+        }
         if text.contains("確認待ち") || text.contains("待ち") || text.contains("入力") || text.contains("承認") {
             return 1
         }
@@ -96,6 +99,9 @@ public enum CodexConversationBubblePlanner {
         let lowered = text.lowercased()
         if lowered.contains("失敗") || lowered.contains("エラー") || lowered.contains("failed") || lowered.contains("systemerror") {
             return .failed
+        }
+        if lowered.contains("承認確認済み") {
+            return .review
         }
         if lowered.contains("確認待ち") || lowered.contains("確認を待") || lowered.contains("入力") || lowered.contains("承認") {
             return .waiting

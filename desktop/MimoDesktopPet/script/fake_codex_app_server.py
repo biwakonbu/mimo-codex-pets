@@ -292,6 +292,100 @@ def state_sequence():
     )
     write_message(
         {
+            "method": "turn/diff/updated",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "diff": "secret turn diff should not be shown",
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "item/autoApprovalReview/started",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "reviewId": "review-secret-id",
+                "startedAtMs": int(time.time() * 1000),
+                "action": {
+                    "type": "command",
+                    "command": "secret approval action should not be shown",
+                },
+                "review": {"type": "approval", "reason": "secret approval reason"},
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "item/autoApprovalReview/completed",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "reviewId": "review-secret-id",
+                "startedAtMs": int(time.time() * 1000) - 200,
+                "completedAtMs": int(time.time() * 1000),
+                "decisionSource": "automatic-secret-source",
+                "action": {
+                    "type": "command",
+                    "command": "secret approval completion should not be shown",
+                },
+                "review": {"type": "approved", "reason": "secret approval completion reason"},
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "hook/started",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "run": {"id": "secret hook run should not be shown"},
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "hook/completed",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "run": {"id": "secret hook completion should not be shown"},
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "serverRequest/resolved",
+            "params": {
+                "threadId": "fake-docs",
+                "requestId": "secret server request should not be shown",
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "thread/goal/updated",
+            "params": {
+                "threadId": "fake-docs",
+                "turnId": "turn-active",
+                "goal": {
+                    "objective": "secret goal objective should not be shown",
+                    "status": "active",
+                },
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "thread/goal/cleared",
+            "params": {
+                "threadId": "fake-thread",
+            },
+        }
+    )
+    write_message(
+        {
             "method": "item/reasoning/summaryTextDelta",
             "params": {
                 "threadId": "fake-thread",

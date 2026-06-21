@@ -30,15 +30,22 @@ require_pattern "ClientRequest.json" '"thread/read"'
 require_pattern "ServerNotification.json" '"thread/started"'
 require_pattern "ServerNotification.json" '"thread/status/changed"'
 require_pattern "ServerNotification.json" '"thread/name/updated"'
+require_pattern "ServerNotification.json" '"thread/goal/updated"'
+require_pattern "ServerNotification.json" '"thread/goal/cleared"'
 require_pattern "ServerNotification.json" '"thread/archived"'
 require_pattern "ServerNotification.json" '"thread/closed"'
 require_pattern "ServerNotification.json" '"thread/deleted"'
 require_pattern "ServerNotification.json" '"thread/unarchived"'
+require_pattern "ServerNotification.json" '"hook/started"'
+require_pattern "ServerNotification.json" '"hook/completed"'
 require_pattern "ServerNotification.json" '"turn/started"'
 require_pattern "ServerNotification.json" '"turn/completed"'
 require_pattern "ServerNotification.json" '"turn/plan/updated"'
+require_pattern "ServerNotification.json" '"turn/diff/updated"'
 require_pattern "ServerNotification.json" '"item/started"'
 require_pattern "ServerNotification.json" '"item/completed"'
+require_pattern "ServerNotification.json" '"item/autoApprovalReview/started"'
+require_pattern "ServerNotification.json" '"item/autoApprovalReview/completed"'
 require_pattern "ServerNotification.json" '"item/agentMessage/delta"'
 require_pattern "ServerNotification.json" '"item/plan/delta"'
 require_pattern "ServerNotification.json" '"item/reasoning/summaryPartAdded"'
@@ -49,9 +56,13 @@ require_pattern "ServerNotification.json" '"item/commandExecution/terminalIntera
 require_pattern "ServerNotification.json" '"item/fileChange/outputDelta"'
 require_pattern "ServerNotification.json" '"item/fileChange/patchUpdated"'
 require_pattern "ServerNotification.json" '"item/mcpToolCall/progress"'
+require_pattern "ServerNotification.json" '"serverRequest/resolved"'
 require_pattern "v2/ThreadStartedNotification.json" '"thread"'
 require_pattern "v2/ItemStartedNotification.json" '"item"'
 require_pattern "v2/ItemCompletedNotification.json" '"item"'
+require_pattern "v2/TurnDiffUpdatedNotification.json" '"diff"'
+require_pattern "v2/ItemGuardianApprovalReviewStartedNotification.json" '"review"'
+require_pattern "v2/ItemGuardianApprovalReviewCompletedNotification.json" '"decisionSource"'
 require_pattern "v2/AgentMessageDeltaNotification.json" '"delta"'
 require_pattern "v2/PlanDeltaNotification.json" '"delta"'
 require_pattern "v2/CommandExecutionOutputDeltaNotification.json" '"delta"'
@@ -193,11 +204,18 @@ for relative_path, fields in {
     "v2/ThreadStartedNotification.json": ["thread"],
     "v2/ThreadStatusChangedNotification.json": ["threadId", "status"],
     "v2/ThreadNameUpdatedNotification.json": ["threadId"],
+    "v2/ThreadGoalUpdatedNotification.json": ["goal", "threadId"],
+    "v2/ThreadGoalClearedNotification.json": ["threadId"],
+    "v2/HookStartedNotification.json": ["run", "threadId"],
+    "v2/HookCompletedNotification.json": ["run", "threadId"],
     "v2/TurnStartedNotification.json": ["threadId", "turn"],
     "v2/TurnCompletedNotification.json": ["threadId", "turn"],
     "v2/TurnPlanUpdatedNotification.json": ["plan", "threadId", "turnId"],
+    "v2/TurnDiffUpdatedNotification.json": ["diff", "threadId", "turnId"],
     "v2/ItemStartedNotification.json": ["item", "threadId", "turnId"],
     "v2/ItemCompletedNotification.json": ["item", "threadId", "turnId"],
+    "v2/ItemGuardianApprovalReviewStartedNotification.json": ["action", "review", "reviewId", "startedAtMs", "threadId", "turnId"],
+    "v2/ItemGuardianApprovalReviewCompletedNotification.json": ["action", "completedAtMs", "decisionSource", "review", "reviewId", "startedAtMs", "threadId", "turnId"],
     "v2/AgentMessageDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
     "v2/PlanDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
     "v2/ReasoningSummaryPartAddedNotification.json": ["itemId", "summaryIndex", "threadId", "turnId"],
@@ -208,6 +226,7 @@ for relative_path, fields in {
     "v2/FileChangeOutputDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
     "v2/FileChangePatchUpdatedNotification.json": ["changes", "itemId", "threadId", "turnId"],
     "v2/McpToolCallProgressNotification.json": ["itemId", "message", "threadId", "turnId"],
+    "v2/ServerRequestResolvedNotification.json": ["requestId", "threadId"],
 }.items():
     require_required_fields(relative_path, fields)
 

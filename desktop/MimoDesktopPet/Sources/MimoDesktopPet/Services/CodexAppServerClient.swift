@@ -708,6 +708,10 @@ final class CodexAppServerClient {
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
+        case .threadGoalUpdated:
+            appendProgressLine(from: params, kind: "threadGoalUpdated")
+        case .threadGoalCleared:
+            appendProgressLine(from: params, kind: "threadGoalCleared")
         case .threadArchived, .threadClosed, .threadDeleted:
             if let payload = decodeNotificationParams(ThreadIdNotification.self, from: params) {
                 removeThreadTracking(threadId: payload.threadId, suppressPendingReads: true)
@@ -720,6 +724,10 @@ final class CodexAppServerClient {
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
             }
+        case .hookStarted:
+            appendProgressLine(from: params, kind: "hookStarted")
+        case .hookCompleted:
+            appendProgressLine(from: params, kind: "hookCompleted")
         case .turnStarted:
             if let payload = decodeNotificationParams(TurnNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
@@ -756,6 +764,8 @@ final class CodexAppServerClient {
             }
         case .turnPlanUpdated:
             appendProgressLine(from: params, kind: "turnPlanUpdated")
+        case .turnDiffUpdated:
+            appendProgressLine(from: params, kind: "turnDiffUpdated")
         case .itemStarted:
             if let dict = params as? [String: Any],
                let threadId = dict["threadId"] as? String {
@@ -789,6 +799,10 @@ final class CodexAppServerClient {
                 }
                 emitSnapshot(connectionAvailable: true)
             }
+        case .autoApprovalReviewStarted:
+            appendProgressLine(from: params, kind: "autoApprovalReviewStarted")
+        case .autoApprovalReviewCompleted:
+            appendProgressLine(from: params, kind: "autoApprovalReviewCompleted")
         case .agentMessageDelta:
             appendProgressLine(from: params, kind: "agentMessageDelta")
         case .planDelta:
@@ -805,6 +819,8 @@ final class CodexAppServerClient {
             appendProgressLine(from: params, kind: "fileChangePatchUpdated")
         case .mcpToolCallProgress:
             appendProgressLine(from: params, kind: "mcpToolCallProgress")
+        case .serverRequestResolved:
+            appendProgressLine(from: params, kind: "serverRequestResolved")
         }
     }
 
@@ -1005,13 +1021,32 @@ final class CodexAppServerClient {
 
     private func combinedConversationLines() -> [CodexConversationLine] {
         let orderedLines = threadDisplayOrder.flatMap { threadId in
-            var lines = Array((conversationByThread[threadId] ?? []).suffix(3))
-            if let activity = threadActivityById[threadId] {
-                lines.append(activity)
+            let recentLines = Array((conversationByThread[threadId] ?? []).suffix(3))
+            guard let activity = threadActivityById[threadId] else {
+                return recentLines
             }
-            return lines
+
+            if CodexConversationBubblePlanner.displayPriority(for: activity) <= 2 {
+                return recentLines + [activity]
+            }
+
+            if recentLines.contains(where: shouldPreferLineOverRoutineActivity) {
+                return [activity] + recentLines
+            }
+
+            return recentLines + [activity]
         }
         return Array(orderedLines.suffix(12))
+    }
+
+    private func shouldPreferLineOverRoutineActivity(_ line: CodexConversationLine) -> Bool {
+        if line.speaker == "you" {
+            return false
+        }
+        if line.activityKind == .message, !line.isAssistant {
+            return false
+        }
+        return line.activityKind != .message || line.isAssistant
     }
 
     private func focusedConversationLine() -> CodexConversationLine? {
