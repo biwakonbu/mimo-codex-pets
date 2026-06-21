@@ -29,7 +29,7 @@ final class PetViewModel: ObservableObject {
         presentation = coordinator.presentation
         visibleBubbles = coordinator.visibleBubbles
         conversationLines = coordinator.conversationLines
-        conversationBubbleDuration = ProcessInfo.processInfo.environment["MIMO_BUBBLE_TEST_MODE"] == "1" ? 1.15 : 3.4
+        conversationBubbleDuration = ProcessInfo.processInfo.environment["MIMO_BUBBLE_TEST_MODE"] == "1" ? 1.15 : 8.0
         if let path = ProcessInfo.processInfo.environment["MIMO_PRESENTATION_LOG"], !path.isEmpty {
             let url = URL(fileURLWithPath: path)
             presentationLogURL = url
@@ -129,7 +129,7 @@ final class PetViewModel: ObservableObject {
         let token = UUID()
         momentToken = token
         Task { @MainActor [weak self] in
-            let duration = self?.conversationBubbleDuration ?? 3.4
+            let duration = self?.conversationBubbleDuration ?? 8.0
             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
             self?.finishConversationBubble(token: token)
         }

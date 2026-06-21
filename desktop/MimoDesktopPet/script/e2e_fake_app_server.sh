@@ -94,13 +94,13 @@ SWIFT
 sleep 10
 kill -0 "$APP_PID" >/dev/null
 
-grep -Fq 'ご主人、「Mimo runtime QA」は吹き出し要約の表示文言をツールで確認中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は吹き出し要約の表示文言をまとめています' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は吹き出し要約の表示文言を計画中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は吹き出し要約の表示文言でコマンドを実行中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は吹き出し要約の表示文言で端末入力を確認中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は吹き出し要約の表示文言の差分確認中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言をツールで確認中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言をまとめています' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言を計画中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言でコマンドを実行中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言で端末入力を確認中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言の差分確認中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、作業内容の説明をテスト中です' "$PRESENTATION_LOG"
 grep -Fq '承認確認' "$PRESENTATION_LOG"
 grep -Fq '承認確認済み' "$PRESENTATION_LOG"
 grep -Fq 'フック確認' "$PRESENTATION_LOG"
@@ -114,13 +114,13 @@ grep -Fq '問題確認' "$PRESENTATION_LOG"
 grep -Fq '警告確認' "$PRESENTATION_LOG"
 grep -Fq '安全警告' "$PRESENTATION_LOG"
 grep -Fq 'MCP 確認' "$PRESENTATION_LOG"
-grep -Eq 'Mimo runtime.*作業内容の説明.*確認待ち' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「別スレッドの確認」は検証をレビューできます' "$PRESENTATION_LOG"
-grep -Fq '「別スレッドの確認」作業中' "$PRESENTATION_LOG"
-grep -Fq '「更新された別スレッド」作業中' "$PRESENTATION_LOG"
+grep -Eq 'Mimo runtime.*吹き出し要約.*確認待ち' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「別セッションの確認」は停止中で、検証をレビューできます' "$PRESENTATION_LOG"
+grep -Fq '「別セッションの確認」動作中・作業中' "$PRESENTATION_LOG"
+grep -Fq '「更新された別セッション」動作中・作業中' "$PRESENTATION_LOG"
 grep -Fq 'ステータスだけで進捗を伝' "$PRESENTATION_LOG"
-grep -Fq '「資料整理」作業中' "$PRESENTATION_LOG"
-grep -Fq '新しい実装スレッド' "$PRESENTATION_LOG"
+grep -Fq '「資料整理」動作中・作業中' "$PRESENTATION_LOG"
+grep -Fq '新しい実装セッション' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -190,10 +190,13 @@ for row in rows:
             thread_titles.append(match.group(1))
     if len(thread_titles) != len(set(thread_titles)):
         raise SystemExit(f"production bubble stack repeated a thread title: {bubbles}")
-    if bubbles and len(str(bubbles[0])) > 44:
-        raise SystemExit(f"primary production bubble is too long: {bubbles[0]}")
-    for bubble in bubbles[1:]:
-        if len(str(bubble)) > 34:
+    if bubbles:
+        primary_limit = 64 if roles and roles[0] == "focus" else 52
+        if len(str(bubbles[0])) > primary_limit:
+            raise SystemExit(f"primary production bubble is too long: {bubbles[0]}")
+    for bubble, role in zip(bubbles[1:], roles[1:]):
+        secondary_limit = 22 if role == "overflow" else 42
+        if len(str(bubble)) > secondary_limit:
             raise SystemExit(f"secondary production bubble is too long: {bubble}")
     accessibility_value = str(row.get("accessibilityValue", ""))
     if bubbles and not accessibility_value:
@@ -247,7 +250,7 @@ for row in rows:
     if (
         len(bubbles) >= 4
         and any("Mimo runtime QA" in str(text) for text in bubbles)
-        and any("別スレッドの確認" in str(text) for text in bubbles)
+        and any("別セッションの確認" in str(text) for text in bubbles)
         and any("ステータスだけで進捗を伝" in str(text) for text in bubbles)
         and any("資料整理" in str(text) for text in bubbles)
     ):
@@ -273,7 +276,7 @@ for row in rows:
         and tones[0] in {"waiting", "review", "failed"}
         and any(
             marker in str(bubbles[0])
-            for marker in ("ステータスだけで進捗を伝", "別スレッドの確認", "新しい実装スレッド")
+            for marker in ("ステータスだけで進捗を伝", "別セッションの確認", "新しい実装セッション")
         )
         and any("Mimo runtime" in str(text) for text in bubbles[1:])
     ):
@@ -283,7 +286,7 @@ for row in rows:
 if not action_required_primary_seen:
     raise SystemExit("action-required secondary thread was never promoted into the primary Mimo report")
 
-closed_thread_markers = ("別スレッドの確認", "更新された別スレッド")
+closed_thread_markers = ("別セッションの確認", "更新された別セッション")
 tail_rows = rows[-5:]
 if any(
     any(marker in str(text) for marker in closed_thread_markers)
@@ -293,7 +296,7 @@ if any(
     raise SystemExit("closed secondary thread remained in recent production bubbles")
 
 if not any(
-    any("新しい実装スレッド" in str(text) for text in row.get("bubbleTexts", []))
+    any("新しい実装セッション" in str(text) for text in row.get("bubbleTexts", []))
     for row in tail_rows
 ):
     raise SystemExit("notification-only started thread was not retained across later production bubble refreshes")

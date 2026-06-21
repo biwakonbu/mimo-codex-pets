@@ -54,6 +54,19 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「実装」は表示まわりの依頼を確認しました")
     }
 
+    func testUserFacingTitleUsesSessionVocabulary() {
+        let line = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "別スレッドの確認",
+            speaker: "codex",
+            text: "レビューできる状態になりました",
+            isAssistant: true
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「別セッションの確認」はレビューできます")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「別セッションの確認」レビュー可")
+    }
+
     func testSummarizesSessionContentAsMimoWorkReport() {
         let line = CodexConversationLine(
             threadId: "thread",
@@ -109,6 +122,68 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「Mimo runtime...」Codex 連携確認待ち")
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: genericTool), "ご主人、「Mimo runtime QA」は作業内容の説明をツールで確認中です")
         XCTAssertEqual(CodexBubbleFormatter.contextText(for: genericTool), "「Mimo runtime...」作業内容の説明ツール確認")
+    }
+
+    func testSessionStateIsVisibleInMimoReports() {
+        let active = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Mimo runtime QA",
+            speaker: "tool",
+            text: "テストを実行中",
+            isAssistant: true,
+            activityKind: .test,
+            workSummary: "作業内容の説明",
+            sessionState: .active
+        )
+        let stopped = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Mimo runtime QA",
+            speaker: "thread",
+            text: "レビュー可能",
+            isAssistant: true,
+            activityKind: .threadStatus,
+            workSummary: "作業内容の説明",
+            sessionState: .stopped
+        )
+
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: active),
+            "ご主人、「Mimo runtime QA」は動作中で、作業内容の説明をテスト中です"
+        )
+        XCTAssertEqual(
+            CodexBubbleFormatter.contextText(for: active),
+            "「Mimo runtime...」動作中・作業内容の説明テスト中"
+        )
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: stopped),
+            "ご主人、「Mimo runtime QA」は停止中で、作業内容の説明をレビューできます"
+        )
+        XCTAssertEqual(
+            CodexBubbleFormatter.contextText(for: stopped),
+            "「Mimo runtime...」停止・作業内容の説明レビュー可"
+        )
+    }
+
+    func testReasoningReportsAsThinkingSummary() {
+        let line = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Mimo runtime QA",
+            speaker: "codex",
+            text: "考えを整理中",
+            isAssistant: true,
+            activityKind: .reasoning,
+            workSummary: "吹き出し要約の表示文言",
+            sessionState: .active
+        )
+
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: line),
+            "ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言について考えを整理中です"
+        )
+        XCTAssertEqual(
+            CodexBubbleFormatter.contextText(for: line),
+            "「Mimo runtime...」動作中・吹き出し要約の表示文言考察中"
+        )
     }
 
     func testUnsafeSessionContentDoesNotBecomeVisibleWorkSummary() {
@@ -506,7 +581,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     text: "作業中",
                     isAssistant: true
                 ),
-                "ご主人、「状態だけのスレッド」は作業を進めています"
+                "ご主人、「状態だけのセッション」は作業を進めています"
             ),
             (
                 CodexConversationLine(

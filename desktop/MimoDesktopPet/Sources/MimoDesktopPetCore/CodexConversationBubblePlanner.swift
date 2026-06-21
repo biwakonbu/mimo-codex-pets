@@ -112,10 +112,10 @@ public enum CodexConversationBubblePlanner {
         if lowered.contains("確認待ち") || lowered.contains("確認を待") || lowered.contains("入力") || lowered.contains("承認") || lowered.contains("安全") {
             return .waiting
         }
-        if lowered.contains("レビュー") || lowered.contains("完了") {
+        if lowered.contains("レビュー") || lowered.contains("完了") || lowered.contains("停止") || lowered.contains("止ま") {
             return .review
         }
-        if lowered.contains("作業") || lowered.contains("実行") || lowered.contains("検証") || lowered.contains("応答") || lowered.contains("計画") {
+        if lowered.contains("作業") || lowered.contains("実行") || lowered.contains("検証") || lowered.contains("応答") || lowered.contains("計画") || lowered.contains("動作中") {
             return .active
         }
         return .neutral

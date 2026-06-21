@@ -95,6 +95,46 @@ final class CodexConversationExtractorTests: XCTestCase {
         )
     }
 
+    func testStatusLinesCarrySessionActivityState() {
+        let active = CodexConversationExtractor.statusLine(
+            threadId: "active",
+            threadTitle: "active",
+            threadStatus: .active(activeFlags: []),
+            latestTurnStatus: .inProgress,
+            hasRecentAssistantFinal: false
+        )
+        let waiting = CodexConversationExtractor.statusLine(
+            threadId: "waiting",
+            threadTitle: "waiting",
+            threadStatus: .active(activeFlags: [.waitingOnUserInput]),
+            latestTurnStatus: .inProgress,
+            hasRecentAssistantFinal: false
+        )
+        let stopped = CodexConversationExtractor.statusLine(
+            threadId: "stopped",
+            threadTitle: "stopped",
+            threadStatus: nil,
+            latestTurnStatus: .completed,
+            hasRecentAssistantFinal: true
+        )
+        let failed = CodexConversationExtractor.statusLine(
+            threadId: "failed",
+            threadTitle: "failed",
+            threadStatus: nil,
+            latestTurnStatus: .failed,
+            hasRecentAssistantFinal: false
+        )
+
+        XCTAssertEqual(active?.sessionState, .active)
+        XCTAssertEqual(waiting?.sessionState, .waiting)
+        XCTAssertEqual(stopped?.sessionState, .stopped)
+        XCTAssertEqual(failed?.sessionState, .failed)
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: stopped!),
+            "ご主人、「stopped」は停止中で、レビューできます"
+        )
+    }
+
     func testFallsBackToThreadPreviewWhenTurnsHaveNoItems() {
         let thread: [String: Any] = [
             "id": "thread-b",
@@ -537,7 +577,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(plan.speaker, "codex")
         XCTAssertEqual(plan.text, "計画を更新中")
         XCTAssertEqual(plan.activityKind, .plan)
-        XCTAssertEqual(reasoning.text, "文脈を整理中")
+        XCTAssertEqual(reasoning.text, "考えを整理中")
         XCTAssertEqual(reasoning.activityKind, .reasoning)
         XCTAssertEqual(terminalInteraction.text, "端末入力を確認中")
         XCTAssertEqual(terminalInteraction.activityKind, .command)

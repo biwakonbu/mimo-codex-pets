@@ -45,7 +45,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placement.maxTextWidth, 344)
         XCTAssertEqual(placement.minTextWidth, 326)
         XCTAssertEqual(placement.scale, 1)
-        XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .focus), 48)
+        XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .focus), 64)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .focus), 2)
     }
 

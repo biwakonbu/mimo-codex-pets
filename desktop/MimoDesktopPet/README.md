@@ -91,15 +91,15 @@ bubble, and autonomous stamina behavior.
 `./script/check_title_sanitizer_parity.py` verifies that the live smoke helper
 and Swift production formatter keep the same ambient title sanitization behavior
 for safe, unsafe, instruction-looking, machine-payload, stdout/env-marker,
-nested, and fallback thread titles.
+nested, and fallback session titles.
 `./script/check_app_bundle_contract.sh` builds and verifies the production app
 bundle contract: `LSUIElement=true`, the menu-bar companion bundle identity, the
 executable bit, and bundled Mimo `pet.json` / `spritesheet.webp` resources.
 `./script/live_app_presentation_smoke.sh` launches the real app process with a
 temporary presentation log and verifies that it leaves the offline/connection
-state after connecting. When the live app-server exposes readable threads, the
+state after connecting. When the live app-server exposes readable sessions, the
 smoke also requires a `focus` or `conversation` production bubble whose title
-matches a sanitized title candidate read from that live thread context before it
+matches a sanitized title candidate read from that live session context before it
 captures the exact production window and inspects the transparent pet-and-bubble
 surface.
 `./script/e2e_unavailable_app_server.sh` launches the real app with an
@@ -170,39 +170,40 @@ visual inspection runs where Mimo must stay still.
 In production mode the panel stays transparent and shows only Mimo plus a
 stacked list of white speech bubbles. When Codex conversation context is
 available, the primary bubble sits closest to Mimo, keeps the speech tail, and
-promotes the focused thread into a short Mimo-style report. The visible stack is
+promotes the focused session into a short Mimo-style report. The visible stack is
 capped at five bubbles total: one primary Mimo report plus up to four smaller
 secondary context bubbles above it. Those secondary bubbles are compact
-thread-status rows with accent markers and no tails, forming a small readable
-thread dashboard rather than a transcript panel. Thread bubbles render
-`「thread title」summary` as a colored title plus one-line Mimo summary, so
+session-status rows with accent markers and no tails, forming a small readable
+session dashboard rather than a transcript panel. Session bubbles render
+`「session title」summary` as a colored title plus one-line Mimo summary, so
 multiple bubbles can be scanned quickly. They do not repeat the longer
 `ご主人、...です` phrase, and they do not dump raw model output, commands, or
-secret-looking payload text. Threads can be summarized from sanitized item
-activity, a safe session-derived `workSummary`, or from thread/turn status
+secret-looking payload text. Sessions can be summarized from sanitized item
+activity, a safe session-derived `workSummary`, or from session/turn status
 alone. `CodexSessionSummarizer` classifies short, non-secret session themes
 such as `作業内容の説明`, `吹き出し要約の表示文言`, `進捗の具体説明`,
-`複数スレッド表示`, `Codex 連携`, or `Mimo の動き`, and the formatter combines
-that theme with state such as testing, waiting, reviewing, or tool checking.
+`複数セッション表示`, `Codex 連携`, or `Mimo の動き`, and the formatter combines
+that theme with session state such as active, waiting, stopped, reviewing, or
+tool checking.
 That is how Mimo can say
-`ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です` or
-`ご主人、「Mimo runtime QA」は吹き出し要約の表示文言をまとめています`
+`ご主人、「Mimo runtime QA」は動作中で、作業内容の説明をテスト中です` or
+`ご主人、「Mimo runtime QA」は停止中で、作業内容の説明をレビューできます`
 without quoting raw session text. Bubble markers use semantic tone for urgent states and typed
 activity kind for ordinary Codex work such as plan, command, file, browser,
-image, skill, or mention activity. The stack favors thread coverage, so each
-visible thread appears at most once. If more threads are active than the compact
-stack can show, Mimo tracks up to six thread contexts and the last secondary
+image, skill, or mention activity. The stack favors session coverage, so each
+visible session appears at most once. If more sessions are active than the compact
+stack can show, Mimo tracks up to six session contexts and the last secondary
 bubble becomes a short overflow note such as `ほか2件も見ています` instead of
-silently dropping the extra context. If hidden threads include attention states,
+silently dropping the extra context. If hidden sessions include attention states,
 that overflow bubble keeps the strongest hidden tone and uses short text such
 as `ほか3件に確認待ち` or `ほか3件に失敗あり`, so urgent work is not flattened
 into a neutral counter.
-If another visible thread needs attention, such as a failure, confirmation
-wait, or review-ready state, that thread is promoted into the primary Mimo
-report ahead of a merely active focused thread. The active focused thread stays
+If another visible session needs attention, such as a failure, confirmation
+wait, or review-ready state, that session is promoted into the primary Mimo
+report ahead of a merely active focused session. The active focused session stays
 visible as a smaller context bubble, so urgent Codex state is not buried in the
 stack.
-Thread contexts discovered from lifecycle notifications are kept briefly even
+Session contexts discovered from lifecycle notifications are kept briefly even
 when the next `thread/loaded/list` or `thread/list` response has not yet caught
 up, so a newly started or updated Codex session does not flicker out of the
 production bubble stack just because it is outside the current list window.

@@ -47,7 +47,10 @@ public enum CodexConversationLineCombiner {
         recentLines: [CodexConversationLine],
         activity: CodexConversationLine?
     ) -> [CodexConversationLine] {
-        let recentLines = propagateWorkSummaries(in: recentLines)
+        let recentLines = propagateSessionState(
+            activity?.sessionState,
+            in: propagateWorkSummaries(in: recentLines)
+        )
         guard let activity else { return recentLines }
         let resolvedActivity = activity.workSummary == nil
             ? activity.withWorkSummary(latestWorkSummary(in: recentLines))
@@ -88,6 +91,16 @@ public enum CodexConversationLineCombiner {
 
     private static func latestWorkSummary(in lines: [CodexConversationLine]) -> String? {
         lines.reversed().compactMap(\.workSummary).first
+    }
+
+    private static func propagateSessionState(
+        _ sessionState: CodexSessionActivityState?,
+        in lines: [CodexConversationLine]
+    ) -> [CodexConversationLine] {
+        guard let sessionState else { return lines }
+        return lines.map { line in
+            line.sessionState == nil ? line.withSessionState(sessionState) : line
+        }
     }
 }
 

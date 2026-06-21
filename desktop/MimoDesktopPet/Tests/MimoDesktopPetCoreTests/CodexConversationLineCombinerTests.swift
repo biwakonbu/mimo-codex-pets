@@ -119,13 +119,52 @@ final class CodexConversationLineCombinerTests: XCTestCase {
         )
     }
 
+    func testOrderedLinesCarrySessionStateIntoRecentWorkLines() {
+        let recent = [
+            line(
+                threadId: "summary",
+                speaker: "you",
+                text: "吹き出しに作業内容の要約を出して",
+                isAssistant: false,
+                activityKind: .userRequest,
+                workSummary: "作業内容の説明"
+            ),
+            line(
+                threadId: "summary",
+                speaker: "tool",
+                text: "テストを実行中",
+                activityKind: .test
+            )
+        ]
+        let activity = line(
+            threadId: "summary",
+            speaker: "thread",
+            text: "作業中",
+            activityKind: .threadStatus,
+            sessionState: .active
+        )
+
+        let ordered = CodexConversationLineCombiner.orderedLines(
+            recentLines: recent,
+            activity: activity
+        )
+
+        XCTAssertEqual(ordered.map(\.sessionState), [.active, .active, .active])
+        let testLine = ordered.first { $0.activityKind == .test }
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: testLine!),
+            "ご主人、「summary」は動作中で、作業内容の説明をテスト中です"
+        )
+    }
+
     private func line(
         threadId: String,
         speaker: String,
         text: String,
         isAssistant: Bool = true,
         activityKind: CodexConversationActivityKind,
-        workSummary: String? = nil
+        workSummary: String? = nil,
+        sessionState: CodexSessionActivityState? = nil
     ) -> CodexConversationLine {
         CodexConversationLine(
             threadId: threadId,
@@ -134,7 +173,8 @@ final class CodexConversationLineCombinerTests: XCTestCase {
             text: text,
             isAssistant: isAssistant,
             activityKind: activityKind,
-            workSummary: workSummary
+            workSummary: workSummary,
+            sessionState: sessionState
         )
     }
 }

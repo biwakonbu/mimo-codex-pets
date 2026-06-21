@@ -19,7 +19,7 @@ public enum CodexSessionSummarizer {
                 return "作業内容の説明"
             }
             if containsAny(lowercased, ["セッションごと", "スレッドごと", "thread", "複数"]) {
-                return "スレッド別の状況整理"
+                return "セッション別の状況整理"
             }
             if containsAny(lowercased, ["実装", "修正", "改善", "対応", "作る"]) {
                 return "吹き出し要約の実装"
@@ -42,7 +42,7 @@ public enum CodexSessionSummarizer {
         }
         if containsAny(lowercased, ["複数スレッド", "マルチスレッド", "multi-thread", "同時"]) &&
             containsAny(lowercased, ["吹き出し", "bubble", "表示", "thread"]) {
-            return "複数スレッド表示"
+            return "複数セッション表示"
         }
         if containsAny(lowercased, ["codex"]) &&
             containsAny(lowercased, ["app-server", "接続", "通信", "protocol", "プロトコル", "thread/read"]) {

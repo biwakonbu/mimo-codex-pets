@@ -25,6 +25,13 @@ public enum CodexConversationActivityKind: String, Equatable, Sendable {
     case threadStatus
 }
 
+public enum CodexSessionActivityState: String, Equatable, Sendable {
+    case active
+    case waiting
+    case stopped
+    case failed
+}
+
 public struct CodexConversationLine: Equatable, Sendable {
     public let threadId: String
     public let threadTitle: String
@@ -33,6 +40,7 @@ public struct CodexConversationLine: Equatable, Sendable {
     public let isAssistant: Bool
     public let activityKind: CodexConversationActivityKind
     public let workSummary: String?
+    public let sessionState: CodexSessionActivityState?
 
     public init(
         threadId: String,
@@ -41,7 +49,8 @@ public struct CodexConversationLine: Equatable, Sendable {
         text: String,
         isAssistant: Bool,
         activityKind: CodexConversationActivityKind = .message,
-        workSummary: String? = nil
+        workSummary: String? = nil,
+        sessionState: CodexSessionActivityState? = nil
     ) {
         self.threadId = threadId
         self.threadTitle = threadTitle
@@ -50,6 +59,7 @@ public struct CodexConversationLine: Equatable, Sendable {
         self.isAssistant = isAssistant
         self.activityKind = activityKind
         self.workSummary = workSummary
+        self.sessionState = sessionState
     }
 
     public func withWorkSummary(_ workSummary: String?) -> CodexConversationLine {
@@ -61,7 +71,22 @@ public struct CodexConversationLine: Equatable, Sendable {
             text: text,
             isAssistant: isAssistant,
             activityKind: activityKind,
-            workSummary: workSummary
+            workSummary: workSummary,
+            sessionState: sessionState
+        )
+    }
+
+    public func withSessionState(_ sessionState: CodexSessionActivityState?) -> CodexConversationLine {
+        guard self.sessionState != sessionState else { return self }
+        return CodexConversationLine(
+            threadId: threadId,
+            threadTitle: threadTitle,
+            speaker: speaker,
+            text: text,
+            isAssistant: isAssistant,
+            activityKind: activityKind,
+            workSummary: workSummary,
+            sessionState: sessionState
         )
     }
 }
@@ -399,22 +424,33 @@ public enum CodexConversationExtractor {
         hasRecentAssistantFinal: Bool
     ) -> CodexConversationLine? {
         let text: String?
+        let sessionState: CodexSessionActivityState?
         if case .systemError = threadStatus {
             text = "失敗を確認"
+            sessionState = .failed
         } else if latestTurnStatus == .failed {
             text = "失敗を確認"
+            sessionState = .failed
         } else if case let .active(flags) = threadStatus {
             if flags.contains(.waitingOnApproval) || flags.contains(.waitingOnUserInput) {
                 text = "確認待ち"
+                sessionState = .waiting
             } else {
                 text = "作業中"
+                sessionState = .active
             }
         } else if latestTurnStatus == .inProgress {
             text = "作業中"
+            sessionState = .active
         } else if latestTurnStatus == .completed && hasRecentAssistantFinal {
             text = "レビュー可能"
+            sessionState = .stopped
+        } else if latestTurnStatus == .completed {
+            text = "停止中"
+            sessionState = .stopped
         } else {
             text = nil
+            sessionState = nil
         }
 
         guard let text else { return nil }
@@ -425,7 +461,8 @@ public enum CodexConversationExtractor {
             text: text,
             isAssistant: true,
             activityKind: .threadStatus,
-            workSummary: nil
+            workSummary: nil,
+            sessionState: sessionState
         )
     }
 
@@ -549,7 +586,7 @@ public enum CodexConversationExtractor {
         case "turnModerationMetadata":
             return "安全を確認中"
         case "reasoningDelta":
-            return "文脈を整理中"
+            return "考えを整理中"
         case "commandExecutionOutputDelta":
             return "コマンド出力を確認中"
         case "commandExecutionTerminalInteraction":

@@ -1020,7 +1020,8 @@ final class CodexAppServerClient {
                     text: line.text,
                     isAssistant: line.isAssistant,
                     activityKind: line.activityKind,
-                    workSummary: line.workSummary
+                    workSummary: line.workSummary,
+                    sessionState: line.sessionState
                 )
             }
         }
@@ -1032,7 +1033,8 @@ final class CodexAppServerClient {
                 text: activity.text,
                 isAssistant: activity.isAssistant,
                 activityKind: activity.activityKind,
-                workSummary: activity.workSummary
+                workSummary: activity.workSummary,
+                sessionState: activity.sessionState
             )
         }
     }

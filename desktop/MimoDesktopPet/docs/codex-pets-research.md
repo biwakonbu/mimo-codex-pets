@@ -226,13 +226,14 @@ State behavior:
 Conversation behavior:
 
 - Prefer a fresh `agentMessage` or `userMessage` when available.
-- Also synthesize short per-thread activity lines from `thread/status/changed`,
+- Also synthesize short per-session activity lines from `thread/status/changed`,
   `turn/started`, `turn/completed`, `thread/list`, and `thread/read` state so a
-  thread can be reported even when recent item text is absent.
+  session can be reported even when recent item text is absent.
 - Production bubbles do not quote Codex speaker labels directly. They combine
-  the thread title and the latest progress-like line into a short Mimo report to
-  the user, such as `ご主人、「<title>」は作業を進めています`.
-- Thread titles are filtered for ambient display before they reach production
+  the session title, latest progress-like line, and synthesized session state
+  into a short Mimo report to the user, such as
+  `ご主人、「<title>」は動作中で、作業を進めています`.
+- Session titles are filtered for ambient display before they reach production
   bubbles. Instruction-looking titles, URLs, local paths, email addresses,
   token-like strings, and credential/secret markers are skipped; if another
   safe title or preview exists it is used, otherwise the bubble falls back to
@@ -252,17 +253,17 @@ Conversation behavior:
   `workSummary` through `CodexSessionSummarizer`. This is deliberately a small
   topic classifier rather than a transcript summarizer: it can identify themes
   such as `作業内容の説明`, `吹き出し要約の表示文言`,
-  `進捗の具体説明`, `複数スレッド表示`, `Codex 連携`, `セッション状況`,
+  `進捗の具体説明`, `複数セッション表示`, `Codex 連携`, `セッション状況`,
   `画面確認`, or `Mimo の動き`, but it first applies the same ambient-display
   safety gate used for titles. Unsafe paths, credentials, stdout/env fragments,
   instruction-looking text, and other secret-looking session details therefore
   cannot become visible bubble topics.
-- The latest safe `workSummary` is propagated within that thread to tool,
+- The latest safe `workSummary` and synthesized session activity state are propagated within that session to tool,
   command, file, status, review, and lifecycle progress lines. This lets Mimo
   explain both the work and the state, for example
-  `ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です`,
-  `ご主人、「Mimo runtime QA」は吹き出し要約の表示文言をまとめています`,
-  or `「Mimo runtime...」進捗の具体説明確認待ち`, while still never quoting
+  `ご主人、「Mimo runtime QA」は動作中で、作業内容の説明をテスト中です`,
+  `ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言をまとめています`,
+  or `「Mimo runtime...」停止・進捗の具体説明レビュー可`, while still never quoting
   raw commands, paths, deltas, or model output.
 - The live app presentation smoke uses Python to preflight expected sanitized
   title candidates. `check_title_sanitizer_parity.py` and
@@ -293,14 +294,14 @@ Conversation behavior:
   threads. The primary bubble stays lowest, widest, and visually attached to
   Mimo with the only speech tail. When it reports a focused conversation thread
   it uses the `focus` presentation role, a stronger accent marker, and the
-  Mimo-style report for that thread instead of a generic status such as
+  Mimo-style report for that session instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
-  Secondary thread bubbles are smaller fixed-width context rows above it: they
+  Secondary session bubbles are smaller fixed-width context rows above it: they
   stay white, use compact accent markers, omit the longer `ご主人、...です`
   phrase, and align into a centered layered stack using the same tested row
-  offsets as `PetSpeechBubbleLayout`, so concurrent thread status is readable
+  offsets as `PetSpeechBubbleLayout`, so concurrent session status is readable
   without becoming a transcript panel. The fixed secondary widths keep
-  short and long thread titles from making the bubble stack jitter as Codex
+  short and long session titles from making the bubble stack jitter as Codex
   notifications arrive. This keeps Codex Pets-like multi-thread awareness in
   the production surface without rendering a console, transcript feed, or debug
   panel.
@@ -468,21 +469,22 @@ Manual or visual checks:
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
-  production bubble text is a Mimo-style summary of the active thread title,
+  production bubble text is a Mimo-style summary of the active session title,
   safe session-derived `workSummary`, and latest progress/tool activity,
   including notification-driven tool activity and streaming delta activity, plus
-  simultaneous stacked bubbles for a second visible thread and a later
-  secondary-thread update discovered immediately from notification-triggered
+  simultaneous stacked bubbles for a second visible session and a later
+  secondary-session update discovered immediately from notification-triggered
   thread reads. The fake session specifically requires concrete topic-aware
-  output such as `吹き出し要約の表示文言をまとめています`,
-  `吹き出し要約の表示文言を計画中`, `作業内容の説明をテスト中`, and
-  `作業内容の説明で確認待ち` so regression tests cover Mimo explaining what
-  Codex is working on, not only generic state labels.
+  output such as `動作中で、吹き出し要約の表示文言をまとめています`,
+  `動作中で、吹き出し要約の表示文言を計画中`, `動作中で、作業内容の説明をテスト中`, and
+  `停止中で、作業内容の説明をレビューできます` so regression tests cover Mimo
+  explaining what Codex is working on and whether the session is moving or
+  stopped, not only generic state labels.
   The same fake E2E emits
-  `thread/started` for a new thread and verifies that Mimo reports the new
-  thread title and sends `thread/read` before the next polling cycle. The fake
-  also keeps that started thread out of subsequent list responses and verifies
-  that Mimo retains the notification-discovered thread in later production
+  `thread/started` for a new session and verifies that Mimo reports the new
+  session title and sends `thread/read` before the next polling cycle. The fake
+  also keeps that started session out of subsequent list responses and verifies
+  that Mimo retains the notification-discovered session in later production
   bubble refreshes instead of pruning it while list state catches up.
 - Unit tests verify that extracted `CodexConversationLine` values retain typed
   activity kinds and that bubble summaries prefer those kinds over brittle raw

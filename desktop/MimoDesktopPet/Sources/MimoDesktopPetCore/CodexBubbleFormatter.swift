@@ -1,16 +1,17 @@
 import Foundation
 
 public enum CodexBubbleFormatter {
-    public static func bubbleText(for line: CodexConversationLine, limit: Int = 46) -> String {
+    public static func bubbleText(for line: CodexConversationLine, limit: Int = 58) -> String {
         let title = compactTitle(line.threadTitle)
         let summary = reportSummary(for: line, title: title)
-        return compact("ご主人、「\(title)」は\(summary)", limit: limit)
+        return compact("ご主人、「\(title)」は\(sessionAwareSummary(summary, state: line.sessionState))", limit: limit)
     }
 
-    public static func contextText(for line: CodexConversationLine, limit: Int = 34) -> String {
+    public static func contextText(for line: CodexConversationLine, limit: Int = 40) -> String {
         let title = compactTitle(line.threadTitle, limit: 12)
         let summary = compactSummary(for: mimoSummary(for: line), topic: reportTopic(for: line, title: title))
-        return compact("「\(title)」\(summary)", limit: limit)
+        let stateLabel = contextStateLabel(for: line.sessionState, summary: summary)
+        return compact("「\(title)」\(stateLabel)\(summary)", limit: limit)
     }
 
     public static func compact(_ text: String, limit: Int = 42) -> String {
@@ -32,7 +33,14 @@ public enum CodexBubbleFormatter {
         if ["Codex Thread", "unknown-thread"].contains(compacted) {
             return "Codex"
         }
-        return compacted.isEmpty ? "Codex" : compacted
+        return compacted.isEmpty ? "Codex" : displayTitleVocabulary(compacted)
+    }
+
+    private static func displayTitleVocabulary(_ title: String) -> String {
+        title
+            .replacingOccurrences(of: "スレッド", with: "セッション")
+            .replacingOccurrences(of: "Thread", with: "Session")
+            .replacingOccurrences(of: "thread", with: "session")
     }
 
     private static func compactSummary(for summary: String, topic: String? = nil) -> String {
@@ -56,6 +64,8 @@ public enum CodexBubbleFormatter {
                 return "\(topic)文脈整理"
             case "文脈を整理しました":
                 return "\(topic)文脈済み"
+            case "考えを整理中です":
+                return "\(topic)考察中"
             case "ツールで確認中です":
                 return "\(topic)ツール確認"
             case "端末入力を確認中です":
@@ -124,6 +134,8 @@ public enum CodexBubbleFormatter {
             return "文脈整理"
         case "文脈を整理しました":
             return "文脈整理済み"
+        case "考えを整理中です":
+            return "考察中"
         case "モデルを調整中です":
             return "モデル調整"
         case "モデルを確認中です":
@@ -343,6 +355,8 @@ public enum CodexBubbleFormatter {
             return "\(topic)の文脈整理中です"
         case "文脈を整理しました":
             return "\(topic)の文脈整理済みです"
+        case "考えを整理中です":
+            return "\(topic)について考えを整理中です"
         case "ツールで確認中です":
             return "\(topic)をツールで確認中です"
         case "端末入力を確認中です":
@@ -431,6 +445,46 @@ public enum CodexBubbleFormatter {
         return normalizedTitle.contains(normalizedTopic) || normalizedTopic.contains(normalizedTitle)
     }
 
+    private static func sessionAwareSummary(
+        _ summary: String,
+        state: CodexSessionActivityState?
+    ) -> String {
+        guard let state else { return summary }
+        switch state {
+        case .active:
+            return summary.contains("動作中") ? summary : "動作中で、\(summary)"
+        case .waiting:
+            return summary.contains("確認待ち") ? summary : "確認待ちで、\(summary)"
+        case .stopped:
+            return summary.contains("停止") || summary.contains("止ま") ? summary : "停止中で、\(summary)"
+        case .failed:
+            if summary.contains("失敗") || summary.contains("問題") || summary.contains("警告") {
+                return summary
+            }
+            return "停止中で、\(summary)"
+        }
+    }
+
+    private static func contextStateLabel(
+        for state: CodexSessionActivityState?,
+        summary: String
+    ) -> String {
+        guard let state else { return "" }
+        switch state {
+        case .active:
+            return summary.contains("動作中") ? "" : "動作中・"
+        case .waiting:
+            return summary.contains("確認待ち") ? "" : "確認待ち・"
+        case .stopped:
+            return summary.contains("停止") ? "" : "停止・"
+        case .failed:
+            if summary.contains("失敗") || summary.contains("問題") || summary.contains("警告") {
+                return ""
+            }
+            return "停止・"
+        }
+    }
+
     private static func activitySummary(
         for kind: CodexConversationActivityKind,
         text: String
@@ -443,7 +497,7 @@ public enum CodexBubbleFormatter {
         case .plan:
             return "計画を整理中です"
         case .reasoning:
-            return "文脈を整理中です"
+            return "考えを整理中です"
         case .contextCompaction:
             if text.contains("済み") || text.contains("完了") {
                 return "文脈を整理しました"

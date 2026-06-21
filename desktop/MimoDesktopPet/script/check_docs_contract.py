@@ -158,8 +158,10 @@ def require_mimicry_contract() -> None:
     require_text(
         FORMATTER,
         [
-            'return compact("ご主人、「\\(title)」は\\(summary)", limit: limit)',
-            'return compact("「\\(title)」\\(summary)", limit: limit)',
+            "sessionAwareSummary",
+            "contextStateLabel",
+            "displayTitleVocabulary",
+            "sessionState",
             "reportTopic(for:",
             "workSummary",
             "activitySummary(for:",
@@ -176,7 +178,7 @@ def require_mimicry_contract() -> None:
             "進捗の具体説明",
             "吹き出し要約の表示文言",
             "吹き出し要約",
-            "複数スレッド表示",
+            "複数セッション表示",
             "Codex 連携",
             "Mimo の動き",
         ],
