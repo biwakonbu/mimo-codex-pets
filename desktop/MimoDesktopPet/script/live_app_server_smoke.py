@@ -157,7 +157,7 @@ def safe_title(candidates, fallback, limit):
         collapsed = " ".join(text.split()).strip()
         if not collapsed:
             continue
-        if looks_like_instruction_title(collapsed) or looks_unsafe_for_ambient_display(collapsed):
+        if is_unsafe_for_ambient_display(collapsed):
             continue
         if len(collapsed) <= limit:
             return collapsed
@@ -176,6 +176,14 @@ def raw_text(value):
             if text:
                 return text
     return None
+
+
+def is_unsafe_for_ambient_display(title):
+    return (
+        looks_like_instruction_title(title)
+        or looks_like_machine_payload(title)
+        or looks_unsafe_for_ambient_display(title)
+    )
 
 
 def looks_like_instruction_title(title):
@@ -198,6 +206,37 @@ def looks_like_instruction_title(title):
         "you are selected",
     )
     return any(fragment in lowercased for fragment in blocked_fragments)
+
+
+def looks_like_machine_payload(title):
+    trimmed = title.strip()
+    lowercased = trimmed.lower()
+    if (trimmed.startswith("{") or trimmed.startswith("[")) and ":" in trimmed:
+        return True
+    if trimmed.startswith("<") and trimmed.endswith(">"):
+        return True
+
+    payload_markers = (
+        '"bundle_id"',
+        '"element_id"',
+        '"window_id"',
+        '"question"',
+        '"coordinate"',
+        '"arguments"',
+        '"method"',
+        '"stdout"',
+        '"stderr"',
+        '"env"',
+        "bundle_id:",
+        "element_id:",
+        "window_id:",
+        "arguments:",
+        "method:",
+        "stdout:",
+        "stderr:",
+        "env:",
+    )
+    return any(marker in lowercased for marker in payload_markers)
 
 
 def looks_unsafe_for_ambient_display(title):

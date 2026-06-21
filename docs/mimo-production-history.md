@@ -241,8 +241,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - the app reads `thread/loaded/list`, `thread/list(limit: 6)`, and
   `thread/read(includeTurns: true)` and sanitizes item text before display
 - live presentation smoke title expectations are checked against the same
-  shared fixture cases as the Swift production title formatter, preventing the
-  Python preflight helper from drifting away from production bubble behavior
+  shared fixture cases as the Swift production title formatter, including
+  machine payload and stdout/env marker titles, preventing the Python preflight
+  helper from drifting away from production bubble behavior
 - live app-server read-only smoke mirrors production transport selection with
   daemon start, proxy first, and direct stdio fallback before initialize; it
   retries transient response timeouts with a fresh selected transport, while

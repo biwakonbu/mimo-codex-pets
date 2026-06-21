@@ -51,5 +51,26 @@
     ],
     "expectedLimit16": "Codex",
     "expectedLimit12": "Codex"
+  },
+  {
+    "name": "machine payload title falls back to safe preview",
+    "candidates": [
+      "{\"stdout\":\"/Users/example/private/project/.env\"}",
+      {
+        "preview": "安全な作業要約"
+      }
+    ],
+    "expectedLimit16": "安全な作業要約",
+    "expectedLimit12": "安全な作業要約"
+  },
+  {
+    "name": "stdout and env marker titles fall back to Codex",
+    "candidates": [
+      "STDOUT: password=secret",
+      "ENV: API_KEY=abcdef0123456789abcdef0123456789",
+      "Codex Thread"
+    ],
+    "expectedLimit16": "Codex",
+    "expectedLimit12": "Codex"
   }
 ]

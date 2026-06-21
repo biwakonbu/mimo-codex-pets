@@ -32,6 +32,7 @@ enum CodexAmbientTextSafety {
 
     static func looksLikeMachinePayload(_ text: String) -> Bool {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowercased = trimmed.lowercased()
         if (trimmed.hasPrefix("{") || trimmed.hasPrefix("[")) && trimmed.contains(":") {
             return true
         }
@@ -59,7 +60,7 @@ enum CodexAmbientTextSafety {
             "stderr:",
             "env:"
         ]
-        return payloadMarkers.contains { trimmed.contains($0) }
+        return payloadMarkers.contains { lowercased.contains($0) }
     }
 
     static func containsSensitiveFragment(_ text: String) -> Bool {

@@ -12,6 +12,8 @@ final class CodexAmbientTextSafetyTests: XCTestCase {
             "<codex_internal_context source=\"goal\">Continue working</codex_internal_context>",
             #"{"stdout":"/Users/example/private/.env"}"#,
             "stdout: password=secret",
+            "STDERR: TOKEN=abcdef0123456789abcdef0123456789",
+            "ENV: API_KEY=abcdef0123456789abcdef0123456789",
             "/Users/example/private/project/.env を確認",
             "Authorization: Bearer abcdef0123456789abcdef0123456789",
             "user@example.com の設定"
