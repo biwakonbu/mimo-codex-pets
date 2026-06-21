@@ -125,8 +125,10 @@ visual inspection runs where Mimo must stay still.
 In production mode the panel stays transparent and shows only Mimo plus a short
 fan of white bubbles. When Codex conversation context is available, the primary
 bubble sits closest to Mimo, keeps the speech tail, and promotes the focused
-thread into a short Mimo-style report. Up to four smaller secondary bubbles sit
-above it as compact thread-status chips, with accent markers, no tails, and a
+thread into a short Mimo-style report. The visible stack is capped at five
+bubbles total: one primary Mimo report plus up to four smaller secondary
+context bubbles above it. Those secondary bubbles are compact thread-status
+chips, with accent markers, no tails, and a
 subtle cluster guide behind the bubbles so concurrent threads read as one Mimo
 reporting surface rather than a feed panel. Thread bubbles split
 `「thread title」summary` text into a tiny title line plus Mimo's short report, so
