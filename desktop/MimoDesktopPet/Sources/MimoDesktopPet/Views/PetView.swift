@@ -171,6 +171,7 @@ struct BubbleView: View {
         .accessibilityLabel(accessibilityLabel)
         .accessibilityValue(text)
         .accessibilityIdentifier(accessibilityIdentifier)
+        .accessibilitySortPriority(accessibilitySortPriority)
     }
 
     private var accessibilityIdentifier: String {
@@ -185,6 +186,11 @@ struct BubbleView: View {
             return PetSpeechBubbleAccessibility.bubbleElementLabel(index: accessibilityIndex, role: role, text: text)
         }
         return "Mimo speech bubble: \(text)"
+    }
+
+    private var accessibilitySortPriority: Double {
+        guard let accessibilityIndex else { return 0 }
+        return PetSpeechBubbleAccessibility.bubbleSortPriority(index: accessibilityIndex)
     }
 
     private var defaultFillOpacity: Double {

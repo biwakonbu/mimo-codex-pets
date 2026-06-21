@@ -8,6 +8,10 @@ public enum PetSpeechBubbleAccessibility {
         "\(identifier).bubble.\(index).\(role.rawValue)"
     }
 
+    public static func bubbleSortPriority(index: Int) -> Double {
+        Double(PetSpeechBubbleLayout.productionVisibleLimit - index)
+    }
+
     public static func bubbleLabel(index: Int, role: PetSpeechBubbleRole) -> String {
         let ordinal = index + 1
         switch role {

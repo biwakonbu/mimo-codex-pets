@@ -116,8 +116,9 @@ identifiers and the overflow summary from the same
 `MimoDesktopPet.productionSurface` box that Computer Use sees. Each production
 bubble is grouped into its own accessibility element such as
 `MimoDesktopPet.productionSurface.bubble.0.focus`, with the full bubble text in
-the label, so assistive tooling reads one bubble at a time instead of
-interleaving title, marker, and summary subviews.
+the label and a primary-first sort priority, so assistive tooling reads Mimo's
+main report before secondary context and does not interleave title, marker, and
+summary subviews.
 
 ## Controls
 

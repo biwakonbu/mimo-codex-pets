@@ -11,6 +11,7 @@ struct Options {
     var requiredIdentifiers: [String] = []
     var requiredIdentifierDescriptionFragments: [(identifier: String, fragment: String)] = []
     var requiredIdentifierValueFragments: [(identifier: String, fragment: String)] = []
+    var orderedIdentifiers: [String] = []
     var minimumRoleCounts: [String: Int] = [:]
 }
 
@@ -80,6 +81,16 @@ func parseOptions() -> Options {
                 fail("--node-value-contains requires IDENTIFIER=FRAGMENT")
             }
             options.requiredIdentifierValueFragments.append((identifier: parts[0], fragment: parts[1]))
+            arguments.removeFirst()
+        case "--ordered-identifiers":
+            guard let value = arguments.first else { fail("--ordered-identifiers requires a comma-separated identifier list") }
+            options.orderedIdentifiers = value
+                .split(separator: ",")
+                .map { String($0).trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+            if options.orderedIdentifiers.isEmpty {
+                fail("--ordered-identifiers requires a comma-separated identifier list")
+            }
             arguments.removeFirst()
         case "--minimum-role-count":
             guard let value = arguments.first else { fail("--minimum-role-count requires ROLE:COUNT") }
@@ -202,6 +213,16 @@ while Date() < deadline {
             }
             if !node.value.contains(requirement.fragment) {
                 fail("accessibility node \(requirement.identifier) value is missing fragment \(requirement.fragment): \(node.value)\n\(describe(allNodes))")
+            }
+        }
+
+        if !options.orderedIdentifiers.isEmpty {
+            var searchStart = 0
+            for identifier in options.orderedIdentifiers {
+                guard let offset = allNodes[searchStart...].firstIndex(where: { $0.identifier == identifier }) else {
+                    fail("accessibility tree did not contain ordered identifier \(identifier) after index \(searchStart):\n\(describe(allNodes))")
+                }
+                searchStart = offset + 1
             }
         }
 

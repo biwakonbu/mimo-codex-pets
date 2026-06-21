@@ -283,8 +283,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - each production bubble is also exposed as a grouped accessibility element
   with a stable identifier such as
   `MimoDesktopPet.productionSurface.bubble.0.focus` and a label containing the
-  full bubble text, preventing accessibility clients from interleaving marker,
-  title, and summary subviews across adjacent bubbles
+  full bubble text; primary-first sort priority keeps Mimo's main report ahead
+  of secondary context and prevents accessibility clients from interleaving
+  marker, title, and summary subviews across adjacent bubbles
 - `check_app_bundle_contract.sh` verifies the built production bundle contract,
   including `LSUIElement=true`, bundle identity, executable permissions, and
   bundled Mimo pet resources, so the companion cannot quietly regress into a

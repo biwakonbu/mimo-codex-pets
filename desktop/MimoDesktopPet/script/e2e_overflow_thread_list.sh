@@ -103,7 +103,8 @@ swift ./script/inspect_accessibility_surface.swift \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.2.conversation" \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.3.conversation" \
   --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.focus=ご主人" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.4.overflow=ほか2件も見ています"
+  --node-description-contains "MimoDesktopPet.productionSurface.bubble.4.overflow=ほか2件も見ています" \
+  --ordered-identifiers "MimoDesktopPet.productionSurface.bubble.0.focus,MimoDesktopPet.productionSurface.bubble.1.conversation,MimoDesktopPet.productionSurface.bubble.2.conversation,MimoDesktopPet.productionSurface.bubble.3.conversation,MimoDesktopPet.productionSurface.bubble.4.overflow"
 
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$SCREENSHOT_PATH"

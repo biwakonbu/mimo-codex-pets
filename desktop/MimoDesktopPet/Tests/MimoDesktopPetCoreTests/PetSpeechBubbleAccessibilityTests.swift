@@ -87,5 +87,13 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
             ),
             "Mimo primary thread bubble 1: ご主人、「実装」は作業中です"
         )
+        XCTAssertGreaterThan(
+            PetSpeechBubbleAccessibility.bubbleSortPriority(index: 0),
+            PetSpeechBubbleAccessibility.bubbleSortPriority(index: 1)
+        )
+        XCTAssertGreaterThan(
+            PetSpeechBubbleAccessibility.bubbleSortPriority(index: 3),
+            PetSpeechBubbleAccessibility.bubbleSortPriority(index: 4)
+        )
     }
 }
