@@ -5,7 +5,10 @@ public enum CodexBubbleFormatter {
         if let speech = line.mimoSpeech,
            !speech.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            !CodexAmbientTextSafety.isUnsafeForAmbientDisplay(speech) {
-            return compact(displayTitleVocabulary(speech), limit: max(limit, 96))
+            return compact(
+                displayTitleVocabulary(speech),
+                limit: max(limit, PetSpeechBubbleLayout.focusTextLimit * 2)
+            )
         }
         let title = compactTitle(line.threadTitle)
         let summary = reportSummary(for: line, title: title)

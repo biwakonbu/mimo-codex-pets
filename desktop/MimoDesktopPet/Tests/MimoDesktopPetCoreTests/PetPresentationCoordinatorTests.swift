@@ -55,6 +55,53 @@ final class PetPresentationCoordinatorTests: XCTestCase {
         XCTAssertFalse(coordinator.hasPendingConversationBubbles)
     }
 
+    func testLongConversationBubblePagesBeforeAdvancingQueue() {
+        var coordinator = PetPresentationCoordinator()
+        let longSpeech = [
+            "ご主人、「Mimo runtime QA」は動作中です。",
+            "Codex が吹き出しの幅と高さを広げて、長い説明も読みやすく整えています。",
+            "Mimo は会話スキットとして区切りながら、必要なところまで順番に伝えます。",
+            "収まりきらない時はページを送って、今なにをしているかを落ち着いて説明します。",
+            "補助のセッション行も見える範囲に残して、ご主人が状況を追いやすいようにします。"
+        ].joined()
+        let expectedPages = PetSpeechBubblePaginator.pages(for: longSpeech, role: .focus)
+        XCTAssertGreaterThan(expectedPages.count, 1)
+
+        let first = line(
+            threadId: "current",
+            speaker: "codex",
+            text: "応答を作成中",
+            mimoSpeech: longSpeech
+        )
+        let second = line(threadId: "docs", speaker: "codex", text: "資料作業を進めています")
+        _ = coordinator.apply(snapshot: PetCodexSnapshot(
+            threadStatus: .active(activeFlags: []),
+            latestTurnStatus: .inProgress,
+            hasRecentAssistantFinal: false,
+            connectionAvailable: true,
+            conversationLines: [first, second],
+            focusedConversationLine: first
+        ))
+
+        XCTAssertEqual(coordinator.presentation.bubbleText, expectedPages[0])
+        XCTAssertEqual(coordinator.visibleBubbles.first?.text, expectedPages[0])
+
+        let secondPage = coordinator.finishConversationBubble()
+
+        XCTAssertTrue(secondPage.shouldScheduleConversationTimeout)
+        XCTAssertEqual(coordinator.presentation.bubbleText, expectedPages[1])
+        XCTAssertEqual(coordinator.visibleBubbles.first?.text, expectedPages[1])
+        XCTAssertTrue(coordinator.hasActiveConversationBubble)
+
+        var next = secondPage
+        for _ in 1..<expectedPages.count {
+            next = coordinator.finishConversationBubble()
+        }
+
+        XCTAssertTrue(next.shouldScheduleConversationTimeout)
+        XCTAssertEqual(coordinator.presentation.bubbleText, "ご主人、「docs」は作業を進めています")
+    }
+
     func testOfflineSnapshotClearsConversationStateAndUsesOfflineBubbleText() {
         var coordinator = PetPresentationCoordinator()
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", activityKind: .command)
@@ -154,7 +201,8 @@ final class PetPresentationCoordinatorTests: XCTestCase {
         threadId: String,
         speaker: String,
         text: String,
-        activityKind: CodexConversationActivityKind = .message
+        activityKind: CodexConversationActivityKind = .message,
+        mimoSpeech: String? = nil
     ) -> CodexConversationLine {
         CodexConversationLine(
             threadId: threadId,
@@ -162,7 +210,8 @@ final class PetPresentationCoordinatorTests: XCTestCase {
             speaker: speaker,
             text: text,
             isAssistant: speaker != "you",
-            activityKind: activityKind
+            activityKind: activityKind,
+            mimoSpeech: mimoSpeech
         )
     }
 }

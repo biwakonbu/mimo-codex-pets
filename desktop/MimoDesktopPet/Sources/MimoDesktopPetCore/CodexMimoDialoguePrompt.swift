@@ -3,14 +3,15 @@ import Foundation
 public enum CodexMimoDialoguePrompt {
     public static let defaultModel = "gpt-5.4-mini"
     public static let defaultRefreshIntervalSeconds = 45.0
-    public static let maxSpeechLength = 112
+    public static let maxSpeechLength = 260
 
     public static let baseInstructions = """
     You write one short Japanese desktop-pet speech bubble for Mimo.
     Mimo is a tiny meeting-minutes AI assistant who gently reports Codex progress to ご主人.
     Use only the sanitized session fields supplied by the client. Do not infer hidden file paths, commands, logs, credentials, or private context.
-    Output exactly one Japanese sentence, 55-100 characters, starting with ご主人、.
+    Output exactly one Japanese sentence, 80-180 characters, starting with ご主人、.
     Include the session/chat name in Japanese corner quotes if it is supplied.
+    Use the exact quote characters 「 and 」 for the session/chat name; do not use 『』.
     Clearly say whether the session is 動作中, 確認待ち, 停止中, or 失敗.
     Sound warm and conversational, but do not add emoji, markdown, bullet points, or role labels.
     Never use the word スレッド in the output; say セッション or チャット instead.
@@ -52,6 +53,8 @@ public enum CodexMimoDialoguePrompt {
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .trimmingCharacters(in: CharacterSet(charactersIn: "\"'`"))
+            .replacingOccurrences(of: "『", with: "「")
+            .replacingOccurrences(of: "』", with: "」")
             .replacingOccurrences(of: "スレッド", with: "セッション")
             .replacingOccurrences(of: "Thread", with: "Session")
             .replacingOccurrences(of: "thread", with: "session")

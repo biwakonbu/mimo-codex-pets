@@ -35,7 +35,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 440)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
 
 swift - "$WINDOW_ID" <<'SWIFT'
 import CoreGraphics
@@ -193,11 +193,11 @@ for row in rows:
     if len(thread_titles) != len(set(thread_titles)):
         raise SystemExit(f"production bubble stack repeated a thread title: {bubbles}")
     if bubbles:
-        primary_limit = 86 if roles and roles[0] == "focus" else 72
+        primary_limit = 156
         if len(str(bubbles[0])) > primary_limit:
             raise SystemExit(f"primary production bubble is too long: {bubbles[0]}")
     for bubble, role in zip(bubbles[1:], roles[1:]):
-        secondary_limit = 22 if role == "overflow" else 42
+        secondary_limit = 22 if role == "overflow" else 64
         if len(str(bubble)) > secondary_limit:
             raise SystemExit(f"secondary production bubble is too long: {bubble}")
     accessibility_value = str(row.get("accessibilityValue", ""))

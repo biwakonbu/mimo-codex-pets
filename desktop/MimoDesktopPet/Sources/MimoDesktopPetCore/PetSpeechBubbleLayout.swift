@@ -36,16 +36,16 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
 
 public enum PetSpeechBubbleLayout {
     public static let productionWindowWidth = 432.0
-    public static let productionWindowHeight = 438.0
+    public static let productionWindowHeight = 530.0
     public static let productionStackWidth = 424.0
-    public static let productionStackHeight = 226.0
+    public static let productionStackHeight = 318.0
     public static let productionSpriteWidth = 192.0
     public static let productionSpriteHeight = 208.0
     public static let productionVisibleLimit = 5
     public static let productionRowSpacing = 5.0
-    public static let statusTextLimit = 72
-    public static let focusTextLimit = 86
-    public static let conversationTextLimit = 42
+    public static let statusTextLimit = 156
+    public static let focusTextLimit = 156
+    public static let conversationTextLimit = 64
     public static let overflowTextLimit = 22
 
     public static func textLimit(for role: PetSpeechBubbleRole) -> Int {
@@ -64,8 +64,10 @@ public enum PetSpeechBubbleLayout {
     public static func lineLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {
         case .status, .focus:
+            return 3
+        case .conversation:
             return 2
-        case .conversation, .overflow:
+        case .overflow:
             return 1
         }
     }
@@ -95,11 +97,11 @@ public enum PetSpeechBubbleLayout {
     private static func maxTextWidth(role: PetSpeechBubbleRole) -> Double {
         switch role {
         case .status, .focus:
-            return 344
+            return 416
         case .conversation:
-            return 318
+            return 392
         case .overflow:
-            return 288
+            return 320
         }
     }
 
@@ -110,13 +112,13 @@ public enum PetSpeechBubbleLayout {
     ) -> Double? {
         switch role {
         case .status:
-            return isPrimary && visibleCount > 1 ? 326 : nil
+            return 398
         case .focus:
-            return 326
+            return 398
         case .conversation:
-            return 302
+            return 370
         case .overflow:
-            return 238
+            return 270
         }
     }
 
@@ -137,13 +139,13 @@ public enum PetSpeechBubbleLayout {
         case 0:
             return 0
         case 1:
-            return -22
+            return -10
         case 2:
-            return 24
+            return 12
         case 3:
-            return -14
+            return -8
         default:
-            return 18
+            return 10
         }
     }
 
@@ -152,13 +154,13 @@ public enum PetSpeechBubbleLayout {
         case 0:
             return 0
         case 1:
-            return 57
+            return 92
         case 2:
-            return 89
+            return 140
         case 3:
-            return 121
+            return 188
         default:
-            return 153
+            return 236
         }
     }
 }

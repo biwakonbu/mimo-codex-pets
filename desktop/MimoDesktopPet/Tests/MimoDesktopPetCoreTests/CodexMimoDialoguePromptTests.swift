@@ -39,4 +39,12 @@ final class CodexMimoDialoguePromptTests: XCTestCase {
 
         XCTAssertEqual(speech, "ご主人、「別セッション」は動作中です。Codex が進捗を整理しています")
     }
+
+    func testSanitizedSpeechNormalizesTitleQuotes() {
+        let speech = CodexMimoDialoguePrompt.sanitizedSpeech(
+            from: "ご主人、『Live Mimo Dialogue Smoke』は動作中で、会話生成を確認しています。"
+        )
+
+        XCTAssertEqual(speech, "ご主人、「Live Mimo Dialogue Smoke」は動作中で、会話生成を確認しています。")
+    }
 }

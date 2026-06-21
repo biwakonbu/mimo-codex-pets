@@ -141,11 +141,12 @@ guard stats.darkOpaquePixels <= 1_500 else {
 
 if requiresMultiBubbleHierarchy {
     let components = whiteComponents(mask: whiteMask, width: width, height: height)
+    let bubbleRegionMaxY = max(245, height - 150)
     let bubbleComponents = components.filter { component in
         component.area >= 3_000 &&
             component.width >= 220 &&
             component.height >= 22 &&
-            component.maxY <= 245
+            component.maxY <= bubbleRegionMaxY
     }
 
     guard (4...5).contains(bubbleComponents.count) else {

@@ -69,6 +69,8 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     private var conversationBubbleActive = false
     private var currentConversationThreadId: String?
     private var currentConversationActivityKind: CodexConversationActivityKind?
+    private var currentConversationPages: [String] = []
+    private var currentConversationPageIndex = 0
     private var focusedThreadId: String?
 
     public init() {}
@@ -134,10 +136,14 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         let previousVisibleBubbles = visibleBubbles
         let shouldScheduleConversationTimeout: Bool
 
-        if pendingConversationLines.isEmpty {
+        if advanceConversationPage() {
+            shouldScheduleConversationTimeout = true
+        } else if pendingConversationLines.isEmpty {
             conversationBubbleActive = false
             currentConversationThreadId = nil
             currentConversationActivityKind = nil
+            currentConversationPages.removeAll()
+            currentConversationPageIndex = 0
             shouldScheduleConversationTimeout = false
             setPresentation(lastCodexPresentation)
         } else {
@@ -309,16 +315,36 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         }
 
         let line = pendingConversationLines.removeFirst()
+        let pages = PetSpeechBubblePaginator.pages(
+            for: CodexBubbleFormatter.bubbleText(for: line),
+            role: .focus
+        )
         conversationBubbleActive = true
         currentConversationThreadId = line.threadId
         currentConversationActivityKind = line.activityKind
+        currentConversationPages = pages.isEmpty ? [CodexBubbleFormatter.bubbleText(for: line)] : pages
+        currentConversationPageIndex = 0
         setPresentation(PetPresentationState(
             animation: CodexConversationBubblePlanner.animation(
                 for: line,
                 fallback: lastCodexPresentation.animation
             ),
-            bubbleText: CodexBubbleFormatter.bubbleText(for: line),
+            bubbleText: currentConversationPages[0],
             isOffline: lastCodexPresentation.isOffline
+        ))
+        return true
+    }
+
+    private mutating func advanceConversationPage() -> Bool {
+        guard conversationBubbleActive,
+              currentConversationPageIndex + 1 < currentConversationPages.count
+        else { return false }
+
+        currentConversationPageIndex += 1
+        setPresentation(PetPresentationState(
+            animation: presentation.animation,
+            bubbleText: currentConversationPages[currentConversationPageIndex],
+            isOffline: presentation.isOffline
         ))
         return true
     }
@@ -328,6 +354,8 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         conversationBubbleActive = false
         currentConversationThreadId = nil
         currentConversationActivityKind = nil
+        currentConversationPages.removeAll()
+        currentConversationPageIndex = 0
     }
 
     private mutating func pruneConversationQueue(keeping activeThreadIds: Set<String>) {
@@ -346,6 +374,8 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
             conversationBubbleActive = false
             self.currentConversationThreadId = nil
             currentConversationActivityKind = nil
+            currentConversationPages.removeAll()
+            currentConversationPageIndex = 0
         }
     }
 

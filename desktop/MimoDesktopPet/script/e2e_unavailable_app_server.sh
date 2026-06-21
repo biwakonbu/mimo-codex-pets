@@ -33,7 +33,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 440)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json

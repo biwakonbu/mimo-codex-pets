@@ -343,10 +343,11 @@ private struct BubbleTextContent: View {
                 Text(parts.summary)
                     .font(.system(size: fontSize, weight: fontWeight))
                     .foregroundStyle(.primary)
-                    .lineLimit(role == .focus ? 2 : 1)
+                    .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         } else if role == .conversation, let threadTitle = parts.threadTitle {
             HStack(alignment: .firstTextBaseline, spacing: 5) {
@@ -356,14 +357,16 @@ private struct BubbleTextContent: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.74)
                     .truncationMode(.tail)
+                    .frame(maxWidth: 116, alignment: .leading)
 
                 Text(parts.summary)
                     .font(.system(size: fontSize, weight: fontWeight))
                     .foregroundStyle(.primary)
-                    .lineLimit(1)
+                    .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         } else {
             Text(text)
@@ -373,6 +376,7 @@ private struct BubbleTextContent: View {
                 .minimumScaleFactor(minimumScaleFactor)
                 .truncationMode(.tail)
                 .multilineTextAlignment(role == .status ? .center : .leading)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

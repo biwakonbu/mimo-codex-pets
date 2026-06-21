@@ -86,6 +86,11 @@ deterministic formatter, `MIMO_CODEX_DIALOGUE_ENABLED=1` to force Codex-backed
 speech in tests, `MIMO_CODEX_DIALOGUE_MODEL=gpt-5.4-mini` to override the Codex
 model, and `MIMO_CODEX_DIALOGUE_REFRESH_SECONDS=45` to control per-session
 regeneration cadence.
+Production bubbles use the available panel width rather than compact chips for
+primary Mimo speech. The primary bubble can grow to three text lines, secondary
+session rows can grow to two lines, and overlong Mimo speech is split into
+readable pages that advance on the same timed conversation-sketch loop as normal
+session updates.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
 By default it mirrors production transport selection: bounded daemon start,

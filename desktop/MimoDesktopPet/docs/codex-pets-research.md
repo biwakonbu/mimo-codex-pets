@@ -178,6 +178,12 @@ Verified runtime behavior:
   without touching user work sessions: it creates an ephemeral Mimo session,
   sends a sanitized `turn/start` request, waits for assistant-message
   notifications, and rejects unsafe or non-Mimo speech.
+- The production bubble panel intentionally uses nearly the full 432pt window
+  width for primary Mimo speech and reserves a taller stack area for text. The
+  primary bubble can render three lines, secondary session rows can render two
+  lines, and `PetSpeechBubblePaginator` splits longer Mimo speech into timed
+  pages so conversation-sketch playback can continue without truncating the
+  whole message into one chip.
 
 Computer Use limitation:
 

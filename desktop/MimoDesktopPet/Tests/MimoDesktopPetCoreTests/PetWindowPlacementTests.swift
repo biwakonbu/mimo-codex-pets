@@ -20,7 +20,7 @@ final class PetWindowPlacementTests: XCTestCase {
             override: "40,1200"
         )
 
-        XCTAssertEqual(origin, PetWanderPoint(x: 100, y: 462))
+        XCTAssertEqual(origin, PetWanderPoint(x: 100, y: 370))
     }
 
     func testInvalidOriginOverrideFallsBackToDefault() {
