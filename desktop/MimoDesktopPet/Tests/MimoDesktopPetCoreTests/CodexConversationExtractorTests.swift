@@ -47,6 +47,54 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(lines.map(\.activityKind), [.userRequest, .assistantMessage, .test])
     }
 
+    func testPropagatesSessionSummaryFromUserRequestToToolLines() {
+        let thread: [String: Any] = [
+            "id": "thread-summary",
+            "name": "Mimo runtime QA",
+            "turns": [
+                [
+                    "id": "turn-1",
+                    "status": "inProgress",
+                    "items": [
+                        [
+                            "id": "item-user",
+                            "type": "userMessage",
+                            "content": [
+                                ["type": "inputText", "text": "吹き出しに作業内容の要約を出して"]
+                            ]
+                        ],
+                        [
+                            "id": "item-command",
+                            "type": "commandExecution",
+                            "command": ["swift", "test"]
+                        ],
+                        [
+                            "id": "item-file",
+                            "type": "fileChange"
+                        ]
+                    ]
+                ]
+            ]
+        ]
+
+        let lines = CodexConversationExtractor.lines(from: thread, maxLines: 10)
+
+        XCTAssertEqual(lines.map(\.text), [
+            "吹き出しに作業内容の要約を出して",
+            "テストを実行中",
+            "ファイル変更を反映"
+        ])
+        XCTAssertEqual(lines.map(\.workSummary), [
+            "吹き出し要約",
+            "吹き出し要約",
+            "吹き出し要約"
+        ])
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: lines[1]),
+            "ご主人、「Mimo runtime QA」は吹き出し要約のテスト中です"
+        )
+    }
+
     func testFallsBackToThreadPreviewWhenTurnsHaveNoItems() {
         let thread: [String: Any] = [
             "id": "thread-b",

@@ -114,7 +114,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             "Codex が作業中",
             "「other」レビュー可",
             "「current」ツール確認",
-            "「third」作業中"
+            "「third」Mimo の動き中"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }

@@ -82,12 +82,50 @@ final class CodexConversationLineCombinerTests: XCTestCase {
         XCTAssertEqual(ordered.map(\.text), ["コマンドを実行中", "応答を作成中", "確認待ち"])
     }
 
+    func testOrderedLinesCarryRecentWorkSummaryIntoThreadActivity() {
+        let recent = [
+            line(
+                threadId: "summary",
+                speaker: "you",
+                text: "吹き出しに作業内容の要約を出して",
+                isAssistant: false,
+                activityKind: .userRequest,
+                workSummary: "吹き出し要約"
+            ),
+            line(
+                threadId: "summary",
+                speaker: "tool",
+                text: "テストを実行中",
+                activityKind: .test
+            )
+        ]
+        let activity = line(threadId: "summary", speaker: "thread", text: "作業中", activityKind: .threadStatus)
+
+        let ordered = CodexConversationLineCombiner.orderedLines(
+            recentLines: recent,
+            activity: activity
+        )
+
+        XCTAssertEqual(ordered.map(\.workSummary), [
+            "吹き出し要約",
+            "吹き出し要約",
+            "吹き出し要約"
+        ])
+        let activityLine = ordered.first { $0.activityKind == .threadStatus }
+        XCTAssertEqual(activityLine?.text, "作業中")
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: activityLine!),
+            "ご主人、「summary」は吹き出し要約を進めています"
+        )
+    }
+
     private func line(
         threadId: String,
         speaker: String,
         text: String,
         isAssistant: Bool = true,
-        activityKind: CodexConversationActivityKind
+        activityKind: CodexConversationActivityKind,
+        workSummary: String? = nil
     ) -> CodexConversationLine {
         CodexConversationLine(
             threadId: threadId,
@@ -95,7 +133,8 @@ final class CodexConversationLineCombinerTests: XCTestCase {
             speaker: speaker,
             text: text,
             isAssistant: isAssistant,
-            activityKind: activityKind
+            activityKind: activityKind,
+            workSummary: workSummary
         )
     }
 }

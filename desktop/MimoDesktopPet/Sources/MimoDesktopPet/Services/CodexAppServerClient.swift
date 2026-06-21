@@ -1019,7 +1019,8 @@ final class CodexAppServerClient {
                     speaker: line.speaker,
                     text: line.text,
                     isAssistant: line.isAssistant,
-                    activityKind: line.activityKind
+                    activityKind: line.activityKind,
+                    workSummary: line.workSummary
                 )
             }
         }
@@ -1030,7 +1031,8 @@ final class CodexAppServerClient {
                 speaker: activity.speaker,
                 text: activity.text,
                 isAssistant: activity.isAssistant,
-                activityKind: activity.activityKind
+                activityKind: activity.activityKind,
+                workSummary: activity.workSummary
             )
         }
     }
@@ -1079,7 +1081,8 @@ final class CodexAppServerClient {
         let line = CodexConversationExtractor.progressLine(
             threadId: threadId,
             threadTitle: title,
-            kind: kind
+            kind: kind,
+            workSummary: latestWorkSummary(for: threadId)
         )
         var lines = conversationByThread[threadId] ?? []
         lines.append(line)
@@ -1094,6 +1097,10 @@ final class CodexAppServerClient {
             hasRecentAssistantFinal: false
         )
         emitSnapshot(connectionAvailable: true)
+    }
+
+    private func latestWorkSummary(for threadId: String) -> String? {
+        conversationByThread[threadId]?.reversed().compactMap(\.workSummary).first
     }
 
     private func threadTitle(from threadObject: [String: Any]) -> String {

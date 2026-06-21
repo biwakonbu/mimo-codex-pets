@@ -3,13 +3,13 @@ import Foundation
 public enum CodexBubbleFormatter {
     public static func bubbleText(for line: CodexConversationLine, limit: Int = 46) -> String {
         let title = compactTitle(line.threadTitle)
-        let summary = mimoSummary(for: line)
+        let summary = reportSummary(for: line, title: title)
         return compact("ご主人、「\(title)」は\(summary)", limit: limit)
     }
 
     public static func contextText(for line: CodexConversationLine, limit: Int = 34) -> String {
         let title = compactTitle(line.threadTitle, limit: 12)
-        let summary = compactSummary(for: mimoSummary(for: line))
+        let summary = compactSummary(for: mimoSummary(for: line), topic: reportTopic(for: line, title: title))
         return compact("「\(title)」\(summary)", limit: limit)
     }
 
@@ -35,7 +35,82 @@ public enum CodexBubbleFormatter {
         return compacted.isEmpty ? "Codex" : compacted
     }
 
-    private static func compactSummary(for summary: String) -> String {
+    private static func compactSummary(for summary: String, topic: String? = nil) -> String {
+        if let topic {
+            switch summary {
+            case "失敗を確認しました":
+                return "\(topic)失敗"
+            case "レビューできます":
+                return "\(topic)レビュー可"
+            case "レビュー中です":
+                return "\(topic)レビュー中"
+            case "確認待ちです":
+                return "\(topic)確認待ち"
+            case "依頼を確認しました":
+                return "\(topic)依頼確認"
+            case "応答をまとめています":
+                return "\(topic)応答中"
+            case "計画を整理中です":
+                return "\(topic)計画中"
+            case "文脈を整理中です":
+                return "\(topic)文脈整理"
+            case "文脈を整理しました":
+                return "\(topic)文脈済み"
+            case "ツールで確認中です":
+                return "\(topic)ツール確認"
+            case "端末入力を確認中です":
+                return "\(topic)端末確認"
+            case "コマンドを実行中です":
+                return "\(topic)実行中"
+            case "承認を確認中です":
+                return "\(topic)承認確認"
+            case "承認を確認しました":
+                return "\(topic)承認済み"
+            case "フックを確認中です":
+                return "\(topic)フック確認"
+            case "フックを確認しました":
+                return "\(topic)フック済み"
+            case "確認を反映中です":
+                return "\(topic)確認反映"
+            case "目標を確認中です":
+                return "\(topic)目標確認"
+            case "目標を整理しました":
+                return "\(topic)目標済み"
+            case "モデルを調整中です":
+                return "\(topic)モデル調整"
+            case "モデルを確認中です":
+                return "\(topic)モデル確認"
+            case "安全を確認中です":
+                return "\(topic)安全確認"
+            case "問題を確認中です":
+                return "\(topic)問題確認"
+            case "警告を確認中です":
+                return "\(topic)警告確認"
+            case "安全警告を確認中です":
+                return "\(topic)安全警告"
+            case "MCP を確認中です":
+                return "\(topic)MCP 確認"
+            case "テストを実行中です", "検証中です":
+                return "\(topic)検証中"
+            case "ファイルを確認中です":
+                return "\(topic)ファイル確認"
+            case "変更を反映中です":
+                return "\(topic)反映中"
+            case "差分を確認中です":
+                return "\(topic)差分確認"
+            case "調査中です":
+                return "\(topic)調査中"
+            case "作業を進めています":
+                return "\(topic)中"
+            case "進捗を確認しました":
+                return "\(topic)進捗あり"
+            case "更新を確認しました":
+                return "\(topic)確認"
+            default:
+                break
+            }
+        }
+
         switch summary {
         case "失敗を確認しました":
             return "失敗"
@@ -239,6 +314,119 @@ public enum CodexBubbleFormatter {
             return "進捗を確認しました"
         }
         return "更新を確認しました"
+    }
+
+    private static func reportSummary(for line: CodexConversationLine, title: String) -> String {
+        let summary = mimoSummary(for: line)
+        guard let topic = reportTopic(for: line, title: title) else {
+            return summary
+        }
+
+        switch summary {
+        case "失敗を確認しました":
+            return "\(topic)で失敗を確認しました"
+        case "レビューできます":
+            return "\(topic)をレビューできます"
+        case "レビュー中です":
+            return "\(topic)をレビュー中です"
+        case "確認待ちです":
+            return "\(topic)で確認待ちです"
+        case "依頼を確認しました":
+            return "\(topic)の依頼を確認しました"
+        case "応答をまとめています":
+            return "\(topic)の返答中です"
+        case "計画を整理中です":
+            return "\(topic)の計画中です"
+        case "文脈を整理中です":
+            return "\(topic)の文脈整理中です"
+        case "文脈を整理しました":
+            return "\(topic)の文脈整理済みです"
+        case "ツールで確認中です":
+            return "\(topic)をツールで確認中です"
+        case "端末入力を確認中です":
+            return "\(topic)の端末入力を確認中です"
+        case "コマンドを実行中です":
+            return "\(topic)のコマンドを実行中です"
+        case "承認を確認中です":
+            return "\(topic)の承認を確認中です"
+        case "承認を確認しました":
+            return "\(topic)の承認を確認しました"
+        case "フックを確認中です":
+            return "\(topic)のフックを確認中です"
+        case "フックを確認しました":
+            return "\(topic)のフックを確認しました"
+        case "確認を反映中です":
+            return "\(topic)の確認を反映中です"
+        case "目標を確認中です":
+            return "\(topic)の目標を確認中です"
+        case "目標を整理しました":
+            return "\(topic)の目標を整理済みです"
+        case "モデルを調整中です":
+            return "\(topic)のモデルを調整中です"
+        case "モデルを確認中です":
+            return "\(topic)のモデルを確認中です"
+        case "安全を確認中です":
+            return "\(topic)の安全を確認中です"
+        case "問題を確認中です":
+            return "\(topic)の問題を確認中です"
+        case "警告を確認中です":
+            return "\(topic)の警告を確認中です"
+        case "安全警告を確認中です":
+            return "\(topic)の安全警告を確認中です"
+        case "MCP を確認中です":
+            return "\(topic)のMCPを確認中です"
+        case "テストを実行中です":
+            return "\(topic)のテスト中です"
+        case "検証中です":
+            return "\(topic)を検証中です"
+        case "ファイルを確認中です":
+            return "\(topic)のファイル確認中です"
+        case "変更を反映中です":
+            return "\(topic)を反映中です"
+        case "差分を確認中です":
+            return "\(topic)の差分確認中です"
+        case "調査中です":
+            return "\(topic)を調査中です"
+        case "作業を進めています":
+            return "\(topic)を進めています"
+        case "進捗を確認しました":
+            return "\(topic)の進捗があります"
+        case "更新を確認しました":
+            return "\(topic)を確認しました"
+        default:
+            return summary
+        }
+    }
+
+    private static func reportTopic(for line: CodexConversationLine, title: String) -> String? {
+        let inferred = shouldInferReportTopic(from: line) ? CodexSessionSummarizer.summary(from: line.text) : nil
+        let topic = line.workSummary ?? inferred
+        guard let topic, !isRedundant(topic: topic, title: title) else {
+            return nil
+        }
+        return topic
+    }
+
+    private static func shouldInferReportTopic(from line: CodexConversationLine) -> Bool {
+        switch line.activityKind {
+        case .message, .userRequest, .assistantMessage, .plan, .reasoning:
+            return line.speaker != "tool"
+        default:
+            return false
+        }
+    }
+
+    private static func isRedundant(topic: String, title: String) -> Bool {
+        let normalizedTopic = topic
+            .lowercased()
+            .replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
+        let normalizedTitle = title
+            .lowercased()
+            .replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
+        guard !normalizedTopic.isEmpty, !normalizedTitle.isEmpty else {
+            return false
+        }
+        return normalizedTitle.contains(normalizedTopic) || normalizedTopic.contains(normalizedTitle)
     }
 
     private static func activitySummary(

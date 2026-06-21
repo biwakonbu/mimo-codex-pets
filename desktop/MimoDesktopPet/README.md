@@ -12,6 +12,9 @@ The v1 app is read-only:
 - it maps Codex app-server thread state to Mimo animation states
 - it shows short status and sanitized multi-thread conversation updates in
   speech bubbles
+- it derives a safe `workSummary` from session items with
+  `CodexSessionSummarizer`, then lets Mimo explain the current work in its own
+  short report style
 - it does not send prompts, speak audio, inspect the screen, or read Codex
   session JSONL files
 
@@ -176,16 +179,22 @@ thread dashboard rather than a transcript panel. Thread bubbles render
 multiple bubbles can be scanned quickly. They do not repeat the longer
 `ご主人、...です` phrase, and they do not dump raw model output, commands, or
 secret-looking payload text. Threads can be summarized from sanitized item
-activity or from thread/turn status alone. Bubble markers use semantic tone for
-urgent states and typed activity kind for ordinary Codex work such as plan,
-command, file, browser, image, skill, or mention activity. The stack favors
-thread coverage, so each visible thread appears at most once. If more threads
-are active than the compact stack can show, Mimo tracks up to six thread
-contexts and the last secondary bubble becomes a short overflow note such as
-`ほか2件も見ています` instead of silently dropping the extra context. If hidden
-threads include attention states, that overflow bubble keeps the strongest
-hidden tone and uses short text such as `ほか3件に確認待ち` or
-`ほか3件に失敗あり`, so urgent work is not flattened into a neutral counter.
+activity, a safe session-derived `workSummary`, or from thread/turn status
+alone. `CodexSessionSummarizer` classifies short, non-secret session themes
+such as `吹き出し要約`, `複数スレッド表示`, `Codex 連携`, or `Mimo の動き`, and
+the formatter combines that theme with state such as testing, waiting,
+reviewing, or tool checking. That is how Mimo can say
+`ご主人、「Mimo runtime QA」は吹き出し要約のテスト中です` without quoting raw
+session text. Bubble markers use semantic tone for urgent states and typed
+activity kind for ordinary Codex work such as plan, command, file, browser,
+image, skill, or mention activity. The stack favors thread coverage, so each
+visible thread appears at most once. If more threads are active than the compact
+stack can show, Mimo tracks up to six thread contexts and the last secondary
+bubble becomes a short overflow note such as `ほか2件も見ています` instead of
+silently dropping the extra context. If hidden threads include attention states,
+that overflow bubble keeps the strongest hidden tone and uses short text such
+as `ほか3件に確認待ち` or `ほか3件に失敗あり`, so urgent work is not flattened
+into a neutral counter.
 If another visible thread needs attention, such as a failure, confirmation
 wait, or review-ready state, that thread is promoted into the primary Mimo
 report ahead of a merely active focused thread. The active focused thread stays

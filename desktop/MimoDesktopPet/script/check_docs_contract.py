@@ -18,6 +18,7 @@ ENERGY_E2E = SCRIPT_DIR / "e2e_autonomous_energy.sh"
 CLIENT = ROOT_DIR / "Sources" / "MimoDesktopPet" / "Services" / "CodexAppServerClient.swift"
 PROTOCOL = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexProtocol.swift"
 FORMATTER = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexBubbleFormatter.swift"
+SUMMARIZER = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexSessionSummarizer.swift"
 ENERGY = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "PetAutonomousEnergyController.swift"
 ENERGY_TESTS = ROOT_DIR / "Tests" / "MimoDesktopPetCoreTests" / "PetAutonomousEnergyControllerTests.swift"
 
@@ -143,6 +144,8 @@ def require_mimicry_contract() -> None:
         "multi-thread",
         "stacked",
         "speech bubbles",
+        "workSummary",
+        "CodexSessionSummarizer",
         "raw",
         "secret",
         "MimoDesktopPet.productionSurface",
@@ -157,10 +160,24 @@ def require_mimicry_contract() -> None:
         [
             'return compact("ご主人、「\\(title)」は\\(summary)", limit: limit)',
             'return compact("「\\(title)」\\(summary)", limit: limit)',
+            "reportTopic(for:",
+            "workSummary",
             "activitySummary(for:",
             "toolSummary(for:",
         ],
         label="bubble formatter contract",
+    )
+    require_text(
+        SUMMARIZER,
+        [
+            "CodexSessionSummarizer",
+            "CodexAmbientTextSafety.isUnsafeForAmbientDisplay",
+            "吹き出し要約",
+            "複数スレッド表示",
+            "Codex 連携",
+            "Mimo の動き",
+        ],
+        label="session summarizer contract",
     )
 
 

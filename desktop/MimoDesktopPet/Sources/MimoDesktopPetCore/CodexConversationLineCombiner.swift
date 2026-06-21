@@ -47,17 +47,21 @@ public enum CodexConversationLineCombiner {
         recentLines: [CodexConversationLine],
         activity: CodexConversationLine?
     ) -> [CodexConversationLine] {
+        let recentLines = propagateWorkSummaries(in: recentLines)
         guard let activity else { return recentLines }
+        let resolvedActivity = activity.workSummary == nil
+            ? activity.withWorkSummary(latestWorkSummary(in: recentLines))
+            : activity
 
-        if CodexConversationBubblePlanner.displayPriority(for: activity) <= 2 {
-            return recentLines + [activity]
+        if CodexConversationBubblePlanner.displayPriority(for: resolvedActivity) <= 2 {
+            return recentLines + [resolvedActivity]
         }
 
         if recentLines.contains(where: shouldPreferLineOverRoutineActivity) {
-            return [activity] + recentLines
+            return [resolvedActivity] + recentLines
         }
 
-        return recentLines + [activity]
+        return recentLines + [resolvedActivity]
     }
 
     private static func shouldPreferLineOverRoutineActivity(_ line: CodexConversationLine) -> Bool {
@@ -68,6 +72,22 @@ public enum CodexConversationLineCombiner {
             return false
         }
         return line.activityKind != .message || line.isAssistant
+    }
+
+    private static func propagateWorkSummaries(in lines: [CodexConversationLine]) -> [CodexConversationLine] {
+        var latestWorkSummary: String?
+        return lines.map { line in
+            if let workSummary = line.workSummary {
+                latestWorkSummary = workSummary
+                return line
+            }
+            guard let latestWorkSummary else { return line }
+            return line.withWorkSummary(latestWorkSummary)
+        }
+    }
+
+    private static func latestWorkSummary(in lines: [CodexConversationLine]) -> String? {
+        lines.reversed().compactMap(\.workSummary).first
     }
 }
 

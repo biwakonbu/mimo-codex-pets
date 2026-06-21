@@ -32,6 +32,7 @@ public struct CodexConversationLine: Equatable, Sendable {
     public let text: String
     public let isAssistant: Bool
     public let activityKind: CodexConversationActivityKind
+    public let workSummary: String?
 
     public init(
         threadId: String,
@@ -39,7 +40,8 @@ public struct CodexConversationLine: Equatable, Sendable {
         speaker: String,
         text: String,
         isAssistant: Bool,
-        activityKind: CodexConversationActivityKind = .message
+        activityKind: CodexConversationActivityKind = .message,
+        workSummary: String? = nil
     ) {
         self.threadId = threadId
         self.threadTitle = threadTitle
@@ -47,6 +49,20 @@ public struct CodexConversationLine: Equatable, Sendable {
         self.text = text
         self.isAssistant = isAssistant
         self.activityKind = activityKind
+        self.workSummary = workSummary
+    }
+
+    public func withWorkSummary(_ workSummary: String?) -> CodexConversationLine {
+        guard self.workSummary != workSummary else { return self }
+        return CodexConversationLine(
+            threadId: threadId,
+            threadTitle: threadTitle,
+            speaker: speaker,
+            text: text,
+            isAssistant: isAssistant,
+            activityKind: activityKind,
+            workSummary: workSummary
+        )
     }
 }
 
@@ -81,7 +97,7 @@ public enum CodexConversationExtractor {
             )
         }
 
-        return Array(extracted.suffix(max(0, maxLines)))
+        return Array(propagatingWorkSummaries(in: extracted).suffix(max(0, maxLines)))
     }
 
     public static func line(from item: [String: Any], threadId: String, threadTitle: String) -> CodexConversationLine? {
@@ -361,7 +377,8 @@ public enum CodexConversationExtractor {
     public static func progressLine(
         threadId: String,
         threadTitle: String,
-        kind: String
+        kind: String,
+        workSummary: String? = nil
     ) -> CodexConversationLine {
         CodexConversationLine(
             threadId: threadId,
@@ -369,7 +386,8 @@ public enum CodexConversationExtractor {
             speaker: progressSpeaker(for: kind),
             text: progressText(for: kind),
             isAssistant: true,
-            activityKind: progressActivityKind(for: kind)
+            activityKind: progressActivityKind(for: kind),
+            workSummary: workSummary
         )
     }
 
@@ -406,7 +424,8 @@ public enum CodexConversationExtractor {
             speaker: "thread",
             text: text,
             isAssistant: true,
-            activityKind: .threadStatus
+            activityKind: .threadStatus,
+            workSummary: nil
         )
     }
 
@@ -459,14 +478,56 @@ public enum CodexConversationExtractor {
         text: String?
     ) -> CodexConversationLine? {
         guard let text, !text.isEmpty else { return nil }
+        let workSummary = shouldInferWorkSummary(for: activityKind, speaker: speaker)
+            ? CodexSessionSummarizer.summary(from: text)
+            : nil
         return CodexConversationLine(
             threadId: threadId,
             threadTitle: threadTitle,
             speaker: speaker,
             text: text,
             isAssistant: isAssistant,
-            activityKind: activityKind
+            activityKind: activityKind,
+            workSummary: workSummary
         )
+    }
+
+    private static func shouldInferWorkSummary(
+        for activityKind: CodexConversationActivityKind,
+        speaker: String
+    ) -> Bool {
+        switch activityKind {
+        case .message, .userRequest, .assistantMessage, .plan, .reasoning:
+            return speaker != "tool"
+        default:
+            return false
+        }
+    }
+
+    private static func propagatingWorkSummaries(in lines: [CodexConversationLine]) -> [CodexConversationLine] {
+        var latestWorkSummary: String?
+        return lines.map { line in
+            if let workSummary = line.workSummary {
+                latestWorkSummary = workSummary
+                return line
+            }
+            guard shouldInheritWorkSummary(line), let latestWorkSummary else {
+                return line
+            }
+            return line.withWorkSummary(latestWorkSummary)
+        }
+    }
+
+    private static func shouldInheritWorkSummary(_ line: CodexConversationLine) -> Bool {
+        switch line.activityKind {
+        case .command, .test, .fileChange, .fileRead, .tool, .subAgent,
+             .webSearch, .browser, .search, .image, .imageGeneration,
+             .sleep, .review, .contextCompaction, .skill, .mention,
+             .threadStatus:
+            return true
+        case .message, .userRequest, .assistantMessage, .plan, .reasoning:
+            return false
+        }
     }
 
     private static func progressText(for kind: String) -> String {

@@ -23,8 +23,8 @@ CURRENT_TURNS = [
         "id": "turn-idle",
         "status": "completed",
         "items": [
-            {"id": "u1", "type": "userMessage", "content": [{"type": "inputText", "text": "Mimo の動きを確認して"}]},
-            {"id": "a1", "type": "agentMessage", "content": [{"type": "outputText", "text": "待機中です。会話を監視しています"}]},
+            {"id": "u1", "type": "userMessage", "content": [{"type": "inputText", "text": "吹き出しに Codex 作業内容の要約を出して状況を説明して"}]},
+            {"id": "a1", "type": "agentMessage", "content": [{"type": "outputText", "text": "セッションごとの吹き出し要約を準備しています"}]},
             {"id": "u-sensitive", "type": "userMessage", "content": "/Users/example/private/project/.env を見て"},
             {"id": "a-sensitive-token", "type": "agentMessage", "text": "Authorization: Bearer abcdef0123456789abcdef0123456789"},
             {"id": "a-sensitive-stdout", "type": "agentMessage", "text": "stdout: password=secret"},
@@ -58,8 +58,8 @@ STARTED_THREAD_TURNS = [
         "id": "turn-started",
         "status": "inProgress",
         "items": [
-            {"id": "u-started", "type": "userMessage", "content": [{"type": "inputText", "text": "新しいスレッドも見て"}]},
-            {"id": "a-started", "type": "agentMessage", "content": [{"type": "outputText", "text": "新しい実装スレッドの作業を進めています"}]},
+            {"id": "u-started", "type": "userMessage", "content": [{"type": "inputText", "text": "新しいスレッドの吹き出し要約も見て"}]},
+            {"id": "a-started", "type": "agentMessage", "content": [{"type": "outputText", "text": "新しい実装スレッドの吹き出し要約を進めています"}]},
         ],
     }
 ]
@@ -196,9 +196,9 @@ def state_sequence():
                 "id": "turn-active",
                 "status": "inProgress",
                 "items": [
-                    {"id": "u3", "type": "userMessage", "content": [{"type": "inputText", "text": "デスクトップ上を歩いて"}]},
+                    {"id": "u3", "type": "userMessage", "content": [{"type": "inputText", "text": "吹き出しに Codex 作業内容の要約を出して"}]},
                     {"id": "c1", "type": "commandExecution", "command": ["swift", "test"]},
-                    {"id": "a3", "type": "agentMessage", "content": [{"type": "outputText", "text": "移動先を決めながら作業しています"}]},
+                    {"id": "a3", "type": "agentMessage", "content": [{"type": "outputText", "text": "吹き出し要約の実装作業を進めています"}]},
                 ],
             }
         ]
@@ -221,7 +221,7 @@ def state_sequence():
                 "item": {
                     "id": "plan-start",
                     "type": "plan",
-                    "text": "表示を確認してから E2E を通す",
+                    "text": "吹き出し要約の表示を確認してから E2E を通す",
                 },
             },
         }
@@ -255,7 +255,7 @@ def state_sequence():
                 "threadId": "fake-thread",
                 "turnId": "turn-active",
                 "plan": [
-                    {"step": "表示を確認", "status": "inProgress"},
+                    {"step": "吹き出し要約表示を確認", "status": "inProgress"},
                     {"step": "E2E を通す", "status": "pending"},
                 ],
             },
@@ -485,8 +485,8 @@ def state_sequence():
                 "id": "turn-waiting",
                 "status": "inProgress",
                 "items": [
-                    {"id": "u4", "type": "userMessage", "content": [{"type": "inputText", "text": "確認待ちの時は止まって"}]},
-                    {"id": "a4", "type": "agentMessage", "content": [{"type": "outputText", "text": "入力を待ちながらメモを取っています"}]},
+                    {"id": "u4", "type": "userMessage", "content": [{"type": "inputText", "text": "吹き出し要約で確認待ちの時は止まって"}]},
+                    {"id": "a4", "type": "agentMessage", "content": [{"type": "outputText", "text": "吹き出し要約で確認待ちです"}]},
                 ],
             }
         ]
@@ -576,8 +576,8 @@ def state_sequence():
                 "id": "turn-review",
                 "status": "completed",
                 "items": [
-                    {"id": "u5", "type": "userMessage", "content": [{"type": "inputText", "text": "結果をレビューして"}]},
-                    {"id": "a5", "type": "agentMessage", "content": [{"type": "outputText", "text": "レビューできる状態になりました"}]},
+                    {"id": "u5", "type": "userMessage", "content": [{"type": "inputText", "text": "吹き出し要約の結果をレビューして"}]},
+                    {"id": "a5", "type": "agentMessage", "content": [{"type": "outputText", "text": "吹き出し要約はレビューできる状態になりました"}]},
                 ],
             }
         ]
@@ -607,8 +607,8 @@ def state_sequence():
                 "id": "turn-failed",
                 "status": "failed",
                 "items": [
-                    {"id": "u6", "type": "userMessage", "content": [{"type": "inputText", "text": "失敗も表示して"}]},
-                    {"id": "a6", "type": "agentMessage", "content": [{"type": "outputText", "text": "実行に失敗しました。確認が必要です"}]},
+                    {"id": "u6", "type": "userMessage", "content": [{"type": "inputText", "text": "吹き出し要約の失敗も表示して"}]},
+                    {"id": "a6", "type": "agentMessage", "content": [{"type": "outputText", "text": "吹き出し要約の実行に失敗しました。確認が必要です"}]},
                 ],
             }
         ]
@@ -673,7 +673,7 @@ def run_stdio_server():
                 {
                     "id": "fake-thread",
                     "name": "Mimo runtime QA",
-                    "preview": "自律移動と会話表示を検証中",
+                    "preview": "吹き出し要約と会話表示を検証中",
                     "status": status,
                     "turns": turns,
                 }
@@ -714,7 +714,7 @@ def run_stdio_server():
                 thread = {
                     "id": "fake-thread",
                     "name": "Mimo runtime QA",
-                    "preview": "自律移動と会話表示を検証中",
+                    "preview": "吹き出し要約と会話表示を検証中",
                     "status": status,
                     "turns": turns,
                 }

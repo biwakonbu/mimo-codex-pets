@@ -248,6 +248,20 @@ Conversation behavior:
   skill, mention, or thread status. The formatter uses that kind before loose
   text guessing, so Mimo can say `ファイルを確認中です` or `計画を整理中です`
   without relying on raw app-server payload wording or leaking tool arguments.
+- Safe user, assistant, plan, and reasoning item text can also produce a compact
+  `workSummary` through `CodexSessionSummarizer`. This is deliberately a small
+  topic classifier rather than a transcript summarizer: it can identify themes
+  such as `吹き出し要約`, `複数スレッド表示`, `Codex 連携`, `セッション状況`,
+  `画面確認`, or `Mimo の動き`, but it first applies the same ambient-display
+  safety gate used for titles. Unsafe paths, credentials, stdout/env fragments,
+  instruction-looking text, and other secret-looking session details therefore
+  cannot become visible bubble topics.
+- The latest safe `workSummary` is propagated within that thread to tool,
+  command, file, status, review, and lifecycle progress lines. This lets Mimo
+  explain both the work and the state, for example
+  `ご主人、「Mimo runtime QA」は吹き出し要約のテスト中です` or
+  `「Mimo runtime...」吹き出し要約確認待ち`, while still never quoting raw
+  commands, paths, deltas, or model output.
 - The live app presentation smoke uses Python to preflight expected sanitized
   title candidates. `check_title_sanitizer_parity.py` and
   `title_sanitizer_fixtures.json` keep that helper aligned with the Swift
@@ -452,11 +466,16 @@ Manual or visual checks:
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
-  production bubble text is a Mimo-style summary of the active thread title and
-  latest progress/tool activity, including notification-driven tool activity and
-  streaming delta activity, plus simultaneous stacked bubbles for a second
-  visible thread and a later secondary-thread update discovered immediately
-  from notification-triggered thread reads. The same fake E2E emits
+  production bubble text is a Mimo-style summary of the active thread title,
+  safe session-derived `workSummary`, and latest progress/tool activity,
+  including notification-driven tool activity and streaming delta activity, plus
+  simultaneous stacked bubbles for a second visible thread and a later
+  secondary-thread update discovered immediately from notification-triggered
+  thread reads. The fake session specifically requires topic-aware output such
+  as `吹き出し要約の返答中`, `吹き出し要約の計画中`,
+  `吹き出し要約のテスト中`, and `吹き出し要約で確認待ち` so regression tests
+  cover Mimo explaining what Codex is working on, not only generic state labels.
+  The same fake E2E emits
   `thread/started` for a new thread and verifies that Mimo reports the new
   thread title and sends `thread/read` before the next polling cycle. The fake
   also keeps that started thread out of subsequent list responses and verifies
