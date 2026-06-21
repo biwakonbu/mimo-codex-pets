@@ -94,6 +94,7 @@ public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
 }
 
 public enum CodexNotificationMethod: String, CaseIterable, Equatable, Sendable {
+    case threadStarted = "thread/started"
     case threadStatusChanged = "thread/status/changed"
     case threadNameUpdated = "thread/name/updated"
     case threadArchived = "thread/archived"
@@ -123,6 +124,10 @@ public struct CodexJSONRPCNotification<Params: Decodable>: Decodable {
 public struct ThreadStatusChangedNotification: Decodable, Equatable, Sendable {
     public let threadId: String
     public let status: CodexThreadStatus
+}
+
+public struct ThreadStartedNotification: Decodable, Equatable, Sendable {
+    public let thread: CodexThreadSnapshot
 }
 
 public struct ThreadIdNotification: Decodable, Equatable, Sendable {

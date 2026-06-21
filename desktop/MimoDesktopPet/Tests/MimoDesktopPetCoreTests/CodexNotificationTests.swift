@@ -4,6 +4,7 @@ import XCTest
 final class CodexNotificationTests: XCTestCase {
     func testSupportedNotificationMethodNames() {
         XCTAssertEqual(CodexNotificationMethod.allCases.map(\.rawValue), [
+            "thread/started",
             "thread/status/changed",
             "thread/name/updated",
             "thread/archived",
@@ -70,6 +71,39 @@ final class CodexNotificationTests: XCTestCase {
         )
 
         XCTAssertEqual(notification.params.status, .active(activeFlags: [.waitingOnUserInput]))
+    }
+
+    func testThreadStartedNotificationDecodes() throws {
+        let data = Data("""
+        {
+          "method": "thread/started",
+          "params": {
+            "thread": {
+              "id": "thread-new",
+              "status": {
+                "type": "active",
+                "activeFlags": []
+              },
+              "turns": [
+                {
+                  "id": "turn-new",
+                  "status": "inProgress"
+                }
+              ]
+            }
+          }
+        }
+        """.utf8)
+
+        let notification = try JSONDecoder().decode(
+            CodexJSONRPCNotification<ThreadStartedNotification>.self,
+            from: data
+        )
+
+        XCTAssertEqual(notification.method, "thread/started")
+        XCTAssertEqual(notification.params.thread.id, "thread-new")
+        XCTAssertEqual(notification.params.thread.status, .active(activeFlags: []))
+        XCTAssertEqual(notification.params.thread.turns.last?.status, .inProgress)
     }
 
     func testTurnCompletedNotificationDecodes() throws {

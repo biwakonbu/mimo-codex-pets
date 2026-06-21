@@ -27,6 +27,7 @@ require_pattern "ClientRequest.json" '"thread/loaded/list"'
 require_pattern "ClientRequest.json" '"thread/list"'
 require_pattern "ClientRequest.json" '"thread/read"'
 
+require_pattern "ServerNotification.json" '"thread/started"'
 require_pattern "ServerNotification.json" '"thread/status/changed"'
 require_pattern "ServerNotification.json" '"thread/name/updated"'
 require_pattern "ServerNotification.json" '"thread/archived"'
@@ -46,6 +47,7 @@ require_pattern "ServerNotification.json" '"item/reasoning/textDelta"'
 require_pattern "ServerNotification.json" '"item/commandExecution/outputDelta"'
 require_pattern "ServerNotification.json" '"item/fileChange/outputDelta"'
 require_pattern "ServerNotification.json" '"item/mcpToolCall/progress"'
+require_pattern "v2/ThreadStartedNotification.json" '"thread"'
 require_pattern "v2/ItemStartedNotification.json" '"item"'
 require_pattern "v2/ItemCompletedNotification.json" '"item"'
 require_pattern "v2/AgentMessageDeltaNotification.json" '"delta"'
@@ -140,6 +142,7 @@ for flag in implicit_string_cases("CodexThreadActiveFlag"):
     require_schema_text(thread_status_changed, f'"{flag}"', "CodexThreadActiveFlag")
 
 for relative_path, fields in {
+    "v2/ThreadStartedNotification.json": ["thread"],
     "v2/ThreadStatusChangedNotification.json": ["threadId", "status"],
     "v2/ThreadNameUpdatedNotification.json": ["threadId"],
     "v2/TurnStartedNotification.json": ["threadId", "turn"],

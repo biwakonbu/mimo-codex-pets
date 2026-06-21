@@ -19,6 +19,7 @@ Verified public protocol surface:
   `turnId`, `itemId`, `delta`, `message`, `item`, and `plan` on the supported
   lifecycle and streaming notification shapes.
 - The same schema exposes the server notifications used by the companion:
+  - `thread/started`
   - `thread/status/changed`
   - `thread/name/updated`
   - `thread/archived`
@@ -104,6 +105,10 @@ Verified runtime behavior:
 - Thread, turn, and item notifications should also trigger an immediate
   `thread/read(includeTurns: true)` for the affected thread, so secondary
   thread bubbles do not wait for the next periodic poll.
+- `thread/started` includes a schema-backed `thread` object. The companion
+  should show that new thread as the focused conversation context immediately
+  and still issue `thread/read(includeTurns: true)` so the cached thread body is
+  refreshed before the next poll.
 - Periodic refresh should coalesce `thread/read(includeTurns: true)` requests
   across the `thread/loaded/list` and `thread/list` phases so each tracked
   thread is read at most once per refresh cycle. Notification-triggered reads
@@ -354,7 +359,9 @@ Manual or visual checks:
   latest progress/tool activity, including notification-driven tool activity and
   streaming delta activity, plus simultaneous stacked bubbles for a second
   visible thread and a later secondary-thread update discovered immediately
-  from notification-triggered thread reads.
+  from notification-triggered thread reads. The same fake E2E emits
+  `thread/started` for a new thread and verifies that Mimo reports the new
+  thread title and sends `thread/read` before the next polling cycle.
 - Unit tests verify that extracted `CodexConversationLine` values retain typed
   activity kinds and that bubble summaries prefer those kinds over brittle raw
   text guesses, while failure text still overrides the kind.

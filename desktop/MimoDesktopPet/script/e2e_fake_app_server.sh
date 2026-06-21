@@ -136,6 +136,7 @@ grep -Fq '「別スレッドの確認」作業中' "$PRESENTATION_LOG"
 grep -Fq '「更新された別スレッド」作業中' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「ステータスだけで進捗を伝える検証」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「資料整理」は作業を進めています' "$PRESENTATION_LOG"
+grep -Fq '新しい実装スレッド' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -318,6 +319,43 @@ next_poll_index = next(
 )
 if next_poll_index is not None and read_index > next_poll_index:
     raise SystemExit("fake-review thread/read waited for the next poll")
+
+started_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events)
+        if direction == "out"
+        and message.get("method") == "thread/started"
+        and message.get("params", {}).get("thread", {}).get("id") == "fake-started"
+    ),
+    None,
+)
+if started_index is None:
+    raise SystemExit("fake-started thread notification was not emitted")
+
+started_read_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events[started_index + 1 :], started_index + 1)
+        if direction == "in"
+        and message.get("method") == "thread/read"
+        and message.get("params", {}).get("threadId") == "fake-started"
+    ),
+    None,
+)
+if started_read_index is None:
+    raise SystemExit("fake-started thread notification did not trigger thread/read")
+
+started_next_poll_index = next(
+    (
+        index
+        for index, (direction, message) in enumerate(events[started_index + 1 :], started_index + 1)
+        if direction == "in" and message.get("method") == "thread/loaded/list"
+    ),
+    None,
+)
+if started_next_poll_index is not None and started_read_index > started_next_poll_index:
+    raise SystemExit("fake-started thread/read waited for the next poll")
 
 close_index = next(
     (

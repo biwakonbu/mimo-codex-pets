@@ -41,6 +41,18 @@ STATUS_ONLY_THREAD_STATUS = {"type": "active", "activeFlags": ["waitingOnUserInp
 STATUS_ONLY_THREAD_TURNS = []
 THIRD_THREAD_STATUS = {"type": "active", "activeFlags": []}
 THIRD_THREAD_TURNS = []
+STARTED_THREAD_VISIBLE = False
+STARTED_THREAD_STATUS = {"type": "active", "activeFlags": []}
+STARTED_THREAD_TURNS = [
+    {
+        "id": "turn-started",
+        "status": "inProgress",
+        "items": [
+            {"id": "u-started", "type": "userMessage", "content": [{"type": "inputText", "text": "新しいスレッドも見て"}]},
+            {"id": "a-started", "type": "agentMessage", "content": [{"type": "outputText", "text": "新しい実装スレッドの作業を進めています"}]},
+        ],
+    }
+]
 
 
 def log(message):
@@ -150,8 +162,18 @@ def third_thread_snapshot():
     }
 
 
+def started_thread_snapshot():
+    return {
+        "id": "fake-started",
+        "name": "新しい実装スレッド",
+        "preview": "新しい実装スレッドの進捗を短く伝える検証",
+        "status": dict(STARTED_THREAD_STATUS),
+        "turns": [dict(turn) for turn in STARTED_THREAD_TURNS],
+    }
+
+
 def state_sequence():
-    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS, STATUS_ONLY_THREAD_STATUS
+    global CURRENT_STATUS, CURRENT_TURNS, SECOND_THREAD_STATUS, SECOND_THREAD_NAME, SECOND_THREAD_CLOSED, SECOND_THREAD_TURNS, STATUS_ONLY_THREAD_STATUS, STARTED_THREAD_VISIBLE
     time.sleep(2.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "active", "activeFlags": []}
@@ -328,6 +350,18 @@ def state_sequence():
             },
         }
     )
+    time.sleep(0.7)
+    with STATE_LOCK:
+        STARTED_THREAD_VISIBLE = True
+        started_thread = started_thread_snapshot()
+    write_message(
+        {
+            "method": "thread/started",
+            "params": {
+                "thread": started_thread,
+            },
+        }
+    )
     time.sleep(3.0)
     with STATE_LOCK:
         CURRENT_STATUS = {"type": "idle"}
@@ -406,11 +440,13 @@ def run_stdio_server():
         elif method == "thread/loaded/list":
             with STATE_LOCK:
                 closed = SECOND_THREAD_CLOSED
-            ids = (
-                ["fake-thread", "fake-status-only", "fake-docs"]
-                if closed
-                else ["fake-thread", "fake-review", "fake-status-only", "fake-docs"]
-            )
+                started_visible = STARTED_THREAD_VISIBLE
+            ids = ["fake-thread"]
+            if not closed:
+                ids.append("fake-review")
+            ids.extend(["fake-status-only", "fake-docs"])
+            if started_visible:
+                ids.append("fake-started")
             write_message(
                 {
                     "id": request_id,
@@ -425,6 +461,8 @@ def run_stdio_server():
                 second_thread = second_thread_snapshot()
                 status_only_thread = status_only_thread_snapshot()
                 third_thread = third_thread_snapshot()
+                started_visible = STARTED_THREAD_VISIBLE
+                started_thread = started_thread_snapshot()
             threads = [
                 {
                     "id": "fake-thread",
@@ -438,6 +476,8 @@ def run_stdio_server():
                 threads.append(second_thread)
             threads.append(status_only_thread)
             threads.append(third_thread)
+            if started_visible:
+                threads.append(started_thread)
             write_message(
                 {
                     "id": request_id,
@@ -458,6 +498,9 @@ def run_stdio_server():
             elif thread_id == "fake-docs":
                 with STATE_LOCK:
                     thread = third_thread_snapshot()
+            elif thread_id == "fake-started":
+                with STATE_LOCK:
+                    thread = started_thread_snapshot()
             else:
                 with STATE_LOCK:
                     status = dict(CURRENT_STATUS)

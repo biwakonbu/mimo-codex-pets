@@ -649,6 +649,29 @@ final class CodexAppServerClient {
         guard let method = CodexNotificationMethod(rawValue: method) else { return }
 
         switch method {
+        case .threadStarted:
+            if let dict = params as? [String: Any],
+               let threadObject = dict["thread"] as? [String: Any],
+               let snapshot = decodeThreadSnapshot(from: threadObject) {
+                suppressedThreadIds.remove(snapshot.id)
+                selectedThreadId = snapshot.id
+                let title = threadTitle(from: threadObject)
+                threadTitlesById[snapshot.id] = title
+                rememberThreadOrder([snapshot.id])
+                let lines = CodexConversationExtractor.lines(from: threadObject)
+                if !lines.isEmpty {
+                    conversationByThread[snapshot.id] = lines
+                }
+                updateThreadActivity(
+                    threadId: snapshot.id,
+                    title: title,
+                    threadStatus: snapshot.status,
+                    latestTurnStatus: snapshot.turns.last?.status,
+                    hasRecentAssistantFinal: snapshot.turns.last?.status == .completed
+                )
+                sendThreadRead(threadId: snapshot.id, reason: .notification)
+                apply(snapshot: snapshot)
+            }
         case .threadStatusChanged:
             if let payload = decodeNotificationParams(ThreadStatusChangedNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
