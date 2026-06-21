@@ -184,6 +184,11 @@ Verified runtime behavior:
   lines, and `PetSpeechBubblePaginator` splits longer Mimo speech into timed
   pages so conversation-sketch playback can continue without truncating the
   whole message into one chip.
+- The production bubble panel treats each visible stack slot as a stable visual
+  control. Additions fade and rise from the primary/Mimo side, removals fade
+  upward, stack-position changes use a short spring, and text-only updates
+  cross-fade in place. This avoids the Codex status surface feeling like a
+  hard-refreshing log panel when app-server notifications arrive close together.
 
 Computer Use limitation:
 

@@ -49,9 +49,10 @@ private struct ProductionBubbleStackView: View {
 
     var body: some View {
         let visible = Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit))
+        let stackSignature = visible.map { "\($0.role.rawValue)|\($0.tone.rawValue)|\($0.activityKind?.rawValue ?? "none")|\($0.text)" }.joined(separator: "\n")
 
         ZStack(alignment: .bottom) {
-            ForEach(Array(visible.enumerated()), id: \.element.id) { index, bubble in
+            ForEach(Array(visible.enumerated()), id: \.offset) { index, bubble in
                 let placement = PetSpeechBubbleLayout.placement(
                     for: index,
                     role: bubble.role,
@@ -75,12 +76,50 @@ private struct ProductionBubbleStackView: View {
                     y: CGFloat(placement.verticalOffset)
                 )
                 .zIndex(placement.zIndex)
+                .transition(ProductionBubbleMotion.transition(for: index, visibleCount: visible.count))
             }
         }
         .frame(
             width: CGFloat(PetSpeechBubbleLayout.productionStackWidth),
             height: CGFloat(PetSpeechBubbleLayout.productionStackHeight),
             alignment: .bottom
+        )
+        .animation(ProductionBubbleMotion.stackAnimation, value: stackSignature)
+        .animation(ProductionBubbleMotion.stackAnimation, value: visible.count)
+    }
+}
+
+private enum ProductionBubbleMotion {
+    static let stackAnimation = Animation.spring(
+        response: PetSpeechBubbleLayout.stackAnimationResponse,
+        dampingFraction: PetSpeechBubbleLayout.stackAnimationDampingFraction,
+        blendDuration: 0.04
+    )
+
+    static let contentAnimation = Animation.easeInOut(
+        duration: PetSpeechBubbleLayout.contentAnimationDuration
+    )
+
+    static func transition(for index: Int, visibleCount: Int) -> AnyTransition {
+        let entersFromPrimaryAnchor = index == 0 || visibleCount <= 1
+        let insertionOffset = entersFromPrimaryAnchor
+            ? PetSpeechBubbleLayout.transitionInsertionOffsetY
+            : PetSpeechBubbleLayout.transitionInsertionOffsetY * 0.65
+
+        return .asymmetric(
+            insertion: .opacity
+                .combined(with: .scale(scale: PetSpeechBubbleLayout.transitionInsertionScale, anchor: .bottom))
+                .combined(with: .offset(y: insertionOffset)),
+            removal: .opacity
+                .combined(with: .scale(scale: PetSpeechBubbleLayout.transitionRemovalScale, anchor: .top))
+                .combined(with: .offset(y: PetSpeechBubbleLayout.transitionRemovalOffsetY))
+        )
+    }
+
+    static var contentTransition: AnyTransition {
+        .asymmetric(
+            insertion: .opacity.combined(with: .offset(y: 3)),
+            removal: .opacity.combined(with: .offset(y: -3))
         )
     }
 }
@@ -125,6 +164,7 @@ struct BubbleView: View {
         let accent = accentColor ?? Color(red: 0.36, green: 0.58, blue: 0.86)
         let bubbleFill = Color.white
         let borderColor = role == .status && tone == .neutral ? Color.black.opacity(0.1) : accent.opacity(borderOpacity)
+        let textIdentity = "\(role.rawValue)|\(tone.rawValue)|\(activityKind?.rawValue ?? "none")|\(text)"
 
         VStack(spacing: 0) {
             HStack(spacing: leadingMarkerSpacing) {
@@ -135,16 +175,22 @@ struct BubbleView: View {
                         activityKind: activityKind,
                         accentColor: accent
                     )
+                    .transition(.opacity.combined(with: .scale(scale: 0.86, anchor: .center)))
                 }
 
-                BubbleTextContent(
-                    text: text,
-                    role: role,
-                    accentColor: accent,
-                    fontSize: fontSize,
-                    fontWeight: fontWeight,
-                    minimumScaleFactor: minimumScaleFactor
-                )
+                ZStack(alignment: .leading) {
+                    BubbleTextContent(
+                        text: text,
+                        role: role,
+                        accentColor: accent,
+                        fontSize: fontSize,
+                        fontWeight: fontWeight,
+                        minimumScaleFactor: minimumScaleFactor
+                    )
+                    .id(textIdentity)
+                    .transition(ProductionBubbleMotion.contentTransition)
+                }
+                .animation(ProductionBubbleMotion.contentAnimation, value: textIdentity)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
@@ -172,6 +218,8 @@ struct BubbleView: View {
         .accessibilityValue(text)
         .accessibilityIdentifier(accessibilityIdentifier)
         .accessibilitySortPriority(accessibilitySortPriority)
+        .animation(ProductionBubbleMotion.contentAnimation, value: tone)
+        .animation(ProductionBubbleMotion.contentAnimation, value: activityKind?.rawValue ?? "none")
     }
 
     private var accessibilityIdentifier: String {

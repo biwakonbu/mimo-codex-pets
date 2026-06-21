@@ -90,7 +90,10 @@ Production bubbles use the available panel width rather than compact chips for
 primary Mimo speech. The primary bubble can grow to three text lines, secondary
 session rows can grow to two lines, and overlong Mimo speech is split into
 readable pages that advance on the same timed conversation-sketch loop as normal
-session updates.
+session updates. Bubble changes use stable visual slots: new bubbles fade and
+rise in from the Mimo side, removed bubbles fade upward, stack position changes
+use a short spring, and text-only updates cross-fade inside the existing bubble
+instead of replacing the whole surface abruptly.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
 By default it mirrors production transport selection: bounded daemon start,

@@ -48,6 +48,14 @@ public enum PetSpeechBubbleLayout {
     public static let conversationTextLimit = 64
     public static let overflowTextLimit = 22
 
+    public static let transitionInsertionOffsetY = 18.0
+    public static let transitionRemovalOffsetY = -14.0
+    public static let transitionInsertionScale = 0.96
+    public static let transitionRemovalScale = 0.98
+    public static let stackAnimationResponse = 0.34
+    public static let stackAnimationDampingFraction = 0.86
+    public static let contentAnimationDuration = 0.18
+
     public static func textLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {
         case .status:

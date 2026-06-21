@@ -239,6 +239,16 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.productionRowSpacing, 7)
     }
 
+    func testBubbleTransitionMotionUsesShortSubtleTimings() {
+        XCTAssertEqual(PetSpeechBubbleLayout.transitionInsertionOffsetY, 18)
+        XCTAssertEqual(PetSpeechBubbleLayout.transitionRemovalOffsetY, -14)
+        XCTAssertEqual(PetSpeechBubbleLayout.transitionInsertionScale, 0.96)
+        XCTAssertEqual(PetSpeechBubbleLayout.transitionRemovalScale, 0.98)
+        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.stackAnimationResponse, 0.4)
+        XCTAssertGreaterThanOrEqual(PetSpeechBubbleLayout.stackAnimationDampingFraction, 0.8)
+        XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.contentAnimationDuration, 0.2)
+    }
+
     func testSecondaryRowsAreSubtlyStaggeredForMultiThreadReadability() {
         let placements = (0..<PetSpeechBubbleLayout.productionVisibleLimit).map { index in
             PetSpeechBubbleLayout.placement(
