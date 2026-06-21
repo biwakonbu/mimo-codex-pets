@@ -255,6 +255,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   daemon start, proxy first, and direct stdio fallback before initialize; it
   retries transient response timeouts with a fresh selected transport, while
   preserving immediate failure for protocol errors and malformed responses
+- `MIMO_CODEX_EXECUTABLE` is the app-specific override for deterministic
+  manual QA and fake app-server runs; it takes precedence over the older
+  generic `CODEX_BIN` override, which remains supported for existing scripts
 - Computer Use is useful as an opportunistic UI observation channel, but it may
   fail to attach to the `LSUIElement` screen-saver-level companion
   (`remoteConnection`) and can disturb deterministic fake-app launches by

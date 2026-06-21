@@ -1,13 +1,18 @@
 import Foundation
 
-struct CommandInvocation {
-    let executableURL: URL
-    let argumentsPrefix: [String]
+public struct CommandInvocation: Equatable, Sendable {
+    public let executableURL: URL
+    public let argumentsPrefix: [String]
+
+    public init(executableURL: URL, argumentsPrefix: [String]) {
+        self.executableURL = executableURL
+        self.argumentsPrefix = argumentsPrefix
+    }
 }
 
-enum CodexCommandLocator {
-    static func resolve(environment: [String: String] = ProcessInfo.processInfo.environment) -> CommandInvocation {
-        if let explicit = environment["CODEX_BIN"], !explicit.isEmpty {
+public enum CodexCommandLocator {
+    public static func resolve(environment: [String: String] = ProcessInfo.processInfo.environment) -> CommandInvocation {
+        if let explicit = explicitCodexExecutablePath(environment: environment) {
             return CommandInvocation(executableURL: URL(fileURLWithPath: explicit), argumentsPrefix: [])
         }
 
@@ -23,7 +28,7 @@ enum CodexCommandLocator {
         )
     }
 
-    static func launchEnvironment(base: [String: String] = ProcessInfo.processInfo.environment) -> [String: String] {
+    public static func launchEnvironment(base: [String: String] = ProcessInfo.processInfo.environment) -> [String: String] {
         var environment = base
         let home = environment["HOME"] ?? NSHomeDirectory()
         let extraPath = [
@@ -42,5 +47,15 @@ enum CodexCommandLocator {
             environment["PATH"] = extraPath
         }
         return environment
+    }
+
+    private static func explicitCodexExecutablePath(environment: [String: String]) -> String? {
+        for key in ["MIMO_CODEX_EXECUTABLE", "CODEX_BIN"] {
+            guard let value = environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+                continue
+            }
+            return value
+        }
+        return nil
     }
 }

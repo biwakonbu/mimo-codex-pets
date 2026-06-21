@@ -16,7 +16,7 @@ cd "$ROOT_DIR"
 
 rm -f "$FAKE_LOG" "$PROXY_SUMMARY"
 PROXY_OUTPUT="$(
-  CODEX_BIN="$FAKE_CODEX" \
+  MIMO_CODEX_EXECUTABLE="$FAKE_CODEX" \
   MIMO_LIVE_SMOKE_TIMEOUT=0.4 \
   MIMO_LIVE_SMOKE_DAEMON_START_TIMEOUT=0.4 \
   ./script/live_app_server_smoke.py --transport auto --attempts 1 --summary-json "$PROXY_SUMMARY" 2>&1

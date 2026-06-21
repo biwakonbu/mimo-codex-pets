@@ -8,7 +8,11 @@ import sys
 import time
 
 
-CODEX_BIN = os.environ.get("CODEX_BIN", "codex")
+CODEX_BIN = (
+    os.environ.get("MIMO_CODEX_EXECUTABLE", "").strip()
+    or os.environ.get("CODEX_BIN", "").strip()
+    or "codex"
+)
 TIMEOUT_SECONDS = float(os.environ.get("MIMO_LIVE_SMOKE_TIMEOUT", "8"))
 ATTEMPTS = int(os.environ.get("MIMO_LIVE_SMOKE_ATTEMPTS", "2"))
 DAEMON_START_TIMEOUT_SECONDS = float(os.environ.get("MIMO_LIVE_SMOKE_DAEMON_START_TIMEOUT", "2"))

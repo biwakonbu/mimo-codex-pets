@@ -130,6 +130,10 @@ Verified runtime behavior:
 - When the local Codex command or app-server is unavailable, the companion must
   stay open in transparent production mode and show a short offline bubble
   instead of crashing or revealing a debug surface.
+- For deterministic manual QA and fake app-server runs, the app and live smoke
+  helper accept `MIMO_CODEX_EXECUTABLE` as a Mimo-specific command override.
+  It takes precedence over the existing generic `CODEX_BIN` override, which is
+  still supported for compatibility with older scripts.
 - `codex app-server daemon start` is a bounded helper for the preferred proxy
   transport. If daemon startup hangs, proxy startup fails, proxy exits early, or
   proxy handshake times out, the companion should proceed to direct
@@ -500,8 +504,9 @@ Manual or visual checks:
   app-server stalls without hiding deterministic protocol failures.
 - Live app-server smoke transport check launches the live-smoke client against a
   fake daemon/proxy-capable app-server, verifies that auto transport uses proxy
-  when it initializes, then forces proxy startup failure and verifies direct
-  stdio fallback before initialize.
+  when it initializes through the `MIMO_CODEX_EXECUTABLE` override, then forces
+  proxy startup failure through the compatibility `CODEX_BIN` override and
+  verifies direct stdio fallback before initialize.
 - Proxy fallback E2E launches the app after a successful fake daemon start but
   forces `codex app-server proxy` to exit immediately. Mimo must then retry with
   direct `codex app-server --stdio`, reach connected thread-summary bubbles, and

@@ -58,6 +58,10 @@ the proxy does not complete the handshake, the companion falls back to direct
 `codex app-server --stdio`. If the local Codex app-server cannot be launched,
 the companion stays open and shows an offline/waiting status instead of crashing
 or waiting forever.
+For deterministic manual QA, set `MIMO_CODEX_EXECUTABLE=/path/to/fake-codex`
+to point the app and smoke helper at a fake app-server command. The older
+`CODEX_BIN` override remains supported for existing scripts, but the Mimo-specific
+override takes precedence when both are present.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
 By default it mirrors production transport selection: bounded daemon start,
