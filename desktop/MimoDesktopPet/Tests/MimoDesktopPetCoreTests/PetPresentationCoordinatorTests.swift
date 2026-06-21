@@ -2,7 +2,7 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class PetPresentationCoordinatorTests: XCTestCase {
-    func testConnectedSnapshotStartsFocusedConversationBubbleAndThreadChips() {
+    func testConnectedSnapshotStartsFocusedConversationBubbleAndThreadRows() {
         var coordinator = PetPresentationCoordinator()
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", activityKind: .command)
         let docs = line(threadId: "docs", speaker: "codex", text: "資料作業を進めています")

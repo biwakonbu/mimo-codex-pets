@@ -207,12 +207,12 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - the production surface can stack up to five speech bubbles at once: one
   primary Mimo report plus up to four compact context bubbles, while the app
   tracks up to six Codex thread contexts internally for overflow reporting
-- secondary thread bubbles use short context-chip text such as
-  `「資料整理」作業中`, omit the longer Mimo address phrase, and sit on a subtle
-  visual guide so multiple Codex threads read as one compact reporting cluster;
-  only the primary Mimo report keeps a speech tail
-- thread bubble text is rendered as a small thread-title line plus a short Mimo
-  report line, so simultaneous bubbles are scan-friendly without becoming a
+- secondary thread bubbles use short context-row text such as
+  `「資料整理」作業中`, omit the longer Mimo address phrase, and align into a
+  centered stacked list so multiple Codex threads read as a compact reporting
+  surface; only the primary Mimo report keeps a speech tail
+- thread bubble text is rendered as a colored thread title plus a one-line Mimo
+  report, so simultaneous bubbles are scan-friendly without becoming a
   transcript or debug feed
 - the primary bubble uses the `focus` role when it is reporting a specific
   Codex thread, keeping generic `status` bubbles for idle/offline state and
@@ -255,6 +255,12 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   daemon start, proxy first, and direct stdio fallback before initialize; it
   retries transient response timeouts with a fresh selected transport, while
   preserving immediate failure for protocol errors and malformed responses
+- Computer Use is useful as an opportunistic UI observation channel, but it may
+  fail to attach to the `LSUIElement` screen-saver-level companion
+  (`remoteConnection`) and can disturb deterministic fake-app launches by
+  starting the bundle through LaunchServices. Treat CGWindow capture,
+  presentation logs, and production E2E scripts as the canonical visual QA
+  evidence.
 - periodic refresh uses `thread/loaded/list` to re-read visible threads, so
   secondary thread bubbles can update after initial load
 - refresh-cycle reads are coalesced across `thread/loaded/list` and

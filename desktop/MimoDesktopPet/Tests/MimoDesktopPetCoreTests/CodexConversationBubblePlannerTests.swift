@@ -119,7 +119,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }
 
-    func testProductionBubblesUseMimoReportOnlyForPrimaryAndThreadChipsForSecondaryBubbles() {
+    func testProductionBubblesUseMimoReportOnlyForPrimaryAndThreadRowsForSecondaryBubbles() {
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
         let lines = [
             current,

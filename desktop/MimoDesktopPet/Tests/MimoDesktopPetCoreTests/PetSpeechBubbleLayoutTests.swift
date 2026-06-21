@@ -210,7 +210,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.zIndex < primary.zIndex })
     }
 
-    func testSecondaryThreadChipsStayVisuallySubordinateToFocusedPrimaryBubble() {
+    func testSecondaryThreadRowsStayVisuallySubordinateToFocusedPrimaryBubble() {
         let primary = PetSpeechBubbleLayout.placement(
             for: 0,
             role: .focus,

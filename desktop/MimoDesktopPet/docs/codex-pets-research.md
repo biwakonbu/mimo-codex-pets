@@ -171,6 +171,13 @@ Computer Use limitation:
   running production `MimoDesktopPet` could not be attached reliably
   (`remoteConnection` in one run, `cgWindowNotFound` in a later run) instead of
   returning a useful accessibility tree.
+- A later Computer Use recheck against `MimoDesktopPet` still returned only
+  `remoteConnection`. During that manual attempt, Computer Use appeared to
+  interact with the app through LaunchServices rather than preserving the
+  shell-launched fake app-server environment, so deterministic fake-app visual
+  QA should not depend on Computer Use attachment. Use Computer Use as an
+  opportunistic observation channel only; use process-scoped CGWindow capture
+  and presentation logs as the canonical evidence.
 - Companion visual QA therefore uses CGWindow discovery plus
   `screencapture -l` on the exact Mimo window. The capture is then inspected for
   transparent corners, bounded alpha coverage, white speech-bubble pixels, and
@@ -396,7 +403,10 @@ Manual or visual checks:
   Computer Use may not attach to `LSUIElement` screen-saver-level panels. On
   2026-06-21, Computer Use returned only `remoteConnection` for
   `MimoDesktopPet`, and refused `com.openai.codex` for safety reasons, so
-  current visual evidence remains CGWindow capture plus pixel inspection.
+  current visual evidence remains CGWindow capture plus pixel inspection. If
+  Computer Use is run during fake-app visual QA, verify that it has not replaced
+  the shell-launched process with a LaunchServices-started instance before
+  trusting the captured state.
 - Window capture corner alpha is transparent.
 - Window capture reports the Mimo window at screen-saver layer.
 - `script/inspect_production_capture.swift` verifies that the captured

@@ -14,7 +14,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「実装」はレビューできます")
     }
 
-    func testFormatsSecondaryContextAsShortThreadChip() {
+    func testFormatsSecondaryContextAsShortThreadRow() {
         let review = CodexConversationLine(
             threadId: "thread",
             threadTitle: "実装",

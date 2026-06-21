@@ -13,7 +13,7 @@ final class PetSpeechBubbleTextPartsTests: XCTestCase {
         )
     }
 
-    func testParsesCompactThreadContextChipIntoTitleAndSummary() {
+    func testParsesCompactThreadContextRowIntoTitleAndSummary() {
         XCTAssertEqual(
             PetSpeechBubbleTextParts.parse("「資料整理」作業中"),
             PetSpeechBubbleTextParts(
