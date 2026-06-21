@@ -337,10 +337,11 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   filters that internal session out of visible bubbles, while
   `live_mimo_dialogue_smoke.py` verifies the live generation path without
   writing into user work sessions
-- production speech bubbles now use nearly the full 432pt panel width with a
-  taller 530pt companion window; primary Mimo speech can grow to three lines,
-  secondary chat rows to two lines, and `PetSpeechBubblePaginator` advances
-  overlong Mimo speech as timed pages before the next chat update is shown
+- production speech bubbles use compact readable columns instead of forcing the
+  nearly full 432pt panel width; primary Mimo speech can grow to four lines,
+  secondary chat rows keep a bounded three-line title/summary shape, and
+  `PetSpeechBubblePaginator` advances overlong Mimo speech as timed pages before
+  the next chat update is shown
 - chat names are treated as primary user-facing information: formatter output
   keeps readable chat titles up to the shared title limit instead of shortening
   them before layout, and secondary chat bubbles render the title on its own

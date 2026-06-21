@@ -75,7 +75,7 @@ public enum PetSpeechBubbleLayout {
     public static func lineLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {
         case .status, .focus:
-            return 3
+            return 4
         case .conversation:
             return 2
         case .overflow:
@@ -128,11 +128,11 @@ public enum PetSpeechBubbleLayout {
     private static func maxTextWidth(role: PetSpeechBubbleRole) -> Double {
         switch role {
         case .status, .focus:
-            return 416
+            return 284
         case .conversation:
-            return 392
+            return 264
         case .overflow:
-            return 320
+            return 220
         }
     }
 
@@ -143,13 +143,13 @@ public enum PetSpeechBubbleLayout {
     ) -> Double? {
         switch role {
         case .status:
-            return 398
+            return 224
         case .focus:
-            return 398
+            return 224
         case .conversation:
-            return 370
+            return 214
         case .overflow:
-            return 270
+            return 158
         }
     }
 

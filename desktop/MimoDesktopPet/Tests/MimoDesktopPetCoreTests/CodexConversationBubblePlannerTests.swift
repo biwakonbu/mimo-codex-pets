@@ -338,7 +338,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             XCTAssertTrue([PetSpeechBubbleRole.conversation, .overflow].contains(bubble.role))
             XCTAssertLessThanOrEqual(bubble.text.count, PetSpeechBubbleLayout.textLimit(for: bubble.role))
         }
-        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .status), 3)
+        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .status), 4)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .conversation), 2)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .overflow), 1)
         XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .conversation), 96)
