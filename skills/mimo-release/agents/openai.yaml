@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mimo Release"
+  short_description: "Build, notarize, and publish Mimo DMGs"
+  default_prompt: "Use $mimo-release to prepare and notarize the next Mimo Desktop Pet release."

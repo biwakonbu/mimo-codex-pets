@@ -46,7 +46,7 @@ swift test
 
 ## Release Packaging
 
-Build a signed release DMG:
+Build a signed release DMG without notarization:
 
 ```bash
 ./script/package_release.sh 0.0.1
@@ -66,6 +66,19 @@ keychain with `xcrun notarytool store-credentials`, then run:
 
 Without notarization, the DMG can still be attached to a GitHub release, but
 macOS Gatekeeper may warn users when opening an internet-downloaded copy.
+
+For the normal release path, use the versioned notarization wrapper:
+
+```bash
+./script/version_and_notarize.sh 0.0.1 --notary-profile MimoDesktopPet
+```
+
+The wrapper validates the clean worktree, runs pre-release checks, builds and
+notarizes the DMG, staples the ticket, and verifies the final artifact with
+`hdiutil`, `codesign`, `spctl`, and the SHA-256 sidecar. Add
+`--github-release` after the notary profile when the notarized DMG should also
+be tagged, pushed, and attached to a GitHub release. The project-local Codex
+skill for this flow is `skills/mimo-release/SKILL.md`.
 
 `./script/qa_all.sh` is the pre-acceptance gate for companion behavior changes.
 It runs unit tests, static checks, schema/live app-server smoke checks, and all
