@@ -66,6 +66,7 @@ var whiteBubblePixels = 0
 var spriteColorPixels = 0
 var darkOpaquePixels = 0
 var whiteMask = [Bool](repeating: false, count: width * height)
+var markerMask = [Bool](repeating: false, count: width * height)
 
 for y in 0..<height {
     for x in 0..<width {
@@ -84,6 +85,9 @@ for y in 0..<height {
         if alpha > 0.7, red > 0.88, green > 0.88, blue > 0.88 {
             whiteBubblePixels += 1
             whiteMask[y * width + x] = true
+        }
+        if isMarkerColor(alpha: alpha, red: red, green: green, blue: blue) {
+            markerMask[y * width + x] = true
         }
         if alpha > 0.5,
            !(red > 0.88 && green > 0.88 && blue > 0.88),
@@ -176,7 +180,21 @@ if requiresMultiBubbleHierarchy {
         }
     }
 
-    print("Multi-bubble hierarchy inspection passed: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    var markerDescriptions: [String] = []
+    for component in bubbleComponents {
+        let markers = markerComponents(mask: markerMask, width: width, bounds: component)
+        guard !markers.isEmpty else {
+            fail("bubble is missing a compact activity/state marker: bubble=\(describe(component))")
+        }
+        markerDescriptions.append(describe(markers))
+    }
+
+    print(
+        "Multi-bubble hierarchy inspection passed: " +
+        "primary=\(describe(primary)), " +
+        "secondary=\(describe(secondaryComponents)), " +
+        "markers=\(markerDescriptions)"
+    )
 }
 
 print(
@@ -246,6 +264,97 @@ func describe(_ component: WhiteComponent) -> String {
 
 func describe(_ components: [WhiteComponent]) -> String {
     "[" + components.map(describe).joined(separator: "; ") + "]"
+}
+
+func isMarkerColor(alpha: CGFloat, red: CGFloat, green: CGFloat, blue: CGFloat) -> Bool {
+    guard alpha > 0.55 else { return false }
+    if red > 0.88, green > 0.88, blue > 0.88 {
+        return false
+    }
+    if red < 0.12, green < 0.12, blue < 0.12 {
+        return false
+    }
+    return max(abs(red - green), abs(green - blue), abs(red - blue)) > 0.05
+}
+
+func markerComponents(mask: [Bool], width: Int, bounds: WhiteComponent) -> [WhiteComponent] {
+    let height = mask.count / width
+    var visited = Set<Int>()
+    var components: [WhiteComponent] = []
+    let minX = max(0, bounds.minX)
+    let maxX = min(width - 1, bounds.maxX)
+    let minY = max(0, bounds.minY)
+    let maxY = min(height - 1, bounds.maxY)
+
+    for y in minY...maxY {
+        for x in minX...maxX {
+            let startIndex = y * width + x
+            guard mask[startIndex], !visited.contains(startIndex) else { continue }
+
+            var queue = [startIndex]
+            var cursor = 0
+            visited.insert(startIndex)
+
+            var area = 0
+            var componentMinX = x
+            var componentMaxX = x
+            var componentMinY = y
+            var componentMaxY = y
+
+            while cursor < queue.count {
+                let index = queue[cursor]
+                cursor += 1
+
+                let currentX = index % width
+                let currentY = index / width
+                area += 1
+                componentMinX = min(componentMinX, currentX)
+                componentMaxX = max(componentMaxX, currentX)
+                componentMinY = min(componentMinY, currentY)
+                componentMaxY = max(componentMaxY, currentY)
+
+                let neighbors = [
+                    currentX > minX ? index - 1 : nil,
+                    currentX < maxX ? index + 1 : nil,
+                    currentY > minY ? index - width : nil,
+                    currentY < maxY ? index + width : nil
+                ]
+
+                for optionalNeighbor in neighbors {
+                    guard let neighbor = optionalNeighbor,
+                          mask[neighbor],
+                          !visited.contains(neighbor)
+                    else {
+                        continue
+                    }
+                    visited.insert(neighbor)
+                    queue.append(neighbor)
+                }
+            }
+
+            let component = WhiteComponent(
+                area: area,
+                minX: componentMinX,
+                minY: componentMinY,
+                maxX: componentMaxX,
+                maxY: componentMaxY
+            )
+            if isCompactMarker(component) {
+                components.append(component)
+            }
+        }
+    }
+
+    return components
+}
+
+func isCompactMarker(_ component: WhiteComponent) -> Bool {
+    component.area >= 70 &&
+        component.area <= 900 &&
+        component.width >= 7 &&
+        component.width <= 36 &&
+        component.height >= 10 &&
+        component.height <= 36
 }
 
 func hasCenteredTailTaper(mask: [Bool], width: Int, component: WhiteComponent) -> Bool {

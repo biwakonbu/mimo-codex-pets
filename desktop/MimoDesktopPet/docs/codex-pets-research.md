@@ -238,6 +238,12 @@ Conversation behavior:
   higher-priority failed/waiting/review/overflow state. This lets simultaneous
   thread bubbles distinguish plan, command/test, file, browser, image, skill,
   mention, and status work without showing raw commands or payload arguments.
+- The multi-bubble production capture gate verifies more than raw bubble count:
+  it requires four separated white bubble components, a larger primary bubble
+  below the secondary thread chips, a single primary speech tail, no secondary
+  tails, and one compact colored activity/state marker inside every bubble.
+  This keeps the Codex Pets-style simultaneous thread surface from regressing
+  into a flat transcript list or anonymous white chips.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary bubble text is still showing a timed moment or an older queue
   item.
