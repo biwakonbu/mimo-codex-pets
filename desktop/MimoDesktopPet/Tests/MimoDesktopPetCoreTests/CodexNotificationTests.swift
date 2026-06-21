@@ -27,6 +27,64 @@ final class CodexNotificationTests: XCTestCase {
         ])
     }
 
+    func testIntentionallyIgnoredNotificationMethodNames() {
+        XCTAssertEqual(CodexIgnoredNotificationMethod.allCases.map(\.rawValue), [
+            "error",
+            "skills/changed",
+            "thread/goal/updated",
+            "thread/goal/cleared",
+            "thread/settings/updated",
+            "thread/tokenUsage/updated",
+            "hook/started",
+            "hook/completed",
+            "turn/diff/updated",
+            "item/autoApprovalReview/started",
+            "item/autoApprovalReview/completed",
+            "command/exec/outputDelta",
+            "process/outputDelta",
+            "process/exited",
+            "item/commandExecution/terminalInteraction",
+            "item/fileChange/patchUpdated",
+            "serverRequest/resolved",
+            "mcpServer/oauthLogin/completed",
+            "mcpServer/startupStatus/updated",
+            "account/updated",
+            "account/rateLimits/updated",
+            "app/list/updated",
+            "remoteControl/status/changed",
+            "externalAgentConfig/import/completed",
+            "fs/changed",
+            "thread/compacted",
+            "model/rerouted",
+            "model/verification",
+            "turn/moderationMetadata",
+            "warning",
+            "guardianWarning",
+            "deprecationNotice",
+            "configWarning",
+            "fuzzyFileSearch/sessionUpdated",
+            "fuzzyFileSearch/sessionCompleted",
+            "thread/realtime/started",
+            "thread/realtime/itemAdded",
+            "thread/realtime/transcript/delta",
+            "thread/realtime/transcript/done",
+            "thread/realtime/outputAudio/delta",
+            "thread/realtime/sdp",
+            "thread/realtime/error",
+            "thread/realtime/closed",
+            "windows/worldWritableWarning",
+            "windowsSandbox/setupCompleted",
+            "account/login/completed"
+        ])
+    }
+
+    func testHandledAndIgnoredNotificationMethodsDoNotOverlap() {
+        let handled = Set(CodexNotificationMethod.allCases.map(\.rawValue))
+        let ignored = Set(CodexIgnoredNotificationMethod.allCases.map(\.rawValue))
+
+        XCTAssertTrue(handled.isDisjoint(with: ignored))
+    }
+
     func testThreadStatusNotificationDecodes() throws {
         let data = Data("""
         {

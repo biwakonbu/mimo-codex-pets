@@ -12,12 +12,14 @@ Verified public protocol surface:
   - `thread/list`
   - `thread/read`
 - `script/check_app_server_schema.sh` regenerates this schema and verifies that
-  the Swift `CodexNotificationMethod` and `CodexThreadActiveFlag` cases are
-  still present in the schema, so client-side protocol coverage cannot silently
-  drift from the public app-server surface. It also verifies the required
-  payload keys Mimo depends on for live bubble updates, including `threadId`,
-  `turnId`, `itemId`, `delta`, `message`, `item`, and `plan` on the supported
-  lifecycle and streaming notification shapes.
+  every `ServerNotification` method in the generated schema is either handled
+  by `CodexNotificationMethod` or explicitly classified as intentionally ignored
+  by `CodexIgnoredNotificationMethod`, so client-side protocol coverage cannot
+  silently drift from the public app-server surface. It also verifies
+  `CodexThreadActiveFlag` cases and the required payload keys Mimo depends on
+  for live bubble updates, including `threadId`, `turnId`, `itemId`, `delta`,
+  `message`, `item`, and `plan` on the supported lifecycle and streaming
+  notification shapes.
 - The same schema exposes the server notifications used by the companion:
   - `thread/started`
   - `thread/status/changed`

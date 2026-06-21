@@ -119,6 +119,36 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }
 
+    func testProductionBubblesUseMimoReportOnlyForPrimaryAndThreadChipsForSecondaryBubbles() {
+        let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+        let lines = [
+            current,
+            line(threadId: "docs", speaker: "codex", text: "資料作業を進めています", isAssistant: true),
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "review", speaker: "thread", text: "レビュー可能", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: CodexBubbleFormatter.bubbleText(for: current),
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: "current",
+            primaryActivityKind: current.activityKind,
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "ご主人、「current」はコマンドを実行中です",
+            "「waiting」確認待ち",
+            "「review」レビュー可",
+            "「docs」作業中"
+        ])
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation])
+        XCTAssertTrue(bubbles[0].text.hasPrefix("ご主人、"))
+        XCTAssertTrue(bubbles.dropFirst().allSatisfy { !$0.text.contains("ご主人") })
+        XCTAssertTrue(bubbles.dropFirst().allSatisfy { $0.text.hasPrefix("「") })
+    }
+
     func testProductionBubblesCarrySemanticTonesForThreadState() {
         let lines = [
             line(threadId: "failed", speaker: "codex", text: "実行に失敗しました。確認が必要です", isAssistant: true),

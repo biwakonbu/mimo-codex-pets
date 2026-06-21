@@ -66,8 +66,9 @@ transient response timeouts with a fresh selected transport so momentary local
 Codex stalls do not make the full gate flaky; protocol errors still fail
 immediately.
 `./script/check_app_server_schema.sh` verifies the generated app-server schema
-and cross-checks that the Swift notification enum and active flags remain
-schema-backed.
+and cross-checks that every server notification is either handled by the Swift
+client or explicitly classified as intentionally ignored. It also keeps the
+thread active flags schema-backed.
 `./script/check_title_sanitizer_parity.py` verifies that the live smoke helper
 and Swift production formatter keep the same ambient title sanitization behavior
 for safe, unsafe, instruction-looking, machine-payload, stdout/env-marker,

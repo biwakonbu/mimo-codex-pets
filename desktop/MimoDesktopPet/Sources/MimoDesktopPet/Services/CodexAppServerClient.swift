@@ -649,7 +649,10 @@ final class CodexAppServerClient {
     }
 
     private func handleNotification(method: String, params: Any?) {
-        guard let method = CodexNotificationMethod(rawValue: method) else { return }
+        guard let method = CodexNotificationMethod(rawValue: method) else {
+            _ = CodexIgnoredNotificationMethod(rawValue: method)
+            return
+        }
 
         switch method {
         case .threadStarted:

@@ -122,6 +122,22 @@ def raw_string_cases(name):
     return cases
 
 
+def schema_notification_methods():
+    data = schema_json("ServerNotification.json")
+    methods = []
+    for variant in data.get("oneOf", []):
+        method_enum = (
+            variant
+            .get("properties", {})
+            .get("method", {})
+            .get("enum", [])
+        )
+        methods.extend(method_enum)
+    if not methods:
+        raise SystemExit("schema ServerNotification.json had no notification methods")
+    return methods
+
+
 def implicit_string_cases(name):
     body = enum_body(name)
     cases = re.findall(r"case\s+([A-Za-z_][A-Za-z0-9_]*)", body)
@@ -135,8 +151,38 @@ def require_schema_text(schema_text, value, label):
         raise SystemExit(f"schema missing Swift {label}: {value}")
 
 
-for method in raw_string_cases("CodexNotificationMethod"):
-    require_schema_text(server_notification, f'"{method}"', "CodexNotificationMethod")
+schema_methods = schema_notification_methods()
+handled_methods = raw_string_cases("CodexNotificationMethod")
+ignored_methods = raw_string_cases("CodexIgnoredNotificationMethod")
+
+duplicate_schema_methods = sorted(method for method in set(schema_methods) if schema_methods.count(method) > 1)
+if duplicate_schema_methods:
+    raise SystemExit(
+        "schema ServerNotification.json duplicated notification method(s): "
+        + ", ".join(duplicate_schema_methods)
+    )
+
+overlap = sorted(set(handled_methods).intersection(ignored_methods))
+if overlap:
+    raise SystemExit(
+        "Swift notification method(s) are both handled and ignored: "
+        + ", ".join(overlap)
+    )
+
+classified_methods = set(handled_methods).union(ignored_methods)
+missing_from_swift = sorted(set(schema_methods) - classified_methods)
+if missing_from_swift:
+    raise SystemExit(
+        "schema notification methods not classified by Swift client: "
+        + ", ".join(missing_from_swift)
+    )
+
+extra_in_swift = sorted(classified_methods - set(schema_methods))
+if extra_in_swift:
+    raise SystemExit(
+        "Swift notification methods not present in schema: "
+        + ", ".join(extra_in_swift)
+    )
 
 for flag in implicit_string_cases("CodexThreadActiveFlag"):
     require_schema_text(thread_status_changed, f'"{flag}"', "CodexThreadActiveFlag")
@@ -161,7 +207,7 @@ for relative_path, fields in {
 }.items():
     require_required_fields(relative_path, fields)
 
-print("Schema-to-client check passed: Swift notification methods and active flags are present.")
+print("Schema-to-client check passed: all server notifications are handled or intentionally ignored, and active flags are present.")
 PY
 
-echo "Schema check passed: required app-server methods, notification payload keys, client cases, and thread item types are present."
+echo "Schema check passed: required app-server methods, notification payload keys, classified client notification cases, and thread item types are present."
