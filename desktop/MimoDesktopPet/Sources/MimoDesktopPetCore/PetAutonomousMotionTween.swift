@@ -39,6 +39,10 @@ public struct PetAutonomousMotionTween: Equatable, Sendable {
         self.speedWavePhase = speedWavePhase
     }
 
+    public var directionAnimation: PetAnimationState {
+        target.x < start.x ? .runningLeft : .runningRight
+    }
+
     public static func make(
         start: PetWanderPoint,
         target: PetWanderPoint,

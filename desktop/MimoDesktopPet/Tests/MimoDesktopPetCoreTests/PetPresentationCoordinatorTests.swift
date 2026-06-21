@@ -159,7 +159,7 @@ final class PetPresentationCoordinatorTests: XCTestCase {
         ])
     }
 
-    func testAmbientMovementDoesNotInterruptActiveConversationBubble() {
+    func testAmbientMovementTemporarilyOverridesConversationAnimationAndRestoresIt() {
         var coordinator = PetPresentationCoordinator()
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", activityKind: .command)
         _ = coordinator.apply(snapshot: PetCodexSnapshot(
@@ -172,9 +172,14 @@ final class PetPresentationCoordinatorTests: XCTestCase {
         ))
 
         _ = coordinator.beginAmbientMovement(animation: .runningLeft)
-        _ = coordinator.endAmbientMovement()
 
         XCTAssertEqual(coordinator.presentation.animation, .runningLeft)
+        XCTAssertEqual(coordinator.presentation.bubbleText, "ご主人、「current」はコマンドを実行中です")
+        XCTAssertTrue(coordinator.hasActiveConversationBubble)
+
+        _ = coordinator.endAmbientMovement()
+
+        XCTAssertEqual(coordinator.presentation.animation, .running)
         XCTAssertEqual(coordinator.presentation.bubbleText, "ご主人、「current」はコマンドを実行中です")
         XCTAssertTrue(coordinator.hasActiveConversationBubble)
     }

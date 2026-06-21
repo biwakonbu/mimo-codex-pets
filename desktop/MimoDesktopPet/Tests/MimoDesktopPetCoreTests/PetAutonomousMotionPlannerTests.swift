@@ -97,6 +97,31 @@ final class PetAutonomousMotionPlannerTests: XCTestCase {
         XCTAssertEqual(tween.duration, 2, accuracy: 0.0001)
     }
 
+    func testTweenDirectionAnimationFollowsHorizontalTarget() {
+        let right = PetAutonomousMotionTween(
+            start: PetWanderPoint(x: 10, y: 0),
+            target: PetWanderPoint(x: 30, y: 100),
+            startTime: 0,
+            duration: 2
+        )
+        let left = PetAutonomousMotionTween(
+            start: PetWanderPoint(x: 30, y: 0),
+            target: PetWanderPoint(x: 10, y: 100),
+            startTime: 0,
+            duration: 2
+        )
+        let vertical = PetAutonomousMotionTween(
+            start: PetWanderPoint(x: 30, y: 0),
+            target: PetWanderPoint(x: 30, y: 100),
+            startTime: 0,
+            duration: 2
+        )
+
+        XCTAssertEqual(right.directionAnimation, .runningRight)
+        XCTAssertEqual(left.directionAnimation, .runningLeft)
+        XCTAssertEqual(vertical.directionAnimation, .runningRight)
+    }
+
     func testTweenStartsAndEndsAtExpectedPoints() {
         let tween = PetAutonomousMotionTween(
             start: PetWanderPoint(x: 10, y: 20),

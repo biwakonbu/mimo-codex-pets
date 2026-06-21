@@ -129,12 +129,12 @@ while time.time() < deadline:
     for index, row in enumerate(rows):
         if row.get("debugOverlay") is not False:
             raise SystemExit("autonomous energy run unexpectedly enabled debug overlay")
-        if str(row.get("animation", "")).startswith("running"):
+        if row.get("animation") in {"running-left", "running-right"}:
             running_index = index
             break
 
     if running_index is None:
-        last_error = f"no running animation yet: {rows[-4:]}"
+        last_error = f"no directional movement animation yet: {rows[-4:]}"
         time.sleep(0.2)
         continue
 

@@ -26,6 +26,7 @@ final class PetWindowController: NSObject {
     private var manualDragActive = false
     private var autonomousEnergy = PetWindowController.makeAutonomousEnergyController()
     private var autonomousMotion: PetAutonomousMotionTween?
+    private var autonomousMotionAnimation: PetAnimationState?
     private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + PetWindowController.environmentDouble(
         "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS",
         default: 2.0
@@ -97,6 +98,8 @@ final class PetWindowController: NSObject {
             onDragStarted: { [weak self] in
                 self?.manualDragActive = true
                 self?.autonomousMotion = nil
+                self?.autonomousMotionAnimation = nil
+                self?.clearMovementAnimationIfNeeded()
             },
             onDragAnimationChanged: { [weak viewModel] animation in
                 viewModel?.beginDrag(animation: animation)
@@ -197,7 +200,9 @@ final class PetWindowController: NSObject {
     }
 
     @objc private func movementTimerFired() {
-        updateAutonomousMotion()
+        if updateAutonomousMotion() {
+            return
+        }
         updateMovementAnimation()
     }
 
@@ -216,15 +221,23 @@ final class PetWindowController: NSObject {
         )
 
         if let animation = update.animation {
-            movementAnimationActive = true
-            movementAnimationWasManual = manualDragActive
             if manualDragActive {
-                viewModel.beginDrag(animation: animation)
+                beginMovementAnimation(animation, manual: true)
             } else {
-                viewModel.beginAmbientMovement(animation: animation)
+                beginMovementAnimation(animation, manual: false)
             }
         } else if movementAnimationActive, !update.isMoving {
             clearMovementAnimationIfNeeded()
+        }
+    }
+
+    private func beginMovementAnimation(_ animation: PetAnimationState, manual: Bool) {
+        movementAnimationActive = true
+        movementAnimationWasManual = manual
+        if manual {
+            viewModel.beginDrag(animation: animation)
+        } else {
+            viewModel.beginAmbientMovement(animation: animation)
         }
     }
 
@@ -240,10 +253,11 @@ final class PetWindowController: NSObject {
         }
     }
 
-    private func updateAutonomousMotion() {
+    @discardableResult
+    private func updateAutonomousMotion() -> Bool {
         let now = Date.timeIntervalSinceReferenceDate
 
-        guard panel.isVisible, !manualDragActive, !autonomousDisabled else { return }
+        guard panel.isVisible, !manualDragActive, !autonomousDisabled else { return false }
 
         autonomousEnergy.update(
             now: now,
@@ -264,25 +278,31 @@ final class PetWindowController: NSObject {
             }
         }
 
-        guard let motion = autonomousMotion else { return }
+        guard let motion = autonomousMotion else { return false }
 
         let position = motion.position(at: now)
         panel.setFrameOrigin(NSPoint(x: position.origin.x, y: position.origin.y))
+        beginMovementAnimation(autonomousMotionAnimation ?? motion.directionAnimation, manual: false)
 
         if position.isComplete {
             autonomousMotion = nil
+            autonomousMotionAnimation = nil
+            clearMovementAnimationIfNeeded()
             scheduleAutonomousRest(now: now, includeMoment: true)
-            return
+            return true
         }
 
         if now >= nextAutonomousRetargetAt {
             if shouldInterruptAutonomousMotionForRest() {
                 autonomousMotion = nil
+                autonomousMotionAnimation = nil
+                clearMovementAnimationIfNeeded()
                 scheduleAutonomousRest(now: now, includeMoment: true)
             } else {
                 chooseNextAutonomousMotion(now: now)
             }
         }
+        return true
     }
 
     private func chooseNextAutonomousMotion(now: TimeInterval) {
@@ -333,7 +353,7 @@ final class PetWindowController: NSObject {
             speedWaveCycles = Double.random(in: 1.0...2.4)
             speedWavePhase = Double.random(in: 0...(2 * Double.pi))
         }
-        autonomousMotion = PetAutonomousMotionTween.make(
+        let motion = PetAutonomousMotionTween.make(
             start: start,
             target: target,
             startTime: now,
@@ -343,6 +363,8 @@ final class PetWindowController: NSObject {
             speedWaveCycles: speedWaveCycles,
             speedWavePhase: speedWavePhase
         )
+        autonomousMotion = motion
+        autonomousMotionAnimation = motion.directionAnimation
         nextAutonomousRetargetAt = now + retargetDelay()
     }
 
@@ -404,22 +426,7 @@ final class PetWindowController: NSObject {
     }
 
     private func currentOnScreenFrame() -> PetDragFrame {
-        guard
-            panel.windowNumber > 0,
-            let windowInfo = CGWindowListCopyWindowInfo(
-                [.optionIncludingWindow],
-                CGWindowID(panel.windowNumber)
-            ) as? [[String: Any]],
-            let bounds = windowInfo.first?[kCGWindowBounds as String] as? [String: Any],
-            let x = bounds["X"] as? Double,
-            let y = bounds["Y"] as? Double,
-            let width = bounds["Width"] as? Double,
-            let height = bounds["Height"] as? Double
-        else {
-            return PetDragFrame(panel.frame)
-        }
-
-        return PetDragFrame(x: x, y: y, width: width, height: height)
+        PetDragFrame(panel.frame)
     }
 }
 
