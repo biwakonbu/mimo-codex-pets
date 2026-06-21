@@ -166,14 +166,19 @@ Computer Use limitation:
   the production companion because it is an `LSUIElement` app using a
   non-activating screen-saver-level panel. This is a Computer Use attachment
   limitation, not proof that the panel is absent.
-- The latest Computer Use recheck reproduced both limitations: `com.openai.codex`
-  was rejected by the Computer Use safety policy, and a running production
-  `MimoDesktopPet` returned only a `remoteConnection` marker instead of a useful
-  accessibility tree.
+- The latest Computer Use rechecks reproduced both limitations:
+  `com.openai.codex` was rejected by the Computer Use safety policy, and a
+  running production `MimoDesktopPet` could not be attached reliably
+  (`remoteConnection` in one run, `cgWindowNotFound` in a later run) instead of
+  returning a useful accessibility tree.
 - Companion visual QA therefore uses CGWindow discovery plus
   `screencapture -l` on the exact Mimo window. The capture is then inspected for
   transparent corners, bounded alpha coverage, white speech-bubble pixels, and
   Mimo sprite color pixels.
+- The production surface still exposes a best-effort accessibility label,
+  identifier, and value on its interaction view for assistive tooling that can
+  attach to the window. That value is assembled only from the already-sanitized
+  visible bubble texts, never from raw app-server payloads.
 
 ## Mimic Rules
 
@@ -287,6 +292,10 @@ Conversation behavior:
   higher-priority failed/waiting/review/overflow state. This lets simultaneous
   thread bubbles distinguish plan, command/test, file, browser, image, skill,
   mention, and status work without showing raw commands or payload arguments.
+- The same visible bubble text is exposed through the production interaction
+  view's accessibility value when macOS accessibility tooling can attach to the
+  panel. This makes screen-reader and Computer Use-visible text match the
+  product bubble surface instead of introducing a second transcript channel.
 - The multi-bubble production capture gate verifies more than raw bubble count:
   it requires four separated white bubble components, a larger primary bubble
   below the secondary thread chips, a single primary speech tail, no secondary
@@ -425,10 +434,11 @@ Manual or visual checks:
   text, MCP server names, and local `.env` paths, then rejects any production
   bubble log that leaks those fragments.
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, `bubbleRoles`,
-  `bubbleTones`, and `bubbleActivityKinds`; stacked bubble-only updates should
-  be logged for deterministic E2E evidence. Fake production E2E also enforces
-  the five-bubble visible limit, the primary/secondary/overflow text-length
-  caps, activity-kind marker propagation, and a three-thread simultaneous
+  `bubbleTones`, `bubbleActivityKinds`, and `accessibilityValue`; stacked
+  bubble-only updates should be logged for deterministic E2E evidence. Fake
+  production E2E also enforces the five-bubble visible limit, the
+  primary/secondary/overflow text-length caps, activity-kind marker propagation,
+  accessibility value production-mode labeling, and a three-thread simultaneous
   bubble case with one focused primary bubble plus three conversation bubbles.
   Overflow E2E separately verifies one focused primary bubble, three concrete
   conversation bubbles, and one overflow counter bubble with no activity kind

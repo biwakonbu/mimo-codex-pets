@@ -226,7 +226,15 @@ for row in rows:
     for bubble in bubbles[1:]:
         if len(str(bubble)) > 34:
             raise SystemExit(f"secondary production bubble is too long: {bubble}")
-    all_visible_text = " ".join([str(row.get("bubbleText", ""))] + [str(bubble) for bubble in bubbles])
+    accessibility_value = str(row.get("accessibilityValue", ""))
+    if bubbles and not accessibility_value:
+        raise SystemExit("production presentation log omitted accessibilityValue")
+    if bubbles and not accessibility_value.startswith("本番表示。"):
+        raise SystemExit(f"production accessibility value did not mark production mode: {accessibility_value!r}")
+    all_visible_text = " ".join(
+        [str(row.get("bubbleText", "")), accessibility_value] +
+        [str(bubble) for bubble in bubbles]
+    )
     forbidden_fragments = (
         "swift test",
         "get_app_state",

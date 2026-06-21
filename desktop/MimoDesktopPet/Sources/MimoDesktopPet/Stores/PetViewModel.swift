@@ -11,6 +11,13 @@ final class PetViewModel: ObservableObject {
     var hasPendingConversationBubbles: Bool {
         coordinator.hasPendingConversationBubbles
     }
+    var accessibilityValue: String {
+        PetSpeechBubbleAccessibility.value(
+            presentation: presentation,
+            bubbles: visibleBubbles,
+            debugOverlay: debugOverlay
+        )
+    }
 
     private let conversationBubbleDuration: TimeInterval
     private let presentationLogURL: URL?
@@ -137,6 +144,7 @@ final class PetViewModel: ObservableObject {
             "bubbleRoles": visibleBubbles.map { $0.role.rawValue },
             "bubbleTones": visibleBubbles.map { $0.tone.rawValue },
             "bubbleActivityKinds": visibleBubbles.map { $0.activityKind?.rawValue ?? "none" },
+            "accessibilityValue": accessibilityValue,
             "debugOverlay": debugOverlay,
             "isOffline": state.isOffline
         ]

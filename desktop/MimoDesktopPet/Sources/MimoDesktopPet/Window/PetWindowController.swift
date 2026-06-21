@@ -86,6 +86,9 @@ final class PetWindowController: NSObject {
             isDebugOverlay: { [weak viewModel] in
                 viewModel?.debugOverlay ?? false
             },
+            accessibilityValue: { [weak viewModel] in
+                viewModel?.accessibilityValue ?? PetSpeechBubbleAccessibility.label
+            },
             onDragStarted: { [weak self] in
                 self?.manualDragActive = true
                 self?.autonomousMotion = nil
@@ -362,6 +365,7 @@ private final class PetInteractionView: NSView {
     private var didMoveDuringDrag = false
 
     private let isDebugOverlay: () -> Bool
+    private let accessibilityValueProvider: () -> String
     private let onDragStarted: () -> Void
     private let onDragAnimationChanged: (PetAnimationState) -> Void
     private let onDragEnded: () -> Void
@@ -370,12 +374,14 @@ private final class PetInteractionView: NSView {
     init(
         hostedView: NSView,
         isDebugOverlay: @escaping () -> Bool,
+        accessibilityValue: @escaping () -> String,
         onDragStarted: @escaping () -> Void,
         onDragAnimationChanged: @escaping (PetAnimationState) -> Void,
         onDragEnded: @escaping () -> Void,
         onClicked: @escaping () -> Void
     ) {
         self.isDebugOverlay = isDebugOverlay
+        self.accessibilityValueProvider = accessibilityValue
         self.onDragStarted = onDragStarted
         self.onDragAnimationChanged = onDragAnimationChanged
         self.onDragEnded = onDragEnded
@@ -385,6 +391,10 @@ private final class PetInteractionView: NSView {
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
         layer?.isOpaque = false
+        setAccessibilityElement(true)
+        setAccessibilityRole(.group)
+        setAccessibilityLabel(PetSpeechBubbleAccessibility.label)
+        setAccessibilityIdentifier(PetSpeechBubbleAccessibility.identifier)
 
         addSubview(hostedView)
         hostedView.translatesAutoresizingMaskIntoConstraints = false
@@ -403,6 +413,10 @@ private final class PetInteractionView: NSView {
 
     override var isOpaque: Bool {
         false
+    }
+
+    override func accessibilityValue() -> Any? {
+        accessibilityValueProvider()
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
