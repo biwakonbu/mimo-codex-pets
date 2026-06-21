@@ -278,14 +278,51 @@ public enum CodexConversationBubblePlanner {
 
         let visibleConversationCount = remainingSlots - 1
         bubbles.append(contentsOf: candidates.prefix(visibleConversationCount))
-        let overflowCount = candidates.count - visibleConversationCount
+        if let overflow = overflowCandidate(from: Array(candidates.dropFirst(visibleConversationCount))) {
+            bubbles.append(overflow)
+        }
+    }
+
+    private static func overflowCandidate(from hiddenCandidates: [BubbleCandidate]) -> BubbleCandidate? {
+        guard !hiddenCandidates.isEmpty else { return nil }
+
+        let tone = highestPriorityOverflowTone(in: hiddenCandidates)
+        let text: String
+        switch tone {
+        case .failed:
+            text = "ほか\(hiddenCandidates.count)件に失敗あり"
+        case .waiting:
+            text = "ほか\(hiddenCandidates.count)件に確認待ち"
+        case .review:
+            text = "ほか\(hiddenCandidates.count)件レビューあり"
+        case .active, .neutral, .overflow:
+            text = "ほか\(hiddenCandidates.count)件も見ています"
+        }
+
         let overflowText = CodexBubbleFormatter.compact(
-            "ほか\(overflowCount)件も見ています",
+            text,
             limit: PetSpeechBubbleLayout.textLimit(for: .overflow)
         )
-        if !overflowText.isEmpty {
-            bubbles.append(BubbleCandidate(text: overflowText, role: .overflow, tone: .overflow, activityKind: nil))
+        guard !overflowText.isEmpty else { return nil }
+        return BubbleCandidate(
+            text: overflowText,
+            role: .overflow,
+            tone: tone,
+            activityKind: nil
+        )
+    }
+
+    private static func highestPriorityOverflowTone(in candidates: [BubbleCandidate]) -> PetSpeechBubbleTone {
+        if candidates.contains(where: { $0.tone == .failed }) {
+            return .failed
         }
+        if candidates.contains(where: { $0.tone == .waiting }) {
+            return .waiting
+        }
+        if candidates.contains(where: { $0.tone == .review }) {
+            return .review
+        }
+        return .overflow
     }
 
     private static func primaryFocusLine(

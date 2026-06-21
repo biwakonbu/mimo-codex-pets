@@ -142,7 +142,10 @@ thread coverage, so
 each visible thread appears at most once. If more threads are active than the
 compact stack can show, Mimo tracks up to six thread contexts and the last
 secondary bubble becomes a short overflow note such as `ほか2件も見ています`
-instead of silently dropping the extra context.
+instead of silently dropping the extra context. If hidden threads include
+attention states, that overflow bubble keeps the strongest hidden tone and uses
+short text such as `ほか3件に確認待ち` or `ほか3件に失敗あり`, so urgent work is
+not flattened into a neutral counter.
 If another visible thread needs attention, such as a failure, confirmation
 wait, or review-ready state, that thread is promoted into the primary Mimo
 report ahead of a merely active focused thread. The active focused thread stays

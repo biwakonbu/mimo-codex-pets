@@ -279,10 +279,14 @@ Conversation behavior:
   scan visually. If more thread summaries are available than the remaining
   compact slots can show, Mimo keeps up to six thread contexts internally and
   reserves the final compact slot for a smaller overflow counter bubble such as
-  `ほか2件も見ています` rather than silently dropping that extra context. The focus
-  and overflow bubbles have their own `bubbleRoles` in presentation logs so E2E
-  can distinguish a primary thread report from generic status and a concrete
-  thread summary.
+  `ほか2件も見ています` rather than silently dropping that extra context. If hidden
+  contexts include attention states, the overflow bubble keeps the strongest
+  hidden tone and switches to short wording such as `ほか3件に確認待ち`,
+  `ほか3件に失敗あり`, or `ほか3件レビューあり`, so a compact stack does not
+  flatten urgent hidden work into a neutral counter. The focus and overflow
+  bubbles have their own `bubbleRoles` in presentation logs so E2E can
+  distinguish a primary thread report from generic status and a concrete thread
+  summary.
 - Each production bubble also carries a semantic `bubbleTone` in presentation
   logs: `active`, `waiting`, `review`, `failed`, `overflow`, or `neutral`.
   SwiftUI uses the tone for compact state markers and accent color, while tests

@@ -256,6 +256,58 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.tone), [.waiting, .review, .active, .overflow])
     }
 
+    func testOverflowBubblePreservesHiddenWaitingUrgency() {
+        let lines = [
+            line(threadId: "waiting-1", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "waiting-2", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "waiting-3", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "waiting-4", speaker: "thread", text: "確認待ち", isAssistant: true),
+            line(threadId: "waiting-5", speaker: "thread", text: "確認待ち", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: nil,
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "Codex が作業中",
+            "「waiting-5」確認待ち",
+            "「waiting-4」確認待ち",
+            "ほか3件に確認待ち"
+        ])
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .overflow])
+        XCTAssertEqual(bubbles.map(\.tone), [.active, .waiting, .waiting, .waiting])
+    }
+
+    func testOverflowBubblePreservesHiddenFailureUrgency() {
+        let lines = [
+            line(threadId: "failed-1", speaker: "codex", text: "実行に失敗しました", isAssistant: true),
+            line(threadId: "failed-2", speaker: "codex", text: "systemError を確認", isAssistant: true),
+            line(threadId: "failed-3", speaker: "codex", text: "エラーを確認", isAssistant: true),
+            line(threadId: "failed-4", speaker: "codex", text: "failed", isAssistant: true),
+            line(threadId: "active", speaker: "codex", text: "作業を進めています", isAssistant: true)
+        ]
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: nil,
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.text), [
+            "Codex が作業中",
+            "「failed-4」失敗",
+            "「failed-3」失敗",
+            "ほか3件に失敗あり"
+        ])
+        XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .overflow])
+        XCTAssertEqual(bubbles.map(\.tone), [.active, .failed, .failed, .failed])
+    }
+
     func testProductionBubblesRespectProductStackTextLimits() {
         let lines = [
             line(
