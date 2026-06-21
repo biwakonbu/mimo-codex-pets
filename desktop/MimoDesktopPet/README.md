@@ -44,6 +44,29 @@ swift test
 ./script/e2e_state_matrix.sh
 ```
 
+## Release Packaging
+
+Build a signed release DMG:
+
+```bash
+./script/package_release.sh 0.0.1
+```
+
+The script builds the release binary, stages `dist/release/v0.0.1/MimoDesktopPet.app`,
+signs it with the first available `Developer ID Application` identity, creates
+`dist/release/v0.0.1/MimoDesktopPet-0.0.1.dmg`, signs the DMG, and writes a
+SHA-256 sidecar file.
+
+To notarize and staple the DMG, first store Apple notary credentials in the
+keychain with `xcrun notarytool store-credentials`, then run:
+
+```bash
+./script/package_release.sh 0.0.1 --notarize --notary-profile <profile>
+```
+
+Without notarization, the DMG can still be attached to a GitHub release, but
+macOS Gatekeeper may warn users when opening an internet-downloaded copy.
+
 `./script/qa_all.sh` is the pre-acceptance gate for companion behavior changes.
 It runs unit tests, static checks, schema/live app-server smoke checks, and all
 production E2E capture gates. It also verifies that every `script/e2e_*.sh`
@@ -86,9 +109,9 @@ deterministic formatter, `MIMO_CODEX_DIALOGUE_ENABLED=1` to force Codex-backed
 speech in tests, `MIMO_CODEX_DIALOGUE_MODEL=gpt-5.4-mini` to override the Codex
 model, and `MIMO_CODEX_DIALOGUE_REFRESH_SECONDS=45` to control per-session
 regeneration cadence.
-Production bubbles use the available panel width rather than compact chips for
-primary Mimo speech. The primary bubble can grow to three text lines, secondary
-session rows can grow to two lines, and overlong Mimo speech is split into
+Production bubbles use compact readable columns instead of forcing the full
+panel width. The primary bubble can grow to four text lines, secondary session
+rows keep a bounded title/summary shape, and overlong Mimo speech is split into
 readable pages that advance on the same timed conversation-sketch loop as normal
 session updates. Bubble changes use stable visual slots: new bubbles fade and
 rise in from the Mimo side, removed bubbles fade upward, stack position changes
