@@ -179,9 +179,9 @@ Computer Use limitation:
   opportunistic observation channel only; use process-scoped CGWindow capture
   and presentation logs as the canonical evidence.
 - Companion visual QA therefore uses CGWindow discovery plus
-  `screencapture -l` on the exact Mimo window. The capture is then inspected for
-  transparent corners, bounded alpha coverage, white speech-bubble pixels, and
-  Mimo sprite color pixels.
+  `screencapture -l` on the exact Mimo window owned by the shell-launched app
+  process. The capture is then inspected for transparent corners, bounded alpha
+  coverage, white speech-bubble pixels, and Mimo sprite color pixels.
 - The production surface still exposes a best-effort accessibility label,
   identifier, and value on its interaction view for assistive tooling that can
   attach to the window. That value is assembled only from the already-sanitized
@@ -409,6 +409,9 @@ Manual or visual checks:
   trusting the captured state.
 - Window capture corner alpha is transparent.
 - Window capture reports the Mimo window at screen-saver layer.
+- Production E2E resolves the CGWindow through `script/find_mimo_window.swift`
+  with the launched `APP_PID`, so a stale or LaunchServices-started Mimo window
+  cannot satisfy the capture gate.
 - `script/inspect_production_capture.swift` verifies that the captured
   production window is neither blank nor a debug-style opaque panel: it must
   contain transparent background, white speech-bubble pixels, and Mimo sprite

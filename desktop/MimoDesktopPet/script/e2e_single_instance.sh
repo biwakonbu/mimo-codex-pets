@@ -92,15 +92,23 @@ if [[ "$pid_count" != "1" || "$pids" != "$APP_PID" ]]; then
   exit 1
 fi
 
-WINDOW_COUNT="$(swift - <<'SWIFT'
+WINDOW_COUNT="$(swift - "$APP_PID" <<'SWIFT'
 import CoreGraphics
 import Foundation
 
+let expectedPID = Int(CommandLine.arguments[1]) ?? -1
 let expectedLayer = Int(CGWindowLevelForKey(.screenSaverWindow))
 let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
 let mimoWindows = windows.filter { window in
     (window[kCGWindowOwnerName as String] as? String ?? "") == "MimoDesktopPet"
         && (window[kCGWindowLayer as String] as? Int) == expectedLayer
+}
+let wrongPIDWindows = mimoWindows.filter { window in
+    (window[kCGWindowOwnerPID as String] as? Int) != expectedPID
+}
+if !wrongPIDWindows.isEmpty {
+    fputs("found Mimo windows not owned by first process: \(wrongPIDWindows)\n", stderr)
+    exit(1)
 }
 print(mimoWindows.count)
 SWIFT

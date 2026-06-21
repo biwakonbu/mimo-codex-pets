@@ -57,37 +57,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift - <<'SWIFT'
-import AppKit
-import CoreGraphics
-import Foundation
-
-let expectedLayer = Int(CGWindowLevelForKey(.screenSaverWindow))
-let deadline = Date().addingTimeInterval(8)
-while Date() < deadline {
-    let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]] ?? []
-    if let window = windows.first(where: { ($0[kCGWindowOwnerName as String] as? String ?? "") == "MimoDesktopPet" }),
-       let id = window[kCGWindowNumber as String],
-       let layer = window[kCGWindowLayer as String] as? Int,
-       let bounds = window[kCGWindowBounds as String] as? [String: Any],
-       let width = bounds["Width"] as? Double,
-       let height = bounds["Height"] as? Double {
-        guard layer == expectedLayer else {
-            fputs("unexpected Mimo window layer \(layer), expected screen-saver layer \(expectedLayer)\n", stderr)
-            exit(1)
-        }
-        guard width <= 440, height <= 440 else {
-            fputs("unexpected production window bounds \(width)x\(height)\n", stderr)
-            exit(1)
-        }
-        print(id)
-        exit(0)
-    }
-    Thread.sleep(forTimeInterval: 0.25)
-}
-exit(1)
-SWIFT
-)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 440)"
 
 python3 - "$PRESENTATION_LOG" "$TIMEOUT_SECONDS" "$EXPECT_THREAD_CONTEXT" "$PREFLIGHT_SUMMARY" <<'PY'
 import json

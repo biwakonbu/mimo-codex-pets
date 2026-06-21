@@ -260,7 +260,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   (`remoteConnection`) and can disturb deterministic fake-app launches by
   starting the bundle through LaunchServices. Treat CGWindow capture,
   presentation logs, and production E2E scripts as the canonical visual QA
-  evidence.
+  evidence. Production E2E resolves the window by launched process PID via
+  `script/find_mimo_window.swift`, so a stale or separately launched Mimo window
+  cannot accidentally satisfy a screenshot gate.
 - periodic refresh uses `thread/loaded/list` to re-read visible threads, so
   secondary thread bubbles can update after initial load
 - refresh-cycle reads are coalesced across `thread/loaded/list` and
