@@ -181,11 +181,13 @@ multiple bubbles can be scanned quickly. They do not repeat the longer
 secret-looking payload text. Threads can be summarized from sanitized item
 activity, a safe session-derived `workSummary`, or from thread/turn status
 alone. `CodexSessionSummarizer` classifies short, non-secret session themes
-such as `吹き出し要約`, `複数スレッド表示`, `Codex 連携`, or `Mimo の動き`, and
-the formatter combines that theme with state such as testing, waiting,
-reviewing, or tool checking. That is how Mimo can say
-`ご主人、「Mimo runtime QA」は吹き出し要約のテスト中です` without quoting raw
-session text. Bubble markers use semantic tone for urgent states and typed
+such as `作業内容の説明`, `吹き出し要約の表示文言`, `進捗の具体説明`,
+`複数スレッド表示`, `Codex 連携`, or `Mimo の動き`, and the formatter combines
+that theme with state such as testing, waiting, reviewing, or tool checking.
+That is how Mimo can say
+`ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です` or
+`ご主人、「Mimo runtime QA」は吹き出し要約の表示文言をまとめています`
+without quoting raw session text. Bubble markers use semantic tone for urgent states and typed
 activity kind for ordinary Codex work such as plan, command, file, browser,
 image, skill, or mention activity. The stack favors thread coverage, so each
 visible thread appears at most once. If more threads are active than the compact

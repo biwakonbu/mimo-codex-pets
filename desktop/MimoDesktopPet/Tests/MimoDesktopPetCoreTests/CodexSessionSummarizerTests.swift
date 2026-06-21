@@ -5,7 +5,14 @@ final class CodexSessionSummarizerTests: XCTestCase {
     func testInfersBubbleSummaryWorkFromSessionContent() {
         XCTAssertEqual(
             CodexSessionSummarizer.summary(from: "吹き出しに Codex 作業内容の要約を出して状況を説明する"),
-            "吹き出し要約"
+            "作業内容の説明"
+        )
+    }
+
+    func testInfersConcreteProgressExplanationFromFeedback() {
+        XCTAssertEqual(
+            CodexSessionSummarizer.summary(from: "具体的にどんな事をやっているのか、考察や進捗を説明してほしい"),
+            "進捗の具体説明"
         )
     }
 

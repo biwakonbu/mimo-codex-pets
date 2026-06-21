@@ -66,11 +66,11 @@ final class CodexBubbleFormatterTests: XCTestCase {
 
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: line),
-            "ご主人、「Mimo runtime QA」は吹き出し要約を進めています"
+            "ご主人、「Mimo runtime QA」は作業内容の説明を進めています"
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: line),
-            "「Mimo runtime...」吹き出し要約中"
+            "「Mimo runtime...」作業内容の説明中"
         )
     }
 
@@ -82,7 +82,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
             text: "テストを実行中",
             isAssistant: true,
             activityKind: .test,
-            workSummary: "吹き出し要約"
+            workSummary: "作業内容の説明"
         )
         let waiting = CodexConversationLine(
             threadId: "thread",
@@ -100,15 +100,15 @@ final class CodexBubbleFormatterTests: XCTestCase {
             text: "ツールを使用中",
             isAssistant: true,
             activityKind: .tool,
-            workSummary: "吹き出し要約"
+            workSummary: "作業内容の説明"
         )
 
-        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: tool), "ご主人、「Mimo runtime QA」は吹き出し要約のテスト中です")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: tool), "「Mimo runtime...」吹き出し要約検証中")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: tool), "ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: tool), "「Mimo runtime...」作業内容の説明テスト中")
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: waiting), "ご主人、「Mimo runtime QA」はCodex 連携で確認待ちです")
         XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「Mimo runtime...」Codex 連携確認待ち")
-        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: genericTool), "ご主人、「Mimo runtime QA」は吹き出し要約をツールで確認中です")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: genericTool), "「Mimo runtime...」吹き出し要約ツール確認")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: genericTool), "ご主人、「Mimo runtime QA」は作業内容の説明をツールで確認中です")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: genericTool), "「Mimo runtime...」作業内容の説明ツール確認")
     }
 
     func testUnsafeSessionContentDoesNotBecomeVisibleWorkSummary() {

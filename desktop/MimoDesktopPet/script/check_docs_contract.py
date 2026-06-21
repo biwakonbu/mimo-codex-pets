@@ -172,6 +172,9 @@ def require_mimicry_contract() -> None:
         [
             "CodexSessionSummarizer",
             "CodexAmbientTextSafety.isUnsafeForAmbientDisplay",
+            "作業内容の説明",
+            "進捗の具体説明",
+            "吹き出し要約の表示文言",
             "吹き出し要約",
             "複数スレッド表示",
             "Codex 連携",

@@ -90,7 +90,9 @@ public enum CodexBubbleFormatter {
                 return "\(topic)安全警告"
             case "MCP を確認中です":
                 return "\(topic)MCP 確認"
-            case "テストを実行中です", "検証中です":
+            case "テストを実行中です":
+                return "\(topic)テスト中"
+            case "検証中です":
                 return "\(topic)検証中"
             case "ファイルを確認中です":
                 return "\(topic)ファイル確認"
@@ -334,9 +336,9 @@ public enum CodexBubbleFormatter {
         case "依頼を確認しました":
             return "\(topic)の依頼を確認しました"
         case "応答をまとめています":
-            return "\(topic)の返答中です"
+            return "\(topic)をまとめています"
         case "計画を整理中です":
-            return "\(topic)の計画中です"
+            return "\(topic)を計画中です"
         case "文脈を整理中です":
             return "\(topic)の文脈整理中です"
         case "文脈を整理しました":
@@ -344,9 +346,9 @@ public enum CodexBubbleFormatter {
         case "ツールで確認中です":
             return "\(topic)をツールで確認中です"
         case "端末入力を確認中です":
-            return "\(topic)の端末入力を確認中です"
+            return "\(topic)で端末入力を確認中です"
         case "コマンドを実行中です":
-            return "\(topic)のコマンドを実行中です"
+            return "\(topic)でコマンドを実行中です"
         case "承認を確認中です":
             return "\(topic)の承認を確認中です"
         case "承認を確認しました":
@@ -376,7 +378,7 @@ public enum CodexBubbleFormatter {
         case "MCP を確認中です":
             return "\(topic)のMCPを確認中です"
         case "テストを実行中です":
-            return "\(topic)のテスト中です"
+            return "\(topic)をテスト中です"
         case "検証中です":
             return "\(topic)を検証中です"
         case "ファイルを確認中です":

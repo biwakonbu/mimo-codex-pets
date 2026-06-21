@@ -90,7 +90,7 @@ final class CodexConversationLineCombinerTests: XCTestCase {
                 text: "吹き出しに作業内容の要約を出して",
                 isAssistant: false,
                 activityKind: .userRequest,
-                workSummary: "吹き出し要約"
+                workSummary: "作業内容の説明"
             ),
             line(
                 threadId: "summary",
@@ -107,15 +107,15 @@ final class CodexConversationLineCombinerTests: XCTestCase {
         )
 
         XCTAssertEqual(ordered.map(\.workSummary), [
-            "吹き出し要約",
-            "吹き出し要約",
-            "吹き出し要約"
+            "作業内容の説明",
+            "作業内容の説明",
+            "作業内容の説明"
         ])
         let activityLine = ordered.first { $0.activityKind == .threadStatus }
         XCTAssertEqual(activityLine?.text, "作業中")
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: activityLine!),
-            "ご主人、「summary」は吹き出し要約を進めています"
+            "ご主人、「summary」は作業内容の説明を進めています"
         )
     }
 

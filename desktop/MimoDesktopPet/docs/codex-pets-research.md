@@ -251,7 +251,8 @@ Conversation behavior:
 - Safe user, assistant, plan, and reasoning item text can also produce a compact
   `workSummary` through `CodexSessionSummarizer`. This is deliberately a small
   topic classifier rather than a transcript summarizer: it can identify themes
-  such as `吹き出し要約`, `複数スレッド表示`, `Codex 連携`, `セッション状況`,
+  such as `作業内容の説明`, `吹き出し要約の表示文言`,
+  `進捗の具体説明`, `複数スレッド表示`, `Codex 連携`, `セッション状況`,
   `画面確認`, or `Mimo の動き`, but it first applies the same ambient-display
   safety gate used for titles. Unsafe paths, credentials, stdout/env fragments,
   instruction-looking text, and other secret-looking session details therefore
@@ -259,9 +260,10 @@ Conversation behavior:
 - The latest safe `workSummary` is propagated within that thread to tool,
   command, file, status, review, and lifecycle progress lines. This lets Mimo
   explain both the work and the state, for example
-  `ご主人、「Mimo runtime QA」は吹き出し要約のテスト中です` or
-  `「Mimo runtime...」吹き出し要約確認待ち`, while still never quoting raw
-  commands, paths, deltas, or model output.
+  `ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です`,
+  `ご主人、「Mimo runtime QA」は吹き出し要約の表示文言をまとめています`,
+  or `「Mimo runtime...」進捗の具体説明確認待ち`, while still never quoting
+  raw commands, paths, deltas, or model output.
 - The live app presentation smoke uses Python to preflight expected sanitized
   title candidates. `check_title_sanitizer_parity.py` and
   `title_sanitizer_fixtures.json` keep that helper aligned with the Swift
@@ -471,10 +473,11 @@ Manual or visual checks:
   including notification-driven tool activity and streaming delta activity, plus
   simultaneous stacked bubbles for a second visible thread and a later
   secondary-thread update discovered immediately from notification-triggered
-  thread reads. The fake session specifically requires topic-aware output such
-  as `吹き出し要約の返答中`, `吹き出し要約の計画中`,
-  `吹き出し要約のテスト中`, and `吹き出し要約で確認待ち` so regression tests
-  cover Mimo explaining what Codex is working on, not only generic state labels.
+  thread reads. The fake session specifically requires concrete topic-aware
+  output such as `吹き出し要約の表示文言をまとめています`,
+  `吹き出し要約の表示文言を計画中`, `作業内容の説明をテスト中`, and
+  `作業内容の説明で確認待ち` so regression tests cover Mimo explaining what
+  Codex is working on, not only generic state labels.
   The same fake E2E emits
   `thread/started` for a new thread and verifies that Mimo reports the new
   thread title and sends `thread/read` before the next polling cycle. The fake

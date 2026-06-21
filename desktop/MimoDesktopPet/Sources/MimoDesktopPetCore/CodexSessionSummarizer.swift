@@ -12,7 +12,33 @@ public enum CodexSessionSummarizer {
         let lowercased = collapsed.lowercased()
         if containsAny(lowercased, ["吹き出し", "bubble"]) &&
             containsAny(lowercased, ["要約", "summary", "会話", "セッション", "状況", "説明"]) {
+            if containsAny(lowercased, ["具体", "考察", "進捗", "どんな事", "何を"]) {
+                return "吹き出し要約の具体説明"
+            }
+            if containsAny(lowercased, ["作業内容", "内容"]) {
+                return "作業内容の説明"
+            }
+            if containsAny(lowercased, ["セッションごと", "スレッドごと", "thread", "複数"]) {
+                return "スレッド別の状況整理"
+            }
+            if containsAny(lowercased, ["実装", "修正", "改善", "対応", "作る"]) {
+                return "吹き出し要約の実装"
+            }
+            if containsAny(lowercased, ["表示", "文言", "ui"]) {
+                return "吹き出し要約の表示文言"
+            }
+            if containsAny(lowercased, ["状況"]) {
+                return "吹き出し要約の状況説明"
+            }
             return "吹き出し要約"
+        }
+        if containsAny(lowercased, ["具体", "考察", "進捗", "どんな事", "何を"]) &&
+            containsAny(lowercased, ["説明", "伝え", "表示", "欲しい", "ほしい"]) {
+            return "進捗の具体説明"
+        }
+        if containsAny(lowercased, ["作業内容"]) &&
+            containsAny(lowercased, ["説明", "要約", "表示", "伝え", "進め"]) {
+            return "作業内容の説明"
         }
         if containsAny(lowercased, ["複数スレッド", "マルチスレッド", "multi-thread", "同時"]) &&
             containsAny(lowercased, ["吹き出し", "bubble", "表示", "thread"]) {

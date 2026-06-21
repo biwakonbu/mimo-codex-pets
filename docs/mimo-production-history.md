@@ -275,8 +275,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - `CodexSessionSummarizer` derives a small safe `workSummary` from sanitized
   user, assistant, plan, and reasoning item text, then propagates that topic to
   later tool/status/progress lines in the same thread. This lets Mimo say what
-  Codex is working on, such as `吹き出し要約のテスト中`, without exposing raw
-  commands, paths, deltas, model text, or secret-looking session fragments.
+  Codex is working on, such as `作業内容の説明をテスト中` or
+  `吹き出し要約の表示文言をまとめています`, without exposing raw commands,
+  paths, deltas, model text, or secret-looking session fragments.
 - production multi-thread bubbles use the same tested layered row offsets and
   subtle horizontal staggering in SwiftUI as the layout contract, keeping the
   focused Mimo report closest to the sprite while secondary thread summaries

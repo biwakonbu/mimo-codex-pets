@@ -85,13 +85,13 @@ final class CodexConversationExtractorTests: XCTestCase {
             "ファイル変更を反映"
         ])
         XCTAssertEqual(lines.map(\.workSummary), [
-            "吹き出し要約",
-            "吹き出し要約",
-            "吹き出し要約"
+            "作業内容の説明",
+            "作業内容の説明",
+            "作業内容の説明"
         ])
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: lines[1]),
-            "ご主人、「Mimo runtime QA」は吹き出し要約のテスト中です"
+            "ご主人、「Mimo runtime QA」は作業内容の説明をテスト中です"
         )
     }
 
