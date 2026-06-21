@@ -28,6 +28,7 @@ Useful checks:
 ./script/qa_all.sh
 swift test
 ./script/check_app_server_schema.sh
+./script/check_app_bundle_contract.sh
 ./script/live_app_server_smoke.py
 ./script/live_app_presentation_smoke.sh
 ./script/build_and_run.sh --verify
@@ -77,6 +78,9 @@ thread active flags schema-backed.
 and Swift production formatter keep the same ambient title sanitization behavior
 for safe, unsafe, instruction-looking, machine-payload, stdout/env-marker,
 nested, and fallback thread titles.
+`./script/check_app_bundle_contract.sh` builds and verifies the production app
+bundle contract: `LSUIElement=true`, the menu-bar companion bundle identity, the
+executable bit, and bundled Mimo `pet.json` / `spritesheet.webp` resources.
 `./script/live_app_presentation_smoke.sh` launches the real app process with a
 temporary presentation log and verifies that it leaves the offline/connection
 state after connecting. When the live app-server exposes readable threads, the
