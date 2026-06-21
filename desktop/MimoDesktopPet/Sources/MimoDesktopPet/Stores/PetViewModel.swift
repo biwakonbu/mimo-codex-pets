@@ -3,30 +3,25 @@ import MimoDesktopPetCore
 
 @MainActor
 final class PetViewModel: ObservableObject {
-    @Published private(set) var presentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
-    @Published private(set) var visibleBubbles: [PetSpeechBubble] = [
-        PetSpeechBubble(id: "0-待機中", text: "待機中", role: .status)
-    ]
-    @Published private(set) var conversationLines: [CodexConversationLine] = []
+    @Published private(set) var presentation: PetPresentationState
+    @Published private(set) var visibleBubbles: [PetSpeechBubble]
+    @Published private(set) var conversationLines: [CodexConversationLine]
     @Published var clickThrough = false
     @Published var debugOverlay: Bool
     var hasPendingConversationBubbles: Bool {
-        conversationBubbleActive || !pendingConversationLines.isEmpty
+        coordinator.hasPendingConversationBubbles
     }
 
     private let conversationBubbleDuration: TimeInterval
     private let presentationLogURL: URL?
-    private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
+    private var coordinator = PetPresentationCoordinator()
     private var momentToken = UUID()
-    private var shownConversationDisplaySignatures: Set<String> = []
-    private var pendingConversationLines: [CodexConversationLine] = []
-    private var conversationBubbleActive = false
-    private var currentConversationThreadId: String?
-    private var currentConversationActivityKind: CodexConversationActivityKind?
-    private var focusedThreadId: String?
 
     init(debugOverlay: Bool = PetDebugOverlayPolicy.isEnabled()) {
         self.debugOverlay = debugOverlay
+        presentation = coordinator.presentation
+        visibleBubbles = coordinator.visibleBubbles
+        conversationLines = coordinator.conversationLines
         conversationBubbleDuration = ProcessInfo.processInfo.environment["MIMO_BUBBLE_TEST_MODE"] == "1" ? 1.15 : 3.4
         if let path = ProcessInfo.processInfo.environment["MIMO_PRESENTATION_LOG"], !path.isEmpty {
             let url = URL(fileURLWithPath: path)
@@ -40,208 +35,67 @@ final class PetViewModel: ObservableObject {
     }
 
     func apply(snapshot: CodexStateSnapshot) {
-        let next = CodexPetStateMapper.presentation(
-            threadStatus: snapshot.threadStatus,
-            latestTurnStatus: snapshot.latestTurnStatus,
-            hasRecentAssistantFinal: snapshot.hasRecentAssistantFinal,
-            connectionAvailable: snapshot.connectionAvailable
-        )
-        let presentationState: PetPresentationState
-        if !snapshot.connectionAvailable, let offlineBubbleText = snapshot.offlineBubbleText {
-            presentationState = PetPresentationState(
-                animation: next.animation,
-                bubbleText: offlineBubbleText,
-                isOffline: next.isOffline
-            )
-        } else {
-            presentationState = next
-        }
-        lastCodexPresentation = presentationState
-        conversationLines = Array(snapshot.conversationLines.suffix(12))
-        focusedThreadId = snapshot.focusedConversationLine?.threadId
-        pruneConversationQueue(keeping: Set(conversationLines.map(\.threadId)))
-        let visibleBubblesChanged = refreshVisibleBubbles()
-
-        if snapshot.connectionAvailable {
-            enqueueConversationLines(
-                snapshot.conversationLines,
-                preferredThreadId: focusedThreadId
-            )
-        } else {
-            clearConversationQueue()
-        }
-
-        if !conversationBubbleActive {
-            if !pendingConversationLines.isEmpty {
-                showNextConversationBubble()
-            } else {
-                momentToken = UUID()
-                setPresentation(presentationState)
-            }
-        } else if visibleBubblesChanged {
-            appendPresentationLog(presentation)
-        }
-    }
-
-    private func enqueueConversationLines(_ lines: [CodexConversationLine], preferredThreadId: String?) {
-        let candidates = CodexConversationBubblePlanner.orderedThreadUpdates(
-            from: lines,
-            preferredThreadId: preferredThreadId
-        )
-        let pendingSignatures = Set(pendingConversationLines.map(CodexConversationBubblePlanner.displaySignature(for:)))
-
-        for line in candidates {
-            let signature = CodexConversationBubblePlanner.displaySignature(for: line)
-            guard !shownConversationDisplaySignatures.contains(signature), !pendingSignatures.contains(signature) else {
-                continue
-            }
-            shownConversationDisplaySignatures.insert(signature)
-            pendingConversationLines.insert(
-                line,
-                at: CodexConversationBubblePlanner.insertionIndex(
-                    for: line,
-                    preferredThreadId: preferredThreadId,
-                    pendingLines: pendingConversationLines
-                )
-            )
-        }
-    }
-
-    private func showNextConversationBubble() {
-        guard !pendingConversationLines.isEmpty else {
-            conversationBubbleActive = false
-            setPresentation(lastCodexPresentation)
-            return
-        }
-
-        let line = pendingConversationLines.removeFirst()
-        let token = UUID()
-        momentToken = token
-        conversationBubbleActive = true
-        currentConversationThreadId = line.threadId
-        currentConversationActivityKind = line.activityKind
-        setPresentation(
-            PetPresentationState(
-                animation: CodexConversationBubblePlanner.animation(
-                    for: line,
-                    fallback: lastCodexPresentation.animation
-                ),
-                bubbleText: CodexBubbleFormatter.bubbleText(for: line),
-                isOffline: lastCodexPresentation.isOffline
+        let change = coordinator.apply(
+            snapshot: PetCodexSnapshot(
+                threadStatus: snapshot.threadStatus,
+                latestTurnStatus: snapshot.latestTurnStatus,
+                hasRecentAssistantFinal: snapshot.hasRecentAssistantFinal,
+                connectionAvailable: snapshot.connectionAvailable,
+                offlineBubbleText: snapshot.offlineBubbleText,
+                conversationLines: snapshot.conversationLines,
+                focusedConversationLine: snapshot.focusedConversationLine
             )
         )
-
-        Task { @MainActor [weak self] in
-            let duration = self?.conversationBubbleDuration ?? 3.4
-            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
-            self?.finishConversationBubble(token: token)
+        if !coordinator.hasActiveConversationBubble {
+            momentToken = UUID()
         }
+        apply(change: change)
     }
 
     private func finishConversationBubble(token: UUID) {
         guard momentToken == token else { return }
-        if pendingConversationLines.isEmpty {
-            conversationBubbleActive = false
-            currentConversationThreadId = nil
-            currentConversationActivityKind = nil
-            setPresentation(lastCodexPresentation)
-        } else {
-            showNextConversationBubble()
-        }
-    }
-
-    private func clearConversationQueue() {
-        pendingConversationLines.removeAll()
-        conversationBubbleActive = false
-        currentConversationThreadId = nil
-        currentConversationActivityKind = nil
-    }
-
-    private func pruneConversationQueue(keeping activeThreadIds: Set<String>) {
-        guard !activeThreadIds.isEmpty else {
-            clearConversationQueue()
-            shownConversationDisplaySignatures.removeAll()
-            momentToken = UUID()
-            return
-        }
-
-        pendingConversationLines.removeAll { !activeThreadIds.contains($0.threadId) }
-        shownConversationDisplaySignatures = Set(shownConversationDisplaySignatures.filter { signature in
-            guard let threadId = signature.split(separator: "|", maxSplits: 1).first else { return false }
-            return activeThreadIds.contains(String(threadId))
-        })
-        if let currentConversationThreadId, !activeThreadIds.contains(currentConversationThreadId) {
-            conversationBubbleActive = false
-            self.currentConversationThreadId = nil
-            currentConversationActivityKind = nil
-            momentToken = UUID()
-        }
+        apply(change: coordinator.finishConversationBubble())
     }
 
     func setConnectionAvailable(_ available: Bool) {
         guard !available else { return }
-        clearConversationQueue()
-        conversationLines.removeAll()
-        focusedThreadId = nil
         momentToken = UUID()
-        let offline = CodexPetStateMapper.presentation(
-            threadStatus: nil,
-            latestTurnStatus: nil,
-            hasRecentAssistantFinal: false,
-            connectionAvailable: false
-        )
-        lastCodexPresentation = offline
-        setPresentation(offline)
+        apply(change: coordinator.setConnectionAvailable(available))
     }
 
     func beginDrag(deltaX: CGFloat) {
-        clearConversationQueue()
         momentToken = UUID()
-        setPresentation(CodexPetStateMapper.dragPresentation(deltaX: Double(deltaX)))
+        apply(change: coordinator.beginDrag(deltaX: Double(deltaX)))
     }
 
     func beginDrag(animation: PetAnimationState) {
-        clearConversationQueue()
         momentToken = UUID()
-        let next = PetPresentationState(animation: animation, bubbleText: "移動中")
-        guard presentation != next else { return }
-        setPresentation(next)
+        apply(change: coordinator.beginDrag(animation: animation))
     }
 
     func beginAmbientMovement(animation: PetAnimationState) {
-        let next = PetPresentationState(
-            animation: animation,
-            bubbleText: presentation.bubbleText,
-            isOffline: presentation.isOffline
-        )
-        guard presentation != next else { return }
-        setPresentation(next)
+        apply(change: coordinator.beginAmbientMovement(animation: animation))
     }
 
     func endDrag() {
-        clearConversationQueue()
         momentToken = UUID()
-        setPresentation(lastCodexPresentation)
+        apply(change: coordinator.endDrag())
     }
 
     func endAmbientMovement() {
-        guard !conversationBubbleActive else { return }
-        setPresentation(lastCodexPresentation)
+        apply(change: coordinator.endAmbientMovement())
     }
 
     func playMoment(animation: PetAnimationState, bubbleText: String? = nil, duration: TimeInterval = 1.8) {
-        clearConversationQueue()
         let token = UUID()
         momentToken = token
-        showTemporaryPresentation(
-            PetPresentationState(
-                animation: animation,
-                bubbleText: bubbleText ?? lastCodexPresentation.bubbleText,
-                isOffline: lastCodexPresentation.isOffline
-            ),
-            token: token,
-            duration: duration
-        )
+        apply(change: coordinator.playMoment(animation: animation, bubbleText: bubbleText))
+
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+            guard let self, self.momentToken == token else { return }
+            self.apply(change: self.coordinator.finishTemporaryPresentation())
+        }
     }
 
     func toggleClickThrough() {
@@ -252,51 +106,26 @@ final class PetViewModel: ObservableObject {
         debugOverlay.toggle()
     }
 
-    private func showTemporaryPresentation(
-        _ state: PetPresentationState,
-        token: UUID = UUID(),
-        duration: TimeInterval
-    ) {
-        momentToken = token
-        setPresentation(state)
-
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
-            guard let self, self.momentToken == token else { return }
-            self.setPresentation(PetPresentationState(
-                animation: self.lastCodexPresentation.animation,
-                bubbleText: self.lastCodexPresentation.bubbleText,
-                isOffline: self.lastCodexPresentation.isOffline
-            ))
+    private func apply(change: PetPresentationCoordinatorChange) {
+        presentation = coordinator.presentation
+        visibleBubbles = coordinator.visibleBubbles
+        conversationLines = coordinator.conversationLines
+        if change.changed {
+            appendPresentationLog(presentation)
+        }
+        if change.shouldScheduleConversationTimeout {
+            scheduleConversationBubbleTimeout()
         }
     }
 
-    private func setPresentation(_ state: PetPresentationState) {
-        presentation = state
-        _ = refreshVisibleBubbles()
-        appendPresentationLog(state)
-    }
-
-    @discardableResult
-    private func refreshVisibleBubbles() -> Bool {
-        let primaryBubble = CodexConversationBubblePlanner.primaryBubble(
-            statusText: presentation.bubbleText,
-            conversationLines: conversationLines,
-            preferredThreadId: focusedThreadId,
-            activeConversationThreadId: conversationBubbleActive ? currentConversationThreadId : nil,
-            activeConversationActivityKind: conversationBubbleActive ? currentConversationActivityKind : nil,
-            isOffline: presentation.isOffline
-        )
-        let nextBubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: primaryBubble.text,
-            conversationLines: conversationLines,
-            preferredThreadId: focusedThreadId,
-            primaryThreadId: primaryBubble.threadId,
-            primaryActivityKind: primaryBubble.activityKind
-        )
-        guard nextBubbles != visibleBubbles else { return false }
-        visibleBubbles = nextBubbles
-        return true
+    private func scheduleConversationBubbleTimeout() {
+        let token = UUID()
+        momentToken = token
+        Task { @MainActor [weak self] in
+            let duration = self?.conversationBubbleDuration ?? 3.4
+            try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+            self?.finishConversationBubble(token: token)
+        }
     }
 
     private func appendPresentationLog(_ state: PetPresentationState) {
