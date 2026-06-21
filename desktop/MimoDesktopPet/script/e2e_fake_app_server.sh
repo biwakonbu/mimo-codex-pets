@@ -130,12 +130,14 @@ grep -Fq 'ご主人、「Mimo runtime QA」は応答をまとめています' "$
 grep -Fq 'ご主人、「Mimo runtime QA」は計画を整理中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は文脈を整理中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」はコマンドを実行中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は端末入力を確認中です' "$PRESENTATION_LOG"
+grep -Fq 'ご主人、「Mimo runtime QA」は差分を確認中です' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「Mimo runtime QA」は確認待ちです' "$PRESENTATION_LOG"
 grep -Fq 'ご主人、「別スレッドの確認」はレビューできます' "$PRESENTATION_LOG"
 grep -Fq '「別スレッドの確認」作業中' "$PRESENTATION_LOG"
 grep -Fq '「更新された別スレッド」作業中' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「ステータスだけで進捗を伝える検証」は確認待ちです' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「資料整理」は作業を進めています' "$PRESENTATION_LOG"
+grep -Fq 'ステータスだけで進捗を伝' "$PRESENTATION_LOG"
+grep -Fq '「資料整理」作業中' "$PRESENTATION_LOG"
 grep -Fq '新しい実装スレッド' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
@@ -217,6 +219,9 @@ for row in rows:
         "get_app_state",
         "raw assistant text",
         "secret-looking command output",
+        "secret terminal input",
+        "process-secret-id",
+        "secret diff",
         "raw reasoning",
         "Authorization",
         "Bearer",
@@ -296,6 +301,8 @@ grep -Fq 'argv ["app-server", "proxy"]' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/read"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
+grep -Eq '"method":"item/commandExecution/terminalInteraction"' "$FAKE_LOG"
+grep -Eq '"method":"item/fileChange/patchUpdated"' "$FAKE_LOG"
 
 python3 - "$FAKE_LOG" <<'PY'
 import json

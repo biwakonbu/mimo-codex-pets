@@ -481,8 +481,12 @@ public enum CodexConversationExtractor {
             return "文脈を整理中"
         case "commandExecutionOutputDelta":
             return "コマンド出力を確認中"
+        case "commandExecutionTerminalInteraction":
+            return "端末入力を確認中"
         case "fileChangeOutputDelta":
             return "ファイル変更を確認中"
+        case "fileChangePatchUpdated":
+            return "変更差分を確認中"
         case "mcpToolCallProgress":
             return "ツールで確認中"
         default:
@@ -498,9 +502,9 @@ public enum CodexConversationExtractor {
             return .plan
         case "reasoningDelta":
             return .reasoning
-        case "commandExecutionOutputDelta":
+        case "commandExecutionOutputDelta", "commandExecutionTerminalInteraction":
             return .command
-        case "fileChangeOutputDelta":
+        case "fileChangeOutputDelta", "fileChangePatchUpdated":
             return .fileChange
         case "mcpToolCallProgress":
             return .tool

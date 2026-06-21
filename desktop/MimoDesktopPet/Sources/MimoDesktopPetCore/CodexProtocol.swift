@@ -112,7 +112,9 @@ public enum CodexNotificationMethod: String, CaseIterable, Equatable, Sendable {
     case reasoningSummaryTextDelta = "item/reasoning/summaryTextDelta"
     case reasoningTextDelta = "item/reasoning/textDelta"
     case commandExecutionOutputDelta = "item/commandExecution/outputDelta"
+    case commandExecutionTerminalInteraction = "item/commandExecution/terminalInteraction"
     case fileChangeOutputDelta = "item/fileChange/outputDelta"
+    case fileChangePatchUpdated = "item/fileChange/patchUpdated"
     case mcpToolCallProgress = "item/mcpToolCall/progress"
 }
 
@@ -131,8 +133,6 @@ public enum CodexIgnoredNotificationMethod: String, CaseIterable, Equatable, Sen
     case commandExecOutputDelta = "command/exec/outputDelta"
     case processOutputDelta = "process/outputDelta"
     case processExited = "process/exited"
-    case commandExecutionTerminalInteraction = "item/commandExecution/terminalInteraction"
-    case fileChangePatchUpdated = "item/fileChange/patchUpdated"
     case serverRequestResolved = "serverRequest/resolved"
     case mcpServerOAuthLoginCompleted = "mcpServer/oauthLogin/completed"
     case mcpServerStartupStatusUpdated = "mcpServer/startupStatus/updated"

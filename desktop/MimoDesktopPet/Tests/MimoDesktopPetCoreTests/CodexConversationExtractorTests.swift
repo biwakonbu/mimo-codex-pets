@@ -405,12 +405,26 @@ final class CodexConversationExtractorTests: XCTestCase {
             threadTitle: "Delta QA",
             kind: "reasoningDelta"
         )
+        let terminalInteraction = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "commandExecutionTerminalInteraction"
+        )
+        let patchUpdated = CodexConversationExtractor.progressLine(
+            threadId: "thread-delta",
+            threadTitle: "Delta QA",
+            kind: "fileChangePatchUpdated"
+        )
 
         XCTAssertEqual(plan.speaker, "codex")
         XCTAssertEqual(plan.text, "計画を更新中")
         XCTAssertEqual(plan.activityKind, .plan)
         XCTAssertEqual(reasoning.text, "文脈を整理中")
         XCTAssertEqual(reasoning.activityKind, .reasoning)
+        XCTAssertEqual(terminalInteraction.text, "端末入力を確認中")
+        XCTAssertEqual(terminalInteraction.activityKind, .command)
+        XCTAssertEqual(patchUpdated.text, "変更差分を確認中")
+        XCTAssertEqual(patchUpdated.activityKind, .fileChange)
     }
 
     func testBuildsStatusLinesFromThreadState() {

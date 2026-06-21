@@ -22,7 +22,9 @@ final class CodexNotificationTests: XCTestCase {
             "item/reasoning/summaryTextDelta",
             "item/reasoning/textDelta",
             "item/commandExecution/outputDelta",
+            "item/commandExecution/terminalInteraction",
             "item/fileChange/outputDelta",
+            "item/fileChange/patchUpdated",
             "item/mcpToolCall/progress"
         ])
     }
@@ -43,8 +45,6 @@ final class CodexNotificationTests: XCTestCase {
             "command/exec/outputDelta",
             "process/outputDelta",
             "process/exited",
-            "item/commandExecution/terminalInteraction",
-            "item/fileChange/patchUpdated",
             "serverRequest/resolved",
             "mcpServer/oauthLogin/completed",
             "mcpServer/startupStatus/updated",

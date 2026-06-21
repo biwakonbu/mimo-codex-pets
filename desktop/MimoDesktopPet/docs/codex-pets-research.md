@@ -63,9 +63,12 @@ Verified public protocol surface:
   `item/plan/delta`, `turn/plan/updated`,
   `item/reasoning/summaryPartAdded`, `item/reasoning/summaryTextDelta`,
   `item/reasoning/textDelta`, `item/commandExecution/outputDelta`,
-  `item/fileChange/outputDelta`, and `item/mcpToolCall/progress` exist in the
+  `item/commandExecution/terminalInteraction`, `item/fileChange/outputDelta`,
+  `item/fileChange/patchUpdated`, and `item/mcpToolCall/progress` exist in the
   generated schema. Production bubbles treat these as activity signals, not as
-  text to quote directly.
+  text to quote directly. Terminal stdin, process ids, patch paths, and patch
+  diffs are never displayed; Mimo reports only fixed summaries such as terminal
+  input checking or diff checking.
 
 Verified runtime behavior:
 
@@ -371,9 +374,10 @@ Manual or visual checks:
 - Unit tests verify that extracted `CodexConversationLine` values retain typed
   activity kinds and that bubble summaries prefer those kinds over brittle raw
   text guesses, while failure text still overrides the kind.
-- Fake app-server E2E also injects raw command/tool/delta and sensitive
-  conversation strings such as `swift test`, `get_app_state`, raw streaming
-  text, bearer-token shaped text, password/stdout fragments, and local
+- Fake app-server E2E also injects raw command/tool/delta, terminal-interaction,
+  patch-update, and sensitive conversation strings such as `swift test`,
+  `get_app_state`, raw streaming text, bearer-token shaped text,
+  password/stdout fragments, terminal stdin, patch diffs, process ids, and local
   `.env` paths, then rejects any production bubble log that leaks those
   fragments.
 - `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, `bubbleRoles`,

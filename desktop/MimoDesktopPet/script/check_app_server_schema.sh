@@ -45,7 +45,9 @@ require_pattern "ServerNotification.json" '"item/reasoning/summaryPartAdded"'
 require_pattern "ServerNotification.json" '"item/reasoning/summaryTextDelta"'
 require_pattern "ServerNotification.json" '"item/reasoning/textDelta"'
 require_pattern "ServerNotification.json" '"item/commandExecution/outputDelta"'
+require_pattern "ServerNotification.json" '"item/commandExecution/terminalInteraction"'
 require_pattern "ServerNotification.json" '"item/fileChange/outputDelta"'
+require_pattern "ServerNotification.json" '"item/fileChange/patchUpdated"'
 require_pattern "ServerNotification.json" '"item/mcpToolCall/progress"'
 require_pattern "v2/ThreadStartedNotification.json" '"thread"'
 require_pattern "v2/ItemStartedNotification.json" '"item"'
@@ -202,7 +204,9 @@ for relative_path, fields in {
     "v2/ReasoningSummaryTextDeltaNotification.json": ["delta", "itemId", "summaryIndex", "threadId", "turnId"],
     "v2/ReasoningTextDeltaNotification.json": ["contentIndex", "delta", "itemId", "threadId", "turnId"],
     "v2/CommandExecutionOutputDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
+    "v2/TerminalInteractionNotification.json": ["itemId", "processId", "stdin", "threadId", "turnId"],
     "v2/FileChangeOutputDeltaNotification.json": ["delta", "itemId", "threadId", "turnId"],
+    "v2/FileChangePatchUpdatedNotification.json": ["changes", "itemId", "threadId", "turnId"],
     "v2/McpToolCallProgressNotification.json": ["itemId", "message", "threadId", "turnId"],
 }.items():
     require_required_fields(relative_path, fields)

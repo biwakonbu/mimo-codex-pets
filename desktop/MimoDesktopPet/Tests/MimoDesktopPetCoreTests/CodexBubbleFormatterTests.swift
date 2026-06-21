@@ -86,6 +86,30 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: commandLine), "ご主人、「Mimo runtime QA」はコマンドを実行中です")
     }
 
+    func testSummarizesTerminalAndPatchProgressAsMimoReports() {
+        let terminal = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "端末確認",
+            speaker: "tool",
+            text: "端末入力を確認中",
+            isAssistant: true,
+            activityKind: .command
+        )
+        let patch = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "差分確認",
+            speaker: "tool",
+            text: "変更差分を確認中",
+            isAssistant: true,
+            activityKind: .fileChange
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: terminal), "ご主人、「端末確認」は端末入力を確認中です")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: terminal), "「端末確認」端末確認")
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: patch), "ご主人、「差分確認」は差分を確認中です")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: patch), "「差分確認」差分確認")
+    }
+
     func testSummarizesStreamingProgressWithoutQuotingDelta() {
         let agent = CodexConversationLine(
             threadId: "thread",

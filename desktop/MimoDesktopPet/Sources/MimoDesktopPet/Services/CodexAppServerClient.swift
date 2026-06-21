@@ -797,8 +797,12 @@ final class CodexAppServerClient {
             appendProgressLine(from: params, kind: "reasoningDelta")
         case .commandExecutionOutputDelta:
             appendProgressLine(from: params, kind: "commandExecutionOutputDelta")
+        case .commandExecutionTerminalInteraction:
+            appendProgressLine(from: params, kind: "commandExecutionTerminalInteraction")
         case .fileChangeOutputDelta:
             appendProgressLine(from: params, kind: "fileChangeOutputDelta")
+        case .fileChangePatchUpdated:
+            appendProgressLine(from: params, kind: "fileChangePatchUpdated")
         case .mcpToolCallProgress:
             appendProgressLine(from: params, kind: "mcpToolCallProgress")
         }

@@ -263,6 +263,35 @@ def state_sequence():
     )
     write_message(
         {
+            "method": "item/commandExecution/terminalInteraction",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "itemId": "command-stream",
+                "processId": "process-secret-id",
+                "stdin": "secret terminal input should not be shown",
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "item/fileChange/patchUpdated",
+            "params": {
+                "threadId": "fake-thread",
+                "turnId": "turn-active",
+                "itemId": "patch-stream",
+                "changes": [
+                    {
+                        "kind": {"type": "update"},
+                        "path": "/Users/example/private/project/.env",
+                        "diff": "secret diff should not be shown",
+                    }
+                ],
+            },
+        }
+    )
+    write_message(
+        {
             "method": "item/reasoning/summaryTextDelta",
             "params": {
                 "threadId": "fake-thread",

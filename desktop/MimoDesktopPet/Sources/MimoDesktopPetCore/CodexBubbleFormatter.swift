@@ -69,6 +69,10 @@ public enum CodexBubbleFormatter {
             return "待機中"
         case "変更を反映中です":
             return "変更反映"
+        case "差分を確認中です":
+            return "差分確認"
+        case "端末入力を確認中です":
+            return "端末確認"
         case "コマンドを実行中です":
             return "実行中"
         case "作業中です":
@@ -179,10 +183,16 @@ public enum CodexBubbleFormatter {
         case .reasoning, .contextCompaction:
             return "文脈を整理中です"
         case .command:
+            if text.contains("端末") || text.contains("入力") {
+                return "端末入力を確認中です"
+            }
             return "コマンドを実行中です"
         case .test:
             return "テストを実行中です"
         case .fileChange:
+            if text.contains("差分") {
+                return "差分を確認中です"
+            }
             return "変更を反映中です"
         case .fileRead:
             return "ファイルを確認中です"
