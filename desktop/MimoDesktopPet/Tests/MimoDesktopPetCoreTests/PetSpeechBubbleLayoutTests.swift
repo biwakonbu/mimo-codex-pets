@@ -249,6 +249,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.stackAnimationResponse, 0.4)
         XCTAssertGreaterThanOrEqual(PetSpeechBubbleLayout.stackAnimationDampingFraction, 0.8)
         XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.contentAnimationDuration, 0.2)
+        XCTAssertEqual(PetSpeechBubbleLayout.typewriterCharactersPerSecond, 48)
+        XCTAssertEqual(PetSpeechBubbleLayout.typewriterFrameInterval, 1.0 / 30.0)
     }
 
     func testConversationRowsReserveWidthForReadableChatNames() {

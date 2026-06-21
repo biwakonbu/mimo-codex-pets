@@ -56,6 +56,8 @@ public enum PetSpeechBubbleLayout {
     public static let stackAnimationResponse = 0.34
     public static let stackAnimationDampingFraction = 0.86
     public static let contentAnimationDuration = 0.18
+    public static let typewriterCharactersPerSecond = 48.0
+    public static let typewriterFrameInterval = 1.0 / 30.0
 
     public static func textLimit(for role: PetSpeechBubbleRole) -> Int {
         switch role {

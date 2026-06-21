@@ -179,7 +179,7 @@ struct BubbleView: View {
                 }
 
                 ZStack(alignment: .leading) {
-                    BubbleTextContent(
+                    TypewriterBubbleTextContent(
                         text: text,
                         role: role,
                         accentColor: accent,
@@ -355,6 +355,92 @@ struct BubbleView: View {
         case .focus, .conversation, .overflow:
             return true
         }
+    }
+}
+
+private struct TypewriterBubbleTextContent: View {
+    let text: String
+    let role: PetSpeechBubbleRole
+    let accentColor: Color
+    let fontSize: CGFloat
+    let fontWeight: Font.Weight
+    let minimumScaleFactor: CGFloat
+
+    @State private var visibleText = ""
+    @State private var animationTask: Task<Void, Never>?
+
+    var body: some View {
+        BubbleTextContent(
+            text: resolvedVisibleText,
+            role: role,
+            accentColor: accentColor,
+            fontSize: fontSize,
+            fontWeight: fontWeight,
+            minimumScaleFactor: minimumScaleFactor
+        )
+        .onAppear(perform: restartAnimation)
+        .onChange(of: text) { _, _ in restartAnimation() }
+        .onChange(of: role) { _, _ in restartAnimation() }
+        .onDisappear(perform: cancelAnimation)
+    }
+
+    private var resolvedVisibleText: String {
+        guard shouldTypewrite else { return text }
+        if visibleText.isEmpty {
+            return PetSpeechBubbleTypewriter.visibleBubbleText(for: text, role: role, elapsed: 0)
+        }
+        return visibleText
+    }
+
+    private var shouldTypewrite: Bool {
+        role != .overflow && !text.isEmpty
+    }
+
+    private func restartAnimation() {
+        cancelAnimation()
+        guard shouldTypewrite else {
+            visibleText = text
+            return
+        }
+
+        let fullText = text
+        let bubbleRole = role
+        let frameInterval = PetSpeechBubbleLayout.typewriterFrameInterval
+        let stepNanoseconds = UInt64(frameInterval * 1_000_000_000)
+        let duration = PetSpeechBubbleTypewriter.durationForBubbleText(for: fullText, role: bubbleRole)
+
+        visibleText = PetSpeechBubbleTypewriter.visibleBubbleText(
+            for: fullText,
+            role: bubbleRole,
+            elapsed: 0
+        )
+        animationTask = Task { @MainActor in
+            let startedAt = Date()
+            while !Task.isCancelled {
+                let elapsed = Date().timeIntervalSince(startedAt)
+                if elapsed >= duration {
+                    visibleText = fullText
+                    break
+                }
+
+                visibleText = PetSpeechBubbleTypewriter.visibleBubbleText(
+                    for: fullText,
+                    role: bubbleRole,
+                    elapsed: elapsed
+                )
+
+                do {
+                    try await Task.sleep(nanoseconds: stepNanoseconds)
+                } catch {
+                    break
+                }
+            }
+        }
+    }
+
+    private func cancelAnimation() {
+        animationTask?.cancel()
+        animationTask = nil
     }
 }
 
