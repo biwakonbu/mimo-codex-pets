@@ -99,6 +99,24 @@ final class CodexBubbleFormatterTests: XCTestCase {
         XCTAssertTrue(bubbles.allSatisfy { !$0.text.contains("ご主人") })
     }
 
+    func testContextRowsKeepReadableChatNameBeforeCompacting() {
+        let line = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "Mimo runtime QA",
+            speaker: "tool",
+            text: "テストを実行中",
+            isAssistant: true,
+            activityKind: .test,
+            workSummary: "吹き出し要約"
+        )
+
+        XCTAssertEqual(
+            CodexBubbleFormatter.contextText(for: line),
+            "「Mimo runtime QA」吹き出し要約テスト中"
+        )
+        XCTAssertFalse(CodexBubbleFormatter.contextText(for: line).contains("..."))
+    }
+
     func testSummarizesAssistantLineAsMimoReport() {
         let line = CodexConversationLine(
             threadId: "thread",
@@ -180,7 +198,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: line),
-            "「Mimo runtime...」作業内容の説明中"
+            "「Mimo runtime QA」作業内容の説明中"
         )
     }
 
@@ -214,11 +232,11 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: tool), "「Mimo runtime QA」は作業内容の説明をテスト中だよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: tool), "「Mimo runtime...」作業内容の説明テスト中")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: tool), "「Mimo runtime QA」作業内容の説明テスト中")
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: waiting), "「Mimo runtime QA」はCodex 連携で確認を待っているよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「Mimo runtime...」Codex 連携返事待ち")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「Mimo runtime QA」Codex 連携返事待ち")
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: genericTool), "「Mimo runtime QA」は作業内容の説明をツールで確認中だよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: genericTool), "「Mimo runtime...」作業内容の説明ツール確認")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: genericTool), "「Mimo runtime QA」作業内容の説明ツール確認")
     }
 
     func testSessionStateShapesNaturalMimoReportsWithoutRawStatusLabels() {
@@ -249,7 +267,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: active),
-            "「Mimo runtime...」作業内容の説明テスト中"
+            "「Mimo runtime QA」作業内容の説明テスト中"
         )
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: stopped),
@@ -257,7 +275,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: stopped),
-            "「Mimo runtime...」作業内容の説明確認できる"
+            "「Mimo runtime QA」作業内容の説明確認できる"
         )
         XCTAssertFalse(CodexBubbleFormatter.bubbleText(for: active).contains("動作中"))
         XCTAssertFalse(CodexBubbleFormatter.contextText(for: stopped).contains("停止・"))
@@ -281,7 +299,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: line),
-            "「Mimo runtime...」吹き出し要約の表示文言考察中"
+            "「Mimo runtime QA」吹き出し要約の表示文言考察中"
         )
     }
 

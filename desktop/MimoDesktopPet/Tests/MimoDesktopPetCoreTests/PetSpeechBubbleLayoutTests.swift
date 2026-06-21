@@ -47,6 +47,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placement.scale, 1)
         XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .focus), 156)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .focus), 3)
+        XCTAssertEqual(PetSpeechBubbleLayout.titleLineLimit(for: .focus), 2)
+        XCTAssertEqual(PetSpeechBubbleLayout.summaryLineLimit(for: .focus), 2)
     }
 
     func testThreeBubbleStackKeepsPrimaryBubbleAttachedToMimoWithStackedThreadRows() {
@@ -247,6 +249,13 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.stackAnimationResponse, 0.4)
         XCTAssertGreaterThanOrEqual(PetSpeechBubbleLayout.stackAnimationDampingFraction, 0.8)
         XCTAssertLessThanOrEqual(PetSpeechBubbleLayout.contentAnimationDuration, 0.2)
+    }
+
+    func testConversationRowsReserveWidthForReadableChatNames() {
+        XCTAssertEqual(PetSpeechBubbleLayout.chatTitleTextLimit, 34)
+        XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .conversation), 96)
+        XCTAssertEqual(PetSpeechBubbleLayout.titleLineLimit(for: .conversation), 2)
+        XCTAssertEqual(PetSpeechBubbleLayout.summaryLineLimit(for: .conversation), 1)
     }
 
     func testSecondaryRowsAreSubtlyStaggeredForMultiThreadReadability() {

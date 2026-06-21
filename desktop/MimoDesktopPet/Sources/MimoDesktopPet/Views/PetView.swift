@@ -324,7 +324,7 @@ struct BubbleView: View {
         case .status, .focus:
             return 8
         case .conversation:
-            return 7
+            return 5
         case .overflow:
             return 6
         }
@@ -383,34 +383,36 @@ private struct BubbleTextContent: View {
                     Text(threadTitle)
                         .font(.system(size: titleFontSize, weight: .semibold))
                         .foregroundStyle(accentColor.opacity(0.96))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.76)
+                        .lineLimit(PetSpeechBubbleLayout.titleLineLimit(for: role))
+                        .minimumScaleFactor(0.82)
                         .truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Text(parts.summary)
                     .font(.system(size: fontSize, weight: fontWeight))
                     .foregroundStyle(.primary)
-                    .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
+                    .lineLimit(PetSpeechBubbleLayout.summaryLineLimit(for: role))
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
         } else if role == .conversation, let threadTitle = parts.threadTitle {
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(threadTitle)
                     .font(.system(size: titleFontSize, weight: .semibold))
                     .foregroundStyle(accentColor.opacity(0.96))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.74)
+                    .lineLimit(PetSpeechBubbleLayout.titleLineLimit(for: role))
+                    .minimumScaleFactor(0.82)
                     .truncationMode(.tail)
-                    .frame(maxWidth: 116, alignment: .leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Text(parts.summary)
                     .font(.system(size: fontSize, weight: fontWeight))
                     .foregroundStyle(.primary)
-                    .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
+                    .lineLimit(PetSpeechBubbleLayout.summaryLineLimit(for: role))
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
                     .frame(maxWidth: .infinity, alignment: .leading)

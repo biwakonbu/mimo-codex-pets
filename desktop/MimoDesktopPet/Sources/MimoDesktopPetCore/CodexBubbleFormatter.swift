@@ -1,7 +1,7 @@
 import Foundation
 
 public enum CodexBubbleFormatter {
-    public static func bubbleText(for line: CodexConversationLine, limit: Int = 58) -> String {
+    public static func bubbleText(for line: CodexConversationLine, limit: Int = PetSpeechBubbleLayout.focusTextLimit) -> String {
         if let speech = line.mimoSpeech,
            !speech.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
            !CodexAmbientTextSafety.isUnsafeForAmbientDisplay(speech) {
@@ -15,8 +15,8 @@ public enum CodexBubbleFormatter {
         return compact("「\(title)」は\(primarySpeechSummary(summary, state: line.sessionState))", limit: limit)
     }
 
-    public static func contextText(for line: CodexConversationLine, limit: Int = 40) -> String {
-        let title = compactTitle(line.threadTitle, limit: 12)
+    public static func contextText(for line: CodexConversationLine, limit: Int = PetSpeechBubbleLayout.conversationTextLimit) -> String {
+        let title = compactTitle(line.threadTitle, limit: PetSpeechBubbleLayout.chatTitleTextLimit)
         let summary = compactSummary(for: mimoSummary(for: line), topic: reportTopic(for: line, title: title))
         return compact("「\(title)」\(contextDisplaySummary(summary))", limit: limit)
     }
@@ -31,7 +31,7 @@ public enum CodexBubbleFormatter {
         return String(collapsed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
     }
 
-    private static func compactTitle(_ title: String, limit: Int = 16) -> String {
+    private static func compactTitle(_ title: String, limit: Int = PetSpeechBubbleLayout.chatTitleTextLimit) -> String {
         let compacted = CodexThreadTitleFormatter.title(
             from: [title],
             fallback: "このチャット",

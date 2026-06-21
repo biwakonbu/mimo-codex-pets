@@ -341,6 +341,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .status), 3)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .conversation), 2)
         XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .overflow), 1)
+        XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .conversation), 96)
+        XCTAssertEqual(PetSpeechBubbleLayout.titleLineLimit(for: .conversation), 2)
+        XCTAssertEqual(PetSpeechBubbleLayout.summaryLineLimit(for: .conversation), 1)
     }
 
     func testProductionBubblesUseOneSummaryPerThread() {

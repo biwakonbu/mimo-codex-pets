@@ -341,6 +341,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   taller 530pt companion window; primary Mimo speech can grow to three lines,
   secondary chat rows to two lines, and `PetSpeechBubblePaginator` advances
   overlong Mimo speech as timed pages before the next chat update is shown
+- chat names are treated as primary user-facing information: formatter output
+  keeps readable chat titles up to the shared title limit instead of shortening
+  them before layout, and secondary chat bubbles render the title on its own
+  wide line before the short activity summary
 - production bubble transitions use stable visual slots rather than text-derived
   view identity: new bubbles fade and rise in, removed bubbles fade upward,
   stack changes spring into place, and text-only updates cross-fade inside the

@@ -45,8 +45,9 @@ public enum PetSpeechBubbleLayout {
     public static let productionRowSpacing = 5.0
     public static let statusTextLimit = 156
     public static let focusTextLimit = 156
-    public static let conversationTextLimit = 64
+    public static let conversationTextLimit = 96
     public static let overflowTextLimit = 22
+    public static let chatTitleTextLimit = 34
 
     public static let transitionInsertionOffsetY = 18.0
     public static let transitionRemovalOffsetY = -14.0
@@ -77,6 +78,26 @@ public enum PetSpeechBubbleLayout {
             return 2
         case .overflow:
             return 1
+        }
+    }
+
+    public static func titleLineLimit(for role: PetSpeechBubbleRole) -> Int {
+        switch role {
+        case .focus, .conversation:
+            return 2
+        case .status, .overflow:
+            return 1
+        }
+    }
+
+    public static func summaryLineLimit(for role: PetSpeechBubbleRole) -> Int {
+        switch role {
+        case .focus:
+            return 2
+        case .conversation, .overflow:
+            return 1
+        case .status:
+            return lineLimit(for: role)
         }
     }
 
