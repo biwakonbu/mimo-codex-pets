@@ -22,7 +22,32 @@ export MIMO_PET_PACKAGE_DIR="${MIMO_PET_PACKAGE_DIR:-$PET_SOURCE_DIR}"
 
 cd "$ROOT_DIR"
 
-pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+wait_for_app_start() {
+  for _ in {1..50}; do
+    if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.1
+  done
+  return 1
+}
+
+wait_for_app_exit() {
+  for _ in {1..50}; do
+    if ! pgrep -x "$APP_NAME" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.1
+  done
+  return 1
+}
+
+terminate_app() {
+  pkill -x "$APP_NAME" >/dev/null 2>&1 || true
+  wait_for_app_exit
+}
+
+terminate_app
 
 swift build --product "$APP_NAME"
 BUILD_BINARY="$(swift build --show-bin-path)/$APP_NAME"
@@ -83,8 +108,8 @@ case "$MODE" in
     ;;
   --verify|verify)
     open_app
-    sleep 1
-    pgrep -x "$APP_NAME" >/dev/null
+    wait_for_app_start
+    terminate_app
     ;;
   *)
     echo "usage: $0 [run|--debug|--logs|--telemetry|--verify]" >&2

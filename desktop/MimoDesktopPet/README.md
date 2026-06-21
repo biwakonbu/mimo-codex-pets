@@ -45,7 +45,9 @@ real Codex app-server is intentionally unavailable.
 `./script/build_and_run.sh` stages a local app bundle under
 `dist/MimoDesktopPet.app`, launches it with `/usr/bin/open -n`, and sets
 `MIMO_PET_PACKAGE_DIR` to this repository's `pets/mimo` package unless you
-override it.
+override it. In `--verify` mode it only checks that the staged bundle can
+launch, then terminates the verification process so later E2E gates do not race
+the single-instance lock.
 
 Codex state sync tries `codex app-server daemon start` as a best-effort helper
 with a short timeout, then connects over JSON-RPC through
