@@ -190,13 +190,15 @@ struct BubbleView: View {
                     .id(textIdentity)
                     .transition(ProductionBubbleMotion.contentTransition)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .animation(ProductionBubbleMotion.contentAnimation, value: textIdentity)
             }
             .padding(.horizontal, horizontalPadding)
             .padding(.vertical, verticalPadding)
             .frame(
                 minWidth: resolvedMinTextWidth.map { CGFloat($0) },
-                maxWidth: CGFloat(maxTextWidth ?? defaultMaxTextWidth)
+                maxWidth: CGFloat(maxTextWidth ?? defaultMaxTextWidth),
+                alignment: .leading
             )
             .background(bubbleFill.opacity(resolvedFillOpacity), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             .overlay(
@@ -482,8 +484,10 @@ private struct BubbleTextContent: View {
                     .minimumScaleFactor(minimumScaleFactor)
                     .truncationMode(.tail)
                     .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         } else if role == .conversation, let threadTitle = parts.threadTitle {
             VStack(alignment: .leading, spacing: 2) {
                 Text(threadTitle)
@@ -511,7 +515,8 @@ private struct BubbleTextContent: View {
                 .lineLimit(PetSpeechBubbleLayout.lineLimit(for: role))
                 .minimumScaleFactor(minimumScaleFactor)
                 .truncationMode(.tail)
-                .multilineTextAlignment(role == .status ? .center : .leading)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
