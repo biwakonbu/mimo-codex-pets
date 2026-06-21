@@ -928,7 +928,8 @@ final class CodexAppServerClient {
                     threadTitle: title,
                     speaker: line.speaker,
                     text: line.text,
-                    isAssistant: line.isAssistant
+                    isAssistant: line.isAssistant,
+                    activityKind: line.activityKind
                 )
             }
         }
@@ -938,7 +939,8 @@ final class CodexAppServerClient {
                 threadTitle: title,
                 speaker: activity.speaker,
                 text: activity.text,
-                isAssistant: activity.isAssistant
+                isAssistant: activity.isAssistant,
+                activityKind: activity.activityKind
             )
         }
     }

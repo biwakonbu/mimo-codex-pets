@@ -44,6 +44,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertTrue(lines[1].isAssistant)
         XCTAssertEqual(lines[2].speaker, "tool")
         XCTAssertEqual(lines[2].text, "テストを実行中")
+        XCTAssertEqual(lines.map(\.activityKind), [.userRequest, .assistantMessage, .test])
     }
 
     func testFallsBackToThreadPreviewWhenTurnsHaveNoItems() {
@@ -89,6 +90,7 @@ final class CodexConversationExtractorTests: XCTestCase {
             "テストを実行中",
             "ツールを使用中"
         ])
+        XCTAssertEqual(lines.map(\.activityKind), [.assistantMessage, .test, .tool])
     }
 
     func testExtractsAdditionalSchemaItemsWithoutDumpingPayloads() {
@@ -130,6 +132,15 @@ final class CodexConversationExtractorTests: XCTestCase {
             "文脈を整理中",
             "レビューを開始"
         ])
+        XCTAssertEqual(lines.map(\.activityKind), [
+            .plan,
+            .reasoning,
+            .tool,
+            .webSearch,
+            .imageGeneration,
+            .contextCompaction,
+            .review
+        ])
         XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("secret"))
         XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("private query"))
         XCTAssertFalse(lines.map(\.text).joined(separator: " ").contains("use_figma"))
@@ -168,6 +179,16 @@ final class CodexConversationExtractorTests: XCTestCase {
             "画像を確認中",
             "スキルを確認中",
             "参照を確認中"
+        ])
+        XCTAssertEqual(lines.map(\.activityKind), [
+            .browser,
+            .browser,
+            .fileRead,
+            .fileRead,
+            .search,
+            .image,
+            .skill,
+            .mention
         ])
 
         let joined = lines.map(\.text).joined(separator: " ")
@@ -247,8 +268,10 @@ final class CodexConversationExtractorTests: XCTestCase {
 
         XCTAssertEqual(command.speaker, "tool")
         XCTAssertEqual(command.text, "コマンド出力を確認中")
+        XCTAssertEqual(command.activityKind, .command)
         XCTAssertEqual(agent.speaker, "codex")
         XCTAssertEqual(agent.text, "応答を作成中")
+        XCTAssertEqual(agent.activityKind, .assistantMessage)
 
         let plan = CodexConversationExtractor.progressLine(
             threadId: "thread-delta",
@@ -263,7 +286,9 @@ final class CodexConversationExtractorTests: XCTestCase {
 
         XCTAssertEqual(plan.speaker, "codex")
         XCTAssertEqual(plan.text, "計画を更新中")
+        XCTAssertEqual(plan.activityKind, .plan)
         XCTAssertEqual(reasoning.text, "文脈を整理中")
+        XCTAssertEqual(reasoning.activityKind, .reasoning)
     }
 
     func testBuildsStatusLinesFromThreadState() {
@@ -298,6 +323,7 @@ final class CodexConversationExtractorTests: XCTestCase {
 
         XCTAssertEqual(active?.speaker, "thread")
         XCTAssertEqual(active?.text, "作業中")
+        XCTAssertEqual(active?.activityKind, .threadStatus)
         XCTAssertEqual(waiting?.text, "確認待ち")
         XCTAssertEqual(review?.text, "レビュー可能")
         XCTAssertNil(idle)

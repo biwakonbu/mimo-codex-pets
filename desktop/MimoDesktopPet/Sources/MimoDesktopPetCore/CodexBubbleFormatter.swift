@@ -51,6 +51,8 @@ public enum CodexBubbleFormatter {
             return "スキル確認"
         case "ページを確認中です":
             return "ページ確認"
+        case "ファイルを確認中です":
+            return "ファイル確認"
         case "調査中です":
             return "調査中"
         case "画像を作成中です":
@@ -71,6 +73,8 @@ public enum CodexBubbleFormatter {
             return "実行中"
         case "作業中です":
             return "作業中"
+        case "参照を確認中です":
+            return "参照確認"
         case "依頼を確認しました":
             return "依頼確認"
         case "確認待ちです":
@@ -100,6 +104,9 @@ public enum CodexBubbleFormatter {
 
         if text.contains("失敗") || text.contains("エラー") || text.contains("failed") || text.contains("systemerror") {
             return "失敗を確認しました"
+        }
+        if let summary = activitySummary(for: line.activityKind, text: text) {
+            return summary
         }
         if text.contains("レビューを開始") {
             return "レビュー中です"
@@ -156,6 +163,53 @@ public enum CodexBubbleFormatter {
             return "進捗を確認しました"
         }
         return "更新を確認しました"
+    }
+
+    private static func activitySummary(
+        for kind: CodexConversationActivityKind,
+        text: String
+    ) -> String? {
+        switch kind {
+        case .message, .assistantMessage, .threadStatus:
+            return nil
+        case .userRequest:
+            return "依頼を確認しました"
+        case .plan:
+            return "計画を整理中です"
+        case .reasoning, .contextCompaction:
+            return "文脈を整理中です"
+        case .command:
+            return "コマンドを実行中です"
+        case .test:
+            return "テストを実行中です"
+        case .fileChange:
+            return "変更を反映中です"
+        case .fileRead:
+            return "ファイルを確認中です"
+        case .tool:
+            return "ツールで確認中です"
+        case .subAgent:
+            return "別作業を確認中です"
+        case .webSearch, .search:
+            return "調査中です"
+        case .browser:
+            return "ページを確認中です"
+        case .image:
+            return "画像を確認中です"
+        case .imageGeneration:
+            return "画像を作成中です"
+        case .sleep:
+            return "少し待機しています"
+        case .review:
+            if text.contains("終了") {
+                return "レビューを終えました"
+            }
+            return "レビュー中です"
+        case .skill:
+            return "スキルを確認中です"
+        case .mention:
+            return "参照を確認中です"
+        }
     }
 
     private static func toolSummary(for text: String) -> String {

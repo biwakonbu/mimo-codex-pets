@@ -240,6 +240,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   direct stdio JSON-RPC instead of waiting forever
 - the app reads `thread/loaded/list`, `thread/list(limit: 6)`, and
   `thread/read(includeTurns: true)` and sanitizes item text before display
+- extracted conversation lines keep typed activity kinds for plan, reasoning,
+  command, test, file, browser, image, skill, mention, and status updates, so
+  production bubbles summarize the kind of Codex work before falling back to
+  loose text matching
 - live presentation smoke title expectations are checked against the same
   shared fixture cases as the Swift production title formatter, including
   machine payload and stdout/env marker titles, preventing the Python preflight

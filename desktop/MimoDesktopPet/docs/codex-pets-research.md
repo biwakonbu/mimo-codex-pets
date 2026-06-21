@@ -180,6 +180,11 @@ Conversation behavior:
   bearer tokens, email addresses, and credential markers are replaced by short
   generic activity such as `応答を受信` or `ユーザー入力を受信` before bubble
   planning.
+- Extracted conversation lines carry a typed activity kind such as plan,
+  reasoning, command, test, file review, browser review, image generation,
+  skill, mention, or thread status. The formatter uses that kind before loose
+  text guessing, so Mimo can say `ファイルを確認中です` or `計画を整理中です`
+  without relying on raw app-server payload wording or leaking tool arguments.
 - The live app presentation smoke uses Python to preflight expected sanitized
   title candidates. `check_title_sanitizer_parity.py` and
   `title_sanitizer_fixtures.json` keep that helper aligned with the Swift
@@ -322,6 +327,9 @@ Manual or visual checks:
   streaming delta activity, plus simultaneous stacked bubbles for a second
   visible thread and a later secondary-thread update discovered immediately
   from notification-triggered thread reads.
+- Unit tests verify that extracted `CodexConversationLine` values retain typed
+  activity kinds and that bubble summaries prefer those kinds over brittle raw
+  text guesses, while failure text still overrides the kind.
 - Fake app-server E2E also injects raw command/tool/delta and sensitive
   conversation strings such as `swift test`, `get_app_state`, raw streaming
   text, bearer-token shaped text, password/stdout fragments, and local

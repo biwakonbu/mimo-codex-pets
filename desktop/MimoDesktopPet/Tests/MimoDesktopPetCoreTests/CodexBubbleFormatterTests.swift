@@ -175,6 +175,64 @@ final class CodexBubbleFormatterTests: XCTestCase {
         }
     }
 
+    func testUsesActivityKindBeforeLooseTextGuessing() {
+        let cases: [(CodexConversationLine, String)] = [
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "計画",
+                    speaker: "codex",
+                    text: "表示を確認しました",
+                    isAssistant: true,
+                    activityKind: .plan
+                ),
+                "ご主人、「計画」は計画を整理中です"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "ファイル確認",
+                    speaker: "tool",
+                    text: "ファイルを確認中",
+                    isAssistant: true,
+                    activityKind: .fileRead
+                ),
+                "ご主人、「ファイル確認」はファイルを確認中です"
+            ),
+            (
+                CodexConversationLine(
+                    threadId: "thread",
+                    threadTitle: "参照",
+                    speaker: "thread",
+                    text: "参照を確認中",
+                    isAssistant: true,
+                    activityKind: .mention
+                ),
+                "ご主人、「参照」は参照を確認中です"
+            )
+        ]
+
+        for (line, expected) in cases {
+            XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), expected)
+        }
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: cases[1].0), "「ファイル確認」ファイル確認")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: cases[2].0), "「参照」参照確認")
+    }
+
+    func testFailedTextStillOverridesActivityKind() {
+        let line = CodexConversationLine(
+            threadId: "thread",
+            threadTitle: "テスト",
+            speaker: "tool",
+            text: "テスト実行に失敗",
+            isAssistant: true,
+            activityKind: .test
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "ご主人、「テスト」は失敗を確認しました")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「テスト」失敗")
+    }
+
     func testSummarizesActiveWorkFromProgressMessage() {
         let line = CodexConversationLine(
             threadId: "thread",

@@ -1,24 +1,52 @@
 import Foundation
 
+public enum CodexConversationActivityKind: String, Equatable, Sendable {
+    case message
+    case userRequest
+    case assistantMessage
+    case plan
+    case reasoning
+    case command
+    case test
+    case fileChange
+    case fileRead
+    case tool
+    case subAgent
+    case webSearch
+    case browser
+    case search
+    case image
+    case imageGeneration
+    case sleep
+    case review
+    case contextCompaction
+    case skill
+    case mention
+    case threadStatus
+}
+
 public struct CodexConversationLine: Equatable, Sendable {
     public let threadId: String
     public let threadTitle: String
     public let speaker: String
     public let text: String
     public let isAssistant: Bool
+    public let activityKind: CodexConversationActivityKind
 
     public init(
         threadId: String,
         threadTitle: String,
         speaker: String,
         text: String,
-        isAssistant: Bool
+        isAssistant: Bool,
+        activityKind: CodexConversationActivityKind = .message
     ) {
         self.threadId = threadId
         self.threadTitle = threadTitle
         self.speaker = speaker
         self.text = text
         self.isAssistant = isAssistant
+        self.activityKind = activityKind
     }
 }
 
@@ -47,7 +75,8 @@ public enum CodexConversationExtractor {
                     threadTitle: threadTitle,
                     speaker: "thread",
                     text: preview,
-                    isAssistant: false
+                    isAssistant: false,
+                    activityKind: .message
                 )
             )
         }
@@ -65,6 +94,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "you",
                 isAssistant: false,
+                activityKind: .userRequest,
                 text: compactText(from: item["content"], limit: 68) ?? "ユーザー入力を受信"
             )
         case "agentMessage", "agent_message":
@@ -73,6 +103,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "codex",
                 isAssistant: true,
+                activityKind: .assistantMessage,
                 text: compactText(from: firstNonEmptyValue(item["text"], item["content"]), limit: 76) ?? "応答を受信"
             )
         case "plan":
@@ -81,6 +112,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "codex",
                 isAssistant: true,
+                activityKind: .plan,
                 text: compactText(from: item["text"], limit: 64).map { "計画: \($0)" } ?? "計画を整理中"
             )
         case "reasoning":
@@ -89,15 +121,18 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "codex",
                 isAssistant: true,
+                activityKind: .reasoning,
                 text: compactText(from: firstNonEmptyValue(item["summary"], item["content"]), limit: 64) ?? "考えを整理しています"
             )
         case "commandExecution":
+            let commandActivity = commandActivity(from: item["command"])
             if itemFailed(item) {
                 return makeLine(
                     threadId: threadId,
                     threadTitle: threadTitle,
                     speaker: "tool",
                     isAssistant: true,
+                    activityKind: commandActivity.kind,
                     text: "コマンド実行に失敗"
                 )
             }
@@ -106,7 +141,8 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
-                text: commandActivityText(from: item["command"])
+                activityKind: commandActivity.kind,
+                text: commandActivity.text
             )
         case "fileChange":
             return makeLine(
@@ -114,6 +150,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .fileChange,
                 text: itemFailed(item) ? "ファイル変更に失敗" : "ファイル変更を反映"
             )
         case "mcpToolCall":
@@ -123,6 +160,7 @@ public enum CodexConversationExtractor {
                     threadTitle: threadTitle,
                     speaker: "tool",
                     isAssistant: true,
+                    activityKind: .tool,
                     text: "ツール実行に失敗"
                 )
             }
@@ -131,6 +169,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .tool,
                 text: "ツールを使用中"
             )
         case "dynamicToolCall":
@@ -140,6 +179,7 @@ public enum CodexConversationExtractor {
                     threadTitle: threadTitle,
                     speaker: "tool",
                     isAssistant: true,
+                    activityKind: .tool,
                     text: "ツール実行に失敗"
                 )
             }
@@ -148,6 +188,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .tool,
                 text: "ツールを使用中"
             )
         case "collabAgentToolCall", "subAgentActivity":
@@ -156,6 +197,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .subAgent,
                 text: itemFailed(item) ? "サブエージェントに失敗" : "サブエージェントを確認中"
             )
         case "webSearch":
@@ -164,6 +206,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .webSearch,
                 text: "Web 検索中"
             )
         case "openPage":
@@ -172,6 +215,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .browser,
                 text: "ページを確認中"
             )
         case "findInPage":
@@ -180,6 +224,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .browser,
                 text: "ページ内を検索中"
             )
         case "listFiles":
@@ -188,6 +233,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .fileRead,
                 text: "ファイル一覧を確認中"
             )
         case "read":
@@ -196,6 +242,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .fileRead,
                 text: "ファイルを確認中"
             )
         case "search":
@@ -204,6 +251,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .search,
                 text: "検索中"
             )
         case "imageView":
@@ -212,6 +260,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .image,
                 text: "画像を確認中"
             )
         case "image", "inputImage", "localImage":
@@ -220,6 +269,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .image,
                 text: "画像を確認中"
             )
         case "imageGeneration":
@@ -228,6 +278,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .imageGeneration,
                 text: itemFailed(item) ? "画像生成に失敗" : "画像を生成中"
             )
         case "sleep":
@@ -236,6 +287,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .sleep,
                 text: "少し待機中"
             )
         case "enteredReviewMode":
@@ -244,6 +296,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "codex",
                 isAssistant: true,
+                activityKind: .review,
                 text: "レビューを開始"
             )
         case "exitedReviewMode":
@@ -252,6 +305,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "codex",
                 isAssistant: true,
+                activityKind: .review,
                 text: "レビューを終了"
             )
         case "contextCompaction":
@@ -260,6 +314,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "codex",
                 isAssistant: true,
+                activityKind: .contextCompaction,
                 text: "文脈を整理中"
             )
         case "skill":
@@ -268,6 +323,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "tool",
                 isAssistant: true,
+                activityKind: .skill,
                 text: "スキルを確認中"
             )
         case "mention":
@@ -276,6 +332,7 @@ public enum CodexConversationExtractor {
                 threadTitle: threadTitle,
                 speaker: "thread",
                 isAssistant: true,
+                activityKind: .mention,
                 text: "参照を確認中"
             )
         case "hookPrompt":
@@ -287,6 +344,7 @@ public enum CodexConversationExtractor {
                     threadTitle: threadTitle,
                     speaker: role == "assistant" ? "codex" : "you",
                     isAssistant: role == "assistant",
+                    activityKind: role == "assistant" ? .assistantMessage : .userRequest,
                     text: compactText(from: firstNonEmptyString(item["text"], item["content"], item["message"]), limit: 72)
                 )
             }
@@ -304,7 +362,8 @@ public enum CodexConversationExtractor {
             threadTitle: threadTitle,
             speaker: ["agentMessageDelta", "planDelta", "turnPlanUpdated"].contains(kind) ? "codex" : "tool",
             text: progressText(for: kind),
-            isAssistant: true
+            isAssistant: true,
+            activityKind: progressActivityKind(for: kind)
         )
     }
 
@@ -340,7 +399,8 @@ public enum CodexConversationExtractor {
             threadTitle: threadTitle,
             speaker: "thread",
             text: text,
-            isAssistant: true
+            isAssistant: true,
+            activityKind: .threadStatus
         )
     }
 
@@ -362,7 +422,8 @@ public enum CodexConversationExtractor {
                     threadTitle: threadTitle,
                     speaker: "you",
                     text: input,
-                    isAssistant: false
+                    isAssistant: false,
+                    activityKind: .userRequest
                 )
             )
         }
@@ -374,7 +435,8 @@ public enum CodexConversationExtractor {
                     threadTitle: threadTitle,
                     speaker: "turn",
                     text: status == "completed" ? "ターンが完了しました" : "ターン状態: \(status)",
-                    isAssistant: true
+                    isAssistant: true,
+                    activityKind: .threadStatus
                 )
             )
         }
@@ -387,6 +449,7 @@ public enum CodexConversationExtractor {
         threadTitle: String,
         speaker: String,
         isAssistant: Bool,
+        activityKind: CodexConversationActivityKind,
         text: String?
     ) -> CodexConversationLine? {
         guard let text, !text.isEmpty else { return nil }
@@ -395,7 +458,8 @@ public enum CodexConversationExtractor {
             threadTitle: threadTitle,
             speaker: speaker,
             text: text,
-            isAssistant: isAssistant
+            isAssistant: isAssistant,
+            activityKind: activityKind
         )
     }
 
@@ -420,6 +484,25 @@ public enum CodexConversationExtractor {
         }
     }
 
+    private static func progressActivityKind(for kind: String) -> CodexConversationActivityKind {
+        switch kind {
+        case "agentMessageDelta":
+            return .assistantMessage
+        case "planDelta", "turnPlanUpdated":
+            return .plan
+        case "reasoningDelta":
+            return .reasoning
+        case "commandExecutionOutputDelta":
+            return .command
+        case "fileChangeOutputDelta":
+            return .fileChange
+        case "mcpToolCallProgress":
+            return .tool
+        default:
+            return .threadStatus
+        }
+    }
+
     private static func compactText(from value: Any?, limit: Int) -> String? {
         guard let raw = rawText(from: value) else { return nil }
         let collapsed = raw
@@ -434,16 +517,16 @@ public enum CodexConversationExtractor {
         return String(collapsed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
     }
 
-    private static func commandActivityText(from command: Any?) -> String {
+    private static func commandActivity(from command: Any?) -> (text: String, kind: CodexConversationActivityKind) {
         let raw = rawText(from: command)?.lowercased() ?? ""
         if raw.contains(" test") ||
             raw.hasSuffix("test") ||
             raw.contains("xctest") ||
             raw.contains("pytest") ||
             raw.contains("テスト") {
-            return "テストを実行中"
+            return ("テストを実行中", .test)
         }
-        return "コマンドを実行中"
+        return ("コマンドを実行中", .command)
     }
 
     private static func rawText(from value: Any?) -> String? {
