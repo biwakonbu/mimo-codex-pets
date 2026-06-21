@@ -41,6 +41,7 @@ public struct CodexConversationLine: Equatable, Sendable {
     public let activityKind: CodexConversationActivityKind
     public let workSummary: String?
     public let sessionState: CodexSessionActivityState?
+    public let mimoSpeech: String?
 
     public init(
         threadId: String,
@@ -50,7 +51,8 @@ public struct CodexConversationLine: Equatable, Sendable {
         isAssistant: Bool,
         activityKind: CodexConversationActivityKind = .message,
         workSummary: String? = nil,
-        sessionState: CodexSessionActivityState? = nil
+        sessionState: CodexSessionActivityState? = nil,
+        mimoSpeech: String? = nil
     ) {
         self.threadId = threadId
         self.threadTitle = threadTitle
@@ -60,6 +62,7 @@ public struct CodexConversationLine: Equatable, Sendable {
         self.activityKind = activityKind
         self.workSummary = workSummary
         self.sessionState = sessionState
+        self.mimoSpeech = mimoSpeech
     }
 
     public func withWorkSummary(_ workSummary: String?) -> CodexConversationLine {
@@ -72,7 +75,8 @@ public struct CodexConversationLine: Equatable, Sendable {
             isAssistant: isAssistant,
             activityKind: activityKind,
             workSummary: workSummary,
-            sessionState: sessionState
+            sessionState: sessionState,
+            mimoSpeech: mimoSpeech
         )
     }
 
@@ -86,7 +90,23 @@ public struct CodexConversationLine: Equatable, Sendable {
             isAssistant: isAssistant,
             activityKind: activityKind,
             workSummary: workSummary,
-            sessionState: sessionState
+            sessionState: sessionState,
+            mimoSpeech: mimoSpeech
+        )
+    }
+
+    public func withMimoSpeech(_ mimoSpeech: String?) -> CodexConversationLine {
+        guard self.mimoSpeech != mimoSpeech else { return self }
+        return CodexConversationLine(
+            threadId: threadId,
+            threadTitle: threadTitle,
+            speaker: speaker,
+            text: text,
+            isAssistant: isAssistant,
+            activityKind: activityKind,
+            workSummary: workSummary,
+            sessionState: sessionState,
+            mimoSpeech: mimoSpeech
         )
     }
 }

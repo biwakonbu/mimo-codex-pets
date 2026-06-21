@@ -43,8 +43,8 @@ public enum PetSpeechBubbleLayout {
     public static let productionSpriteHeight = 208.0
     public static let productionVisibleLimit = 5
     public static let productionRowSpacing = 5.0
-    public static let statusTextLimit = 52
-    public static let focusTextLimit = 64
+    public static let statusTextLimit = 72
+    public static let focusTextLimit = 86
     public static let conversationTextLimit = 42
     public static let overflowTextLimit = 22
 

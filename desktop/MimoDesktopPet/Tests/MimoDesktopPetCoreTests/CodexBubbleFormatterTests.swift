@@ -2,6 +2,25 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class CodexBubbleFormatterTests: XCTestCase {
+    func testGeneratedMimoSpeechWinsOverDeterministicSummary() {
+        let line = CodexConversationLine(
+            threadId: "session-1",
+            threadTitle: "Mimo runtime QA",
+            speaker: "assistant",
+            text: "吹き出し要約を進めています",
+            isAssistant: true,
+            activityKind: .assistantMessage,
+            workSummary: "吹き出し要約の表示文言",
+            sessionState: .active,
+            mimoSpeech: "ご主人、「Mimo runtime QA」は動作中です。Codex が吹き出し文を整えて、Mimo が分かりやすく伝えます"
+        )
+
+        XCTAssertEqual(
+            CodexBubbleFormatter.bubbleText(for: line),
+            "ご主人、「Mimo runtime QA」は動作中です。Codex が吹き出し文を整えて、Mimo が分かりやすく伝えます"
+        )
+    }
+
     func testSummarizesAssistantLineAsMimoReport() {
         let line = CodexConversationLine(
             threadId: "thread",

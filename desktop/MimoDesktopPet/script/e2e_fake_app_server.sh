@@ -27,6 +27,7 @@ CODEX_BIN="$FAKE_CODEX" \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_TEST_MODE=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
+MIMO_CODEX_DIALOGUE_ENABLED=1 \
 MIMO_PRESENTATION_LOG="$PRESENTATION_LOG" \
 MIMO_WINDOW_ORIGIN="160,160" \
 "$APP_BINARY" &
@@ -94,13 +95,14 @@ SWIFT
 sleep 10
 kill -0 "$APP_PID" >/dev/null
 
-grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言をツールで確認中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言をまとめています' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言を計画中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言でコマンドを実行中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言で端末入力を確認中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言の差分確認中です' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「Mimo runtime QA」は動作中で、作業内容の説明をテスト中です' "$PRESENTATION_LOG"
+grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)をツールで確認中です' "$PRESENTATION_LOG"
+grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)をまとめています' "$PRESENTATION_LOG"
+grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)を計画中です' "$PRESENTATION_LOG"
+grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)でコマンドを実行中です' "$PRESENTATION_LOG"
+grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)で端末入力を確認中です' "$PRESENTATION_LOG"
+grep -Eq 'ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の(表示文言|実装)の差分確認中です' "$PRESENTATION_LOG"
+grep -Eq 'Mimo runtime QA.*(作業内容|吹き出し要約).*テスト|Mimo runtime QA.*Mimo が見やすく伝える準備' "$PRESENTATION_LOG"
+grep -Fq 'Mimo が見やすく伝える準備を進めています' "$PRESENTATION_LOG"
 grep -Fq '承認確認' "$PRESENTATION_LOG"
 grep -Fq '承認確認済み' "$PRESENTATION_LOG"
 grep -Fq 'フック確認' "$PRESENTATION_LOG"
@@ -115,7 +117,7 @@ grep -Fq '警告確認' "$PRESENTATION_LOG"
 grep -Fq '安全警告' "$PRESENTATION_LOG"
 grep -Fq 'MCP 確認' "$PRESENTATION_LOG"
 grep -Eq 'Mimo runtime.*吹き出し要約.*確認待ち' "$PRESENTATION_LOG"
-grep -Fq 'ご主人、「別セッションの確認」は停止中で、検証をレビューできます' "$PRESENTATION_LOG"
+grep -Fq '「別セッションの確認」停止・検証レビュー可' "$PRESENTATION_LOG"
 grep -Fq '「別セッションの確認」動作中・作業中' "$PRESENTATION_LOG"
 grep -Fq '「更新された別セッション」動作中・作業中' "$PRESENTATION_LOG"
 grep -Fq 'ステータスだけで進捗を伝' "$PRESENTATION_LOG"
@@ -191,7 +193,7 @@ for row in rows:
     if len(thread_titles) != len(set(thread_titles)):
         raise SystemExit(f"production bubble stack repeated a thread title: {bubbles}")
     if bubbles:
-        primary_limit = 64 if roles and roles[0] == "focus" else 52
+        primary_limit = 86 if roles and roles[0] == "focus" else 72
         if len(str(bubbles[0])) > primary_limit:
             raise SystemExit(f"primary production bubble is too long: {bubbles[0]}")
     for bubble, role in zip(bubbles[1:], roles[1:]):
@@ -310,6 +312,8 @@ grep -Fq 'argv ["app-server", "proxy"]' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/read"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
+grep -Eq '"method":"thread\\?/start"' "$FAKE_LOG"
+grep -Eq '"method":"turn\\?/start"' "$FAKE_LOG"
 grep -Eq '"method":"item/commandExecution/terminalInteraction"' "$FAKE_LOG"
 grep -Eq '"method":"item/fileChange/patchUpdated"' "$FAKE_LOG"
 grep -Eq '"method":"turn/diff/updated"' "$FAKE_LOG"

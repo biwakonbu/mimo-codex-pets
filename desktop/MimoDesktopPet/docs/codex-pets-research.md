@@ -11,6 +11,8 @@ Verified public protocol surface:
   - `thread/loaded/list`
   - `thread/list`
   - `thread/read`
+  - `thread/start`
+  - `turn/start`
 - `script/check_app_server_schema.sh` regenerates this schema and verifies that
   every `ServerNotification` method in the generated schema is either handled
   by `CodexNotificationMethod` or explicitly classified as intentionally ignored
@@ -163,6 +165,19 @@ Verified runtime behavior:
   `daemon start` and `proxy`, but direct stdio fallback must remain available so
   production startup does not depend on private Codex.app state or user config
   changes.
+- Mimo speech rewriting uses a separate ephemeral Codex session, not the user's
+  active work session. The companion creates that internal session with
+  `thread/start`, then asks for one short Mimo speech bubble with `turn/start`.
+  The turn input contains only sanitized session title, state, activity kind,
+  safe `workSummary`, and deterministic fallback text. It uses
+  `approvalPolicy=never`, read-only sandbox policy, and empty environments so
+  Codex is used as a text rewriter rather than as an agent that can inspect the
+  workspace. The internal Mimo session is filtered out of visible thread lists,
+  notification tracking, and production bubbles.
+- `script/live_mimo_dialogue_smoke.py` exercises that same live app-server path
+  without touching user work sessions: it creates an ephemeral Mimo session,
+  sends a sanitized `turn/start` request, waits for assistant-message
+  notifications, and rejects unsafe or non-Mimo speech.
 
 Computer Use limitation:
 
@@ -265,6 +280,12 @@ Conversation behavior:
   `ご主人、「Mimo runtime QA」は動作中で、吹き出し要約の表示文言をまとめています`,
   or `「Mimo runtime...」停止・進捗の具体説明レビュー可`, while still never quoting
   raw commands, paths, deltas, or model output.
+- When Codex-backed Mimo speech is enabled, `CodexMimoDialoguePrompt` asks the
+  ephemeral Mimo session to rewrite only those safe fields into a warmer
+  one-sentence bubble. The generated `mimoSpeech` is safety-checked again before
+  display and then cached by session title, state, activity kind, safe topic,
+  and safe text. Regeneration is throttled per session so bubbles update at a
+  human-readable cadence rather than streaming every raw Codex event.
 - The live app presentation smoke uses Python to preflight expected sanitized
   title candidates. `check_title_sanitizer_parity.py` and
   `title_sanitizer_fixtures.json` keep that helper aligned with the Swift

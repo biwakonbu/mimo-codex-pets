@@ -14,10 +14,12 @@ RESEARCH = ROOT_DIR / "docs" / "codex-pets-research.md"
 QA_ALL = SCRIPT_DIR / "qa_all.sh"
 SCHEMA_CHECK = SCRIPT_DIR / "check_app_server_schema.sh"
 LIVE_SMOKE = SCRIPT_DIR / "live_app_server_smoke.py"
+LIVE_DIALOGUE_SMOKE = SCRIPT_DIR / "live_mimo_dialogue_smoke.py"
 ENERGY_E2E = SCRIPT_DIR / "e2e_autonomous_energy.sh"
 CLIENT = ROOT_DIR / "Sources" / "MimoDesktopPet" / "Services" / "CodexAppServerClient.swift"
 PROTOCOL = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexProtocol.swift"
 FORMATTER = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexBubbleFormatter.swift"
+DIALOGUE_PROMPT = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexMimoDialoguePrompt.swift"
 SUMMARIZER = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexSessionSummarizer.swift"
 ENERGY = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "PetAutonomousEnergyController.swift"
 ENERGY_TESTS = ROOT_DIR / "Tests" / "MimoDesktopPetCoreTests" / "PetAutonomousEnergyControllerTests.swift"
@@ -73,6 +75,8 @@ def require_app_server_contract() -> None:
         "thread/loaded/list",
         "thread/list",
         "thread/read",
+        "thread/start",
+        "turn/start",
         "includeTurns",
         "thread/status/changed",
         "turn/started",
@@ -90,6 +94,8 @@ def require_app_server_contract() -> None:
             'method: "thread/loaded/list"',
             'method: "thread/list"',
             'method: "thread/read"',
+            'method: "thread/start"',
+            'method: "turn/start"',
             '"includeTurns": true',
             "handleNotification(method:",
         ],
@@ -108,12 +114,30 @@ def require_app_server_contract() -> None:
         label="live smoke protocol contract",
     )
     require_text(
+        LIVE_DIALOGUE_SMOKE,
+        [
+            '"name": "mimo_desktop_pet_dialogue_smoke"',
+            '"experimentalApi": True',
+            '"thread/start"',
+            '"turn/start"',
+            '"ephemeral": True',
+            '"approvalPolicy": "never"',
+            '"sandbox": "read-only"',
+            '"sandboxPolicy"',
+            '"networkAccess": False',
+            "gpt-5.4-mini",
+        ],
+        label="live Mimo dialogue smoke protocol contract",
+    )
+    require_text(
         SCHEMA_CHECK,
         [
             'require_pattern "v1/InitializeParams.json" \'"experimentalApi"\'',
             'require_pattern "ClientRequest.json" \'"thread/loaded/list"\'',
             'require_pattern "ClientRequest.json" \'"thread/list"\'',
             'require_pattern "ClientRequest.json" \'"thread/read"\'',
+            'require_pattern "ClientRequest.json" \'"thread/start"\'',
+            'require_pattern "ClientRequest.json" \'"turn/start"\'',
             "ServerNotification.json",
             "CodexNotificationMethod",
             "CodexIgnoredNotificationMethod",
@@ -162,12 +186,26 @@ def require_mimicry_contract() -> None:
             "contextStateLabel",
             "displayTitleVocabulary",
             "sessionState",
+            "mimoSpeech",
             "reportTopic(for:",
             "workSummary",
             "activitySummary(for:",
             "toolSummary(for:",
         ],
         label="bubble formatter contract",
+    )
+    require_text(
+        DIALOGUE_PROMPT,
+        [
+            "CodexMimoDialoguePrompt",
+            "gpt-5.4-mini",
+            "Mimo speech request",
+            "session_state",
+            "safe_work_topic",
+            "sanitizedSpeech",
+            "Never use the word スレッド",
+        ],
+        label="Codex-backed Mimo dialogue contract",
     )
     require_text(
         SUMMARIZER,
@@ -250,6 +288,7 @@ def require_qa_contract() -> None:
             './script/e2e_autonomous_energy.sh',
             './script/check_app_server_schema.sh',
             './script/live_app_server_smoke.py',
+            "desktop/MimoDesktopPet/script/live_mimo_dialogue_smoke.py",
             './script/live_app_presentation_smoke.sh',
             './script/check_qa_all_coverage.py',
         ],

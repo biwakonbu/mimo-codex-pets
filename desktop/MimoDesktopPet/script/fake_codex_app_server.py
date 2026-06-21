@@ -63,6 +63,8 @@ STARTED_THREAD_TURNS = [
         ],
     }
 ]
+MIMO_DIALOGUE_THREAD_ID = "mimo-dialogue-thread"
+MIMO_DIALOGUE_TURN_COUNTER = 0
 
 
 def log(message):
@@ -184,6 +186,76 @@ def started_thread_snapshot():
         "status": dict(STARTED_THREAD_STATUS),
         "turns": [dict(turn) for turn in STARTED_THREAD_TURNS],
     }
+
+
+def mimo_dialogue_thread_snapshot():
+    return {
+        "id": MIMO_DIALOGUE_THREAD_ID,
+        "name": "Mimo dialogue",
+        "preview": "Mimo internal dialogue synthesis",
+        "status": {"type": "idle"},
+        "turns": [],
+    }
+
+
+def dialogue_text_from_input(params):
+    text = ""
+    for item in params.get("input", []):
+        if isinstance(item, dict) and item.get("type") == "text":
+            text += str(item.get("text", ""))
+    session_name = "Codex"
+    session_state = "動作中"
+    safe_work_topic = "作業内容の説明"
+    for line in text.splitlines():
+        key, sep, value = line.partition(":")
+        if not sep:
+            continue
+        value = value.strip()
+        if key.strip() == "session_name" and value:
+            session_name = value
+        elif key.strip() == "session_state" and value:
+            session_state = value
+        elif key.strip() == "safe_work_topic" and value:
+            safe_work_topic = value
+    return f"ご主人、「{session_name}」は{session_state}です。Codex が{safe_work_topic}を整理して、Mimo が見やすく伝える準備を進めています"
+
+
+def write_dialogue_turn_sequence(turn_id, text):
+    time.sleep(0.15)
+    write_message(
+        {
+            "method": "item/agentMessage/delta",
+            "params": {
+                "threadId": MIMO_DIALOGUE_THREAD_ID,
+                "turnId": turn_id,
+                "itemId": f"{turn_id}-agent",
+                "delta": text,
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "item/completed",
+            "params": {
+                "threadId": MIMO_DIALOGUE_THREAD_ID,
+                "turnId": turn_id,
+                "item": {
+                    "id": f"{turn_id}-agent",
+                    "type": "agentMessage",
+                    "content": [{"type": "outputText", "text": text}],
+                },
+            },
+        }
+    )
+    write_message(
+        {
+            "method": "turn/completed",
+            "params": {
+                "threadId": MIMO_DIALOGUE_THREAD_ID,
+                "turn": {"id": turn_id, "status": "completed"},
+            },
+        }
+    )
 
 
 def state_sequence():
@@ -624,6 +696,7 @@ def state_sequence():
 
 
 def run_stdio_server():
+    global MIMO_DIALOGUE_TURN_COUNTER
     log("stdio start")
     sequence_started = False
     for request in read_messages():
@@ -695,7 +768,10 @@ def run_stdio_server():
             )
         elif method == "thread/read":
             thread_id = request.get("params", {}).get("threadId", "fake-thread")
-            if thread_id == "fake-review":
+            if thread_id == MIMO_DIALOGUE_THREAD_ID:
+                with STATE_LOCK:
+                    thread = mimo_dialogue_thread_snapshot()
+            elif thread_id == "fake-review":
                 with STATE_LOCK:
                     thread = second_thread_snapshot()
             elif thread_id == "fake-status-only":
@@ -727,6 +803,47 @@ def run_stdio_server():
             if not sequence_started:
                 sequence_started = True
                 threading.Thread(target=state_sequence, daemon=True).start()
+        elif method == "thread/start":
+            write_message(
+                {
+                    "id": request_id,
+                    "result": {
+                        "thread": mimo_dialogue_thread_snapshot(),
+                        "model": request.get("params", {}).get("model", "gpt-5.4-mini"),
+                        "modelProvider": "openai",
+                        "approvalPolicy": "never",
+                        "approvalsReviewer": "user",
+                        "cwd": "/tmp",
+                        "sandbox": {"type": "readOnly"},
+                    },
+                }
+            )
+        elif method == "turn/start":
+            params = request.get("params", {})
+            if params.get("threadId") == MIMO_DIALOGUE_THREAD_ID:
+                MIMO_DIALOGUE_TURN_COUNTER += 1
+                turn_id = f"mimo-dialogue-turn-{MIMO_DIALOGUE_TURN_COUNTER}"
+                text = dialogue_text_from_input(params)
+                write_message(
+                    {
+                        "id": request_id,
+                        "result": {
+                            "turn": {"id": turn_id, "status": "inProgress"},
+                        },
+                    }
+                )
+                write_message(
+                    {
+                        "method": "turn/started",
+                        "params": {
+                            "threadId": MIMO_DIALOGUE_THREAD_ID,
+                            "turn": {"id": turn_id, "status": "inProgress"},
+                        },
+                    }
+                )
+                threading.Thread(target=write_dialogue_turn_sequence, args=(turn_id, text), daemon=True).start()
+            else:
+                write_message({"id": request_id, "result": {"turn": {"id": "ignored-turn", "status": "completed"}}})
         elif request_id is not None:
             write_message({"id": request_id, "result": {}})
 

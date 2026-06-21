@@ -118,7 +118,8 @@ run_from_repo "python syntax checks" python3 -m py_compile \
   desktop/MimoDesktopPet/script/check_title_sanitizer_parity.py \
   desktop/MimoDesktopPet/script/check_qa_all_coverage.py \
   desktop/MimoDesktopPet/script/check_docs_contract.py \
-  desktop/MimoDesktopPet/script/live_app_server_smoke.py
+  desktop/MimoDesktopPet/script/live_app_server_smoke.py \
+  desktop/MimoDesktopPet/script/live_mimo_dialogue_smoke.py
 run_from_repo "swift script parse checks" bash -c '
   set -euo pipefail
   swiftc -parse desktop/MimoDesktopPet/script/find_mimo_window.swift

@@ -2,6 +2,11 @@ import Foundation
 
 public enum CodexBubbleFormatter {
     public static func bubbleText(for line: CodexConversationLine, limit: Int = 58) -> String {
+        if let speech = line.mimoSpeech,
+           !speech.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !CodexAmbientTextSafety.isUnsafeForAmbientDisplay(speech) {
+            return compact(displayTitleVocabulary(speech), limit: max(limit, 96))
+        }
         let title = compactTitle(line.threadTitle)
         let summary = reportSummary(for: line, title: title)
         return compact("ご主人、「\(title)」は\(sessionAwareSummary(summary, state: line.sessionState))", limit: limit)

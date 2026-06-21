@@ -3,7 +3,7 @@
 Mimo Desktop Pet is a small macOS companion app that reuses the public Mimo
 Codex pet package from this repository.
 
-The v1 app is read-only:
+The v1 app keeps user work sessions read-only:
 
 - it renders `../../pets/mimo/pet.json` and `../../pets/mimo/spritesheet.webp`
 - it shows Mimo in a transparent floating desktop panel
@@ -15,8 +15,10 @@ The v1 app is read-only:
 - it derives a safe `workSummary` from session items with
   `CodexSessionSummarizer`, then lets Mimo explain the current work in its own
   short report style
-- it does not send prompts, speak audio, inspect the screen, or read Codex
-  session JSONL files
+- it can use a separate ephemeral Codex session to rewrite that already
+  sanitized state into a warmer Mimo speech bubble
+- it does not send prompts into the user's active work sessions, speak audio,
+  inspect the screen, or read Codex session JSONL files
 
 ## Run
 
@@ -62,17 +64,28 @@ state through `thread/loaded/list`, `thread/list`, and
 `thread/read(includeTurns: true)`. It reacts to thread/turn/item lifecycle
 notifications such as `thread/status/changed`, `turn/started`,
 `turn/completed`, `item/started`, and `item/completed` to refresh visible
-conversation bubbles promptly. Startup tries `codex app-server daemon start` as
-a best-effort helper with a short timeout, then connects over JSON-RPC through
-`codex app-server proxy`. If the daemon helper hangs, proxy startup fails, or
-the proxy does not complete the handshake, the companion falls back to direct
-`codex app-server --stdio`. If the local Codex app-server cannot be launched,
-the companion stays open and shows an offline/waiting status instead of crashing
-or waiting forever.
+conversation bubbles promptly. For optional Mimo speech rewriting, the client
+uses public `thread/start` and `turn/start` on a separate ephemeral Codex
+session with `approvalPolicy=never`, read-only sandbox policy, and empty
+environments. Only sanitized session title, state, activity kind, and
+`workSummary` are sent to that internal Mimo session; raw commands, paths, logs,
+or model output are not forwarded. Startup tries `codex app-server daemon start`
+as a best-effort helper with a short timeout, then connects over JSON-RPC
+through `codex app-server proxy`. If the daemon helper hangs, proxy startup
+fails, or the proxy does not complete the handshake, the companion falls back to
+direct `codex app-server --stdio`. If the local Codex app-server cannot be
+launched, the companion stays open and shows an offline/waiting status instead
+of crashing or waiting forever.
 For deterministic manual QA, set `MIMO_CODEX_EXECUTABLE=/path/to/fake-codex`
 to point the app and smoke helper at a fake app-server command. The older
 `CODEX_BIN` override remains supported for existing scripts, but the Mimo-specific
 override takes precedence when both are present.
+Mimo speech rewriting is enabled in normal app launches and disabled by default
+in `MIMO_BUBBLE_TEST_MODE=1`. Set `MIMO_CODEX_DIALOGUE_DISABLED=1` to force the
+deterministic formatter, `MIMO_CODEX_DIALOGUE_ENABLED=1` to force Codex-backed
+speech in tests, `MIMO_CODEX_DIALOGUE_MODEL=gpt-5.4-mini` to override the Codex
+model, and `MIMO_CODEX_DIALOGUE_REFRESH_SECONDS=45` to control per-session
+regeneration cadence.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
 By default it mirrors production transport selection: bounded daemon start,
@@ -80,6 +93,13 @@ proxy first, then direct stdio fallback if proxy cannot initialize. It retries
 transient response timeouts with a fresh selected transport so momentary local
 Codex stalls do not make the full gate flaky; protocol errors still fail
 immediately.
+`./script/live_mimo_dialogue_smoke.py` performs the Mimo speech generation path
+against the live app-server. It starts a separate ephemeral Mimo Codex session
+with `thread/start`, sends one sanitized `turn/start` request with
+`approvalPolicy=never`, read-only sandbox policy, and empty environments, then
+waits for assistant-message notifications and verifies the generated bubble can
+be shown as Mimo speech. This smoke does not write into the user's active work
+sessions.
 `./script/check_app_server_schema.sh` verifies the generated app-server schema
 and cross-checks that every server notification is either handled by the Swift
 client or explicitly classified as intentionally ignored. It also keeps the
@@ -188,7 +208,10 @@ tool checking.
 That is how Mimo can say
 `ご主人、「Mimo runtime QA」は動作中で、作業内容の説明をテスト中です` or
 `ご主人、「Mimo runtime QA」は停止中で、作業内容の説明をレビューできます`
-without quoting raw session text. Bubble markers use semantic tone for urgent states and typed
+without quoting raw session text. When Codex-backed Mimo speech is available,
+the primary bubble can be a longer conversational sentence such as
+`ご主人、「Mimo runtime QA」は動作中です。Codex が吹き出し要約を整理して、Mimo が見やすく伝えます`.
+Bubble markers use semantic tone for urgent states and typed
 activity kind for ordinary Codex work such as plan, command, file, browser,
 image, skill, or mention activity. The stack favors session coverage, so each
 visible session appears at most once. If more sessions are active than the compact
