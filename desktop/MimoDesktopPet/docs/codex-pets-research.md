@@ -444,6 +444,10 @@ Manual or visual checks:
   primary/secondary/overflow text-length caps, activity-kind marker propagation,
   accessibility value production-mode labeling, and a three-thread simultaneous
   bubble case with one focused primary bubble plus three conversation bubbles.
+  Live app presentation smoke applies the same accessibility channel checks to
+  real Codex app-server data: the value must mark production mode, mirror every
+  visible bubble, and pass the same raw/sensitive-fragment leak gate as the
+  rendered bubble text.
   Overflow E2E separately verifies one focused primary bubble, three concrete
   conversation bubbles, and one overflow counter bubble with no activity kind
   on the counter.

@@ -233,11 +233,30 @@ while time.time() < deadline:
                     title = bubble_title(bubble_text)
                     if title in expected_titles:
                         title_match_seen = True
-        all_visible_text = " ".join([str(row.get("bubbleText", ""))] + [str(bubble) for bubble in visible_bubbles])
+            accessibility_value = str(row.get("accessibilityValue", ""))
+            if visible_bubbles and not accessibility_value:
+                raise SystemExit("live app presentation omitted accessibilityValue")
+            if visible_bubbles and not accessibility_value.startswith("本番表示。"):
+                raise SystemExit(f"live app accessibilityValue did not mark production mode: {accessibility_value!r}")
+            if visible_bubbles and accessibility_value.startswith("デバッグ表示。"):
+                raise SystemExit(f"live app accessibilityValue exposed debug mode: {accessibility_value!r}")
+            missing_ax_bubbles = [str(bubble) for bubble in visible_bubbles if str(bubble) not in accessibility_value]
+            if missing_ax_bubbles:
+                raise SystemExit(
+                    "live app accessibilityValue did not mirror visible bubbles: "
+                    f"missing={missing_ax_bubbles!r} value={accessibility_value!r}"
+                )
+        else:
+            accessibility_value = str(row.get("accessibilityValue", ""))
+
+        all_visible_text = " ".join(
+            [str(row.get("bubbleText", "")), accessibility_value] +
+            [str(bubble) for bubble in visible_bubbles]
+        )
         for fragment in forbidden_fragments:
             if fragment in all_visible_text:
                 raise SystemExit(
-                    f"live app production bubble leaked raw or sensitive text: {fragment!r} in {all_visible_text!r}"
+                    f"live app production surface leaked raw or sensitive text: {fragment!r} in {all_visible_text!r}"
                 )
         bubble = str(row.get("bubbleText", ""))
         is_offline = bool(row.get("isOffline", False))
