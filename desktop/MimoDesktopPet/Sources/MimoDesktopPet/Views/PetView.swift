@@ -78,6 +78,7 @@ private struct ProductionBubbleStackView: View {
                     text: bubble.text,
                     role: bubble.role,
                     tone: bubble.tone,
+                    activityKind: bubble.activityKind,
                     showsTail: index == 0,
                     maxTextWidth: placement.maxTextWidth,
                     fillOpacity: placement.fillOpacity,
@@ -156,6 +157,7 @@ struct BubbleView: View {
     let text: String
     var role: PetSpeechBubbleRole = .status
     var tone: PetSpeechBubbleTone = .neutral
+    var activityKind: CodexConversationActivityKind?
     var showsTail = true
     var maxTextWidth: Double?
     var fillOpacity: Double?
@@ -170,7 +172,12 @@ struct BubbleView: View {
         VStack(spacing: 0) {
             HStack(spacing: leadingMarkerSpacing) {
                 if showsStateMarker {
-                    BubbleStateMarker(role: role, tone: tone, accentColor: accent)
+                    BubbleStateMarker(
+                        role: role,
+                        tone: tone,
+                        activityKind: activityKind,
+                        accentColor: accent
+                    )
                 }
 
                 BubbleTextContent(
@@ -381,6 +388,7 @@ private struct BubbleTextContent: View {
 private struct BubbleStateMarker: View {
     let role: PetSpeechBubbleRole
     let tone: PetSpeechBubbleTone
+    let activityKind: CodexConversationActivityKind?
     let accentColor: Color
 
     @ViewBuilder
@@ -427,12 +435,60 @@ private struct BubbleStateMarker: View {
             return "hourglass"
         case .review:
             return "checkmark"
-        case .active:
-            return "ellipsis"
         case .overflow:
             return "plus"
+        case .active:
+            return activitySymbolName ?? "ellipsis"
         case .neutral:
-            return "circle.fill"
+            return activitySymbolName ?? "circle.fill"
+        }
+    }
+
+    private var activitySymbolName: String? {
+        guard let activityKind else { return nil }
+        switch activityKind {
+        case .message:
+            return nil
+        case .userRequest:
+            return "person.fill"
+        case .assistantMessage:
+            return "text.bubble.fill"
+        case .plan:
+            return "list.bullet"
+        case .reasoning, .contextCompaction:
+            return "brain.head.profile"
+        case .command:
+            return "terminal.fill"
+        case .test:
+            return "checklist"
+        case .fileChange:
+            return "doc.fill"
+        case .fileRead:
+            return "doc.text.fill"
+        case .tool:
+            return "wrench.fill"
+        case .subAgent:
+            return "person.2.fill"
+        case .webSearch:
+            return "globe"
+        case .browser:
+            return "safari.fill"
+        case .search:
+            return "magnifyingglass"
+        case .image:
+            return "photo.fill"
+        case .imageGeneration:
+            return "sparkles"
+        case .sleep:
+            return "moon.fill"
+        case .review:
+            return "checkmark"
+        case .skill:
+            return "puzzlepiece.fill"
+        case .mention:
+            return "paperclip"
+        case .threadStatus:
+            return "waveform.path.ecg"
         }
     }
 }

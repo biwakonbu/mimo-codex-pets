@@ -84,6 +84,31 @@ log_path, label, animation, required_text, require_four_bubbles, required_tone =
 deadline = time.time() + 18
 last_rows = []
 valid_tones = {"neutral", "active", "waiting", "review", "failed", "overflow"}
+valid_activity_kinds = {
+    "none",
+    "message",
+    "userRequest",
+    "assistantMessage",
+    "plan",
+    "reasoning",
+    "command",
+    "test",
+    "fileChange",
+    "fileRead",
+    "tool",
+    "subAgent",
+    "webSearch",
+    "browser",
+    "search",
+    "image",
+    "imageGeneration",
+    "sleep",
+    "review",
+    "contextCompaction",
+    "skill",
+    "mention",
+    "threadStatus",
+}
 
 while time.time() < deadline:
     if not os.path.exists(log_path):
@@ -103,6 +128,7 @@ while time.time() < deadline:
         bubbles = row.get("bubbleTexts", [])
         roles = row.get("bubbleRoles", [])
         tones = row.get("bubbleTones", [])
+        activity_kinds = row.get("bubbleActivityKinds", [])
         if not isinstance(bubbles, list):
             continue
         if len(bubbles) > 4:
@@ -111,9 +137,14 @@ while time.time() < deadline:
             raise SystemExit(f"{label}: bubble roles did not match text count: roles={roles} bubbles={bubbles}")
         if not isinstance(tones, list) or len(tones) != len(bubbles):
             raise SystemExit(f"{label}: bubble tones did not match bubble text count: tones={tones} bubbles={bubbles}")
+        if not isinstance(activity_kinds, list) or len(activity_kinds) != len(bubbles):
+            raise SystemExit(f"{label}: bubble activity kinds did not match text count: activity_kinds={activity_kinds} bubbles={bubbles}")
         unknown_tones = [tone for tone in tones if tone not in valid_tones]
         if unknown_tones:
             raise SystemExit(f"{label}: bubble tones contained unknown values: {unknown_tones}")
+        unknown_activity_kinds = [kind for kind in activity_kinds if kind not in valid_activity_kinds]
+        if unknown_activity_kinds:
+            raise SystemExit(f"{label}: bubble activity kinds contained unknown values: {unknown_activity_kinds}")
         joined = " ".join(str(item) for item in bubbles)
         if row.get("animation") != animation:
             continue
@@ -126,6 +157,8 @@ while time.time() < deadline:
                 continue
             if roles != ["focus", "conversation", "conversation", "conversation"]:
                 raise SystemExit(f"{label}: unexpected four-bubble roles: {roles}")
+            if any(kind == "none" for kind in activity_kinds):
+                raise SystemExit(f"{label}: four-bubble activity kinds were missing: {activity_kinds}")
         print(f"{label} presentation observed.")
         raise SystemExit(0)
 

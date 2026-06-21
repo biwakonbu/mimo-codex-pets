@@ -33,17 +33,20 @@ public struct PetSpeechBubble: Equatable, Identifiable, Sendable {
     public let text: String
     public let role: PetSpeechBubbleRole
     public let tone: PetSpeechBubbleTone
+    public let activityKind: CodexConversationActivityKind?
 
     public init(
         id: String,
         text: String,
         role: PetSpeechBubbleRole,
-        tone: PetSpeechBubbleTone = .neutral
+        tone: PetSpeechBubbleTone = .neutral,
+        activityKind: CodexConversationActivityKind? = nil
     ) {
         self.id = id
         self.text = text
         self.role = role
         self.tone = tone
+        self.activityKind = activityKind
     }
 }
 

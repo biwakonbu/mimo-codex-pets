@@ -5,15 +5,22 @@ public enum CodexConversationBubblePlanner {
         let text: String
         let role: PetSpeechBubbleRole
         let tone: PetSpeechBubbleTone
+        let activityKind: CodexConversationActivityKind?
     }
 
     public struct PrimaryBubble: Equatable, Sendable {
         public let text: String
         public let threadId: String?
+        public let activityKind: CodexConversationActivityKind?
 
-        public init(text: String, threadId: String?) {
+        public init(
+            text: String,
+            threadId: String?,
+            activityKind: CodexConversationActivityKind? = nil
+        ) {
             self.text = text
             self.threadId = threadId
+            self.activityKind = activityKind
         }
     }
 
@@ -107,10 +114,15 @@ public enum CodexConversationBubblePlanner {
         conversationLines: [CodexConversationLine],
         preferredThreadId: String?,
         activeConversationThreadId: String? = nil,
+        activeConversationActivityKind: CodexConversationActivityKind? = nil,
         isOffline: Bool = false
     ) -> PrimaryBubble {
         if let activeConversationThreadId {
-            return PrimaryBubble(text: statusText, threadId: activeConversationThreadId)
+            return PrimaryBubble(
+                text: statusText,
+                threadId: activeConversationThreadId,
+                activityKind: activeConversationActivityKind
+            )
         }
 
         if !isOffline,
@@ -120,7 +132,8 @@ public enum CodexConversationBubblePlanner {
            ) {
             return PrimaryBubble(
                 text: CodexBubbleFormatter.bubbleText(for: focusedLine),
-                threadId: focusedLine.threadId
+                threadId: focusedLine.threadId,
+                activityKind: focusedLine.activityKind
             )
         }
 
@@ -132,6 +145,7 @@ public enum CodexConversationBubblePlanner {
         conversationLines: [CodexConversationLine],
         preferredThreadId: String?,
         primaryThreadId: String? = nil,
+        primaryActivityKind: CodexConversationActivityKind? = nil,
         primaryRole: PetSpeechBubbleRole? = nil,
         limit: Int = PetSpeechBubbleLayout.productionVisibleLimit
     ) -> [PetSpeechBubble] {
@@ -147,7 +161,8 @@ public enum CodexConversationBubblePlanner {
             bubbles.append(BubbleCandidate(
                 text: primary,
                 role: resolvedPrimaryRole,
-                tone: tone(forStatusText: primary)
+                tone: tone(forStatusText: primary),
+                activityKind: primaryActivityKind
             ))
         }
         if let primaryThreadId {
@@ -158,8 +173,7 @@ public enum CodexConversationBubblePlanner {
             from: conversationLines,
             preferredThreadId: preferredThreadId
         )
-        var candidateTexts: [String] = []
-        var candidateTonesByText: [String: PetSpeechBubbleTone] = [:]
+        var candidates: [BubbleCandidate] = []
 
         for line in conversationLines {
             guard !usedThreadIds.contains(line.threadId) else { continue }
@@ -170,30 +184,34 @@ public enum CodexConversationBubblePlanner {
             )
             guard !compacted.isEmpty,
                   !bubbles.contains(where: { $0.text == compacted }),
-                  !candidateTexts.contains(compacted)
+                  !candidates.contains(where: { $0.text == compacted })
             else { continue }
-            candidateTexts.append(compacted)
-            candidateTonesByText[compacted] = tone(for: line)
+            candidates.append(BubbleCandidate(
+                text: compacted,
+                role: .conversation,
+                tone: tone(for: line),
+                activityKind: line.activityKind
+            ))
             usedThreadIds.insert(line.threadId)
         }
 
         appendConversationContext(
-            candidateTexts,
-            tonesByText: candidateTonesByText,
+            candidates,
             to: &bubbles,
             visibleLimit: visibleLimit
         )
 
         if bubbles.isEmpty {
-            bubbles.append(BubbleCandidate(text: "待機中", role: .status, tone: .neutral))
+            bubbles.append(BubbleCandidate(text: "待機中", role: .status, tone: .neutral, activityKind: nil))
         }
 
         return bubbles.prefix(visibleLimit).enumerated().map { index, bubble in
             PetSpeechBubble(
-                id: "\(index)-\(bubble.role.rawValue)-\(bubble.text)",
+                id: "\(index)-\(bubble.role.rawValue)-\(bubble.activityKind?.rawValue ?? "none")-\(bubble.text)",
                 text: bubble.text,
                 role: bubble.role,
-                tone: bubble.tone
+                tone: bubble.tone,
+                activityKind: bubble.activityKind
             )
         }
     }
@@ -234,8 +252,7 @@ public enum CodexConversationBubblePlanner {
     }
 
     private static func appendConversationContext(
-        _ candidates: [String],
-        tonesByText: [String: PetSpeechBubbleTone],
+        _ candidates: [BubbleCandidate],
         to bubbles: inout [BubbleCandidate],
         visibleLimit: Int
     ) {
@@ -243,23 +260,19 @@ public enum CodexConversationBubblePlanner {
         guard remainingSlots > 0, !candidates.isEmpty else { return }
 
         if candidates.count <= remainingSlots || remainingSlots == 1 {
-            bubbles.append(contentsOf: candidates.prefix(remainingSlots).map {
-                BubbleCandidate(text: $0, role: .conversation, tone: tonesByText[$0] ?? .active)
-            })
+            bubbles.append(contentsOf: candidates.prefix(remainingSlots))
             return
         }
 
         let visibleConversationCount = remainingSlots - 1
-        bubbles.append(contentsOf: candidates.prefix(visibleConversationCount).map {
-            BubbleCandidate(text: $0, role: .conversation, tone: tonesByText[$0] ?? .active)
-        })
+        bubbles.append(contentsOf: candidates.prefix(visibleConversationCount))
         let overflowCount = candidates.count - visibleConversationCount
         let overflowText = CodexBubbleFormatter.compact(
             "ほか\(overflowCount)件も見ています",
             limit: PetSpeechBubbleLayout.textLimit(for: .overflow)
         )
         if !overflowText.isEmpty {
-            bubbles.append(BubbleCandidate(text: overflowText, role: .overflow, tone: .overflow))
+            bubbles.append(BubbleCandidate(text: overflowText, role: .overflow, tone: .overflow, activityKind: nil))
         }
     }
 

@@ -22,6 +22,7 @@ final class PetViewModel: ObservableObject {
     private var pendingConversationLines: [CodexConversationLine] = []
     private var conversationBubbleActive = false
     private var currentConversationThreadId: String?
+    private var currentConversationActivityKind: CodexConversationActivityKind?
     private var focusedThreadId: String?
 
     init(debugOverlay: Bool = PetDebugOverlayPolicy.isEnabled()) {
@@ -118,6 +119,7 @@ final class PetViewModel: ObservableObject {
         momentToken = token
         conversationBubbleActive = true
         currentConversationThreadId = line.threadId
+        currentConversationActivityKind = line.activityKind
         setPresentation(
             PetPresentationState(
                 animation: CodexConversationBubblePlanner.animation(
@@ -141,6 +143,7 @@ final class PetViewModel: ObservableObject {
         if pendingConversationLines.isEmpty {
             conversationBubbleActive = false
             currentConversationThreadId = nil
+            currentConversationActivityKind = nil
             setPresentation(lastCodexPresentation)
         } else {
             showNextConversationBubble()
@@ -151,6 +154,7 @@ final class PetViewModel: ObservableObject {
         pendingConversationLines.removeAll()
         conversationBubbleActive = false
         currentConversationThreadId = nil
+        currentConversationActivityKind = nil
     }
 
     private func pruneConversationQueue(keeping activeThreadIds: Set<String>) {
@@ -169,6 +173,7 @@ final class PetViewModel: ObservableObject {
         if let currentConversationThreadId, !activeThreadIds.contains(currentConversationThreadId) {
             conversationBubbleActive = false
             self.currentConversationThreadId = nil
+            currentConversationActivityKind = nil
             momentToken = UUID()
         }
     }
@@ -279,13 +284,15 @@ final class PetViewModel: ObservableObject {
             conversationLines: conversationLines,
             preferredThreadId: focusedThreadId,
             activeConversationThreadId: conversationBubbleActive ? currentConversationThreadId : nil,
+            activeConversationActivityKind: conversationBubbleActive ? currentConversationActivityKind : nil,
             isOffline: presentation.isOffline
         )
         let nextBubbles = CodexConversationBubblePlanner.productionBubbles(
             primaryText: primaryBubble.text,
             conversationLines: conversationLines,
             preferredThreadId: focusedThreadId,
-            primaryThreadId: primaryBubble.threadId
+            primaryThreadId: primaryBubble.threadId,
+            primaryActivityKind: primaryBubble.activityKind
         )
         guard nextBubbles != visibleBubbles else { return false }
         visibleBubbles = nextBubbles
@@ -300,6 +307,7 @@ final class PetViewModel: ObservableObject {
             "bubbleTexts": visibleBubbles.map(\.text),
             "bubbleRoles": visibleBubbles.map { $0.role.rawValue },
             "bubbleTones": visibleBubbles.map { $0.tone.rawValue },
+            "bubbleActivityKinds": visibleBubbles.map { $0.activityKind?.rawValue ?? "none" },
             "debugOverlay": debugOverlay,
             "isOffline": state.isOffline
         ]

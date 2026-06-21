@@ -128,7 +128,10 @@ reporting surface rather than a feed panel. Thread bubbles split
 multiple bubbles can be scanned without relying on a transcript-like list. They
 do not repeat the longer `ご主人、...です` phrase, and they do not dump raw model
 output, commands, or payload text. Threads can be summarized from sanitized item
-activity or from thread/turn status alone. The stack favors thread coverage, so
+activity or from thread/turn status alone. Bubble markers use semantic tone for
+urgent states and typed activity kind for ordinary Codex work such as plan,
+command, file, browser, image, skill, or mention activity. The stack favors
+thread coverage, so
 each visible thread appears at most once. If more threads are active than the
 compact stack can show, Mimo tracks up to six thread contexts and the last
 secondary bubble becomes a short overflow note such as `ほか3件も見ています`

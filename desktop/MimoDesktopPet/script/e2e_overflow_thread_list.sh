@@ -80,6 +80,7 @@ while time.time() < deadline:
     for row in rows:
         bubbles = [str(text) for text in row.get("bubbleTexts", [])]
         roles = row.get("bubbleRoles", [])
+        activity_kinds = row.get("bubbleActivityKinds", [])
         if row.get("debugOverlay") is not False:
             raise SystemExit("overflow production run unexpectedly enabled debug overlay")
         if row.get("isOffline") is not False:
@@ -90,6 +91,12 @@ while time.time() < deadline:
             continue
         if roles != ["focus", "conversation", "conversation", "overflow"]:
             last_error = f"expected overflow bubble role, got roles={roles} bubbles={bubbles}"
+            continue
+        if not isinstance(activity_kinds, list) or len(activity_kinds) != len(bubbles):
+            last_error = f"activity kinds did not match overflow bubble count: activity_kinds={activity_kinds} bubbles={bubbles}"
+            continue
+        if activity_kinds[:3].count("none") > 0 or activity_kinds[3] != "none":
+            last_error = f"overflow bubble stack had wrong activity-kind markers: {activity_kinds}"
             continue
         if "ほか3件も見ています" not in bubbles:
             last_error = f"overflow note missing from {bubbles!r}"

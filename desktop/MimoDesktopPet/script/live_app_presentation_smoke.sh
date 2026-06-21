@@ -121,6 +121,31 @@ role_limits = {
     "conversation": 34,
     "overflow": 22,
 }
+valid_activity_kinds = {
+    "none",
+    "message",
+    "userRequest",
+    "assistantMessage",
+    "plan",
+    "reasoning",
+    "command",
+    "test",
+    "fileChange",
+    "fileRead",
+    "tool",
+    "subAgent",
+    "webSearch",
+    "browser",
+    "search",
+    "image",
+    "imageGeneration",
+    "sleep",
+    "review",
+    "contextCompaction",
+    "skill",
+    "mention",
+    "threadStatus",
+}
 expected_titles = []
 if expect_thread_context:
     try:
@@ -161,10 +186,13 @@ while time.time() < deadline:
         bubbles = row.get("bubbleTexts", [])
         roles = row.get("bubbleRoles", [])
         tones = row.get("bubbleTones", [])
+        activity_kinds = row.get("bubbleActivityKinds", [])
         if roles and not isinstance(roles, list):
             raise SystemExit(f"live app bubble roles were not a list: {roles!r}")
         if tones and not isinstance(tones, list):
             raise SystemExit(f"live app bubble tones were not a list: {tones!r}")
+        if activity_kinds and not isinstance(activity_kinds, list):
+            raise SystemExit(f"live app bubble activity kinds were not a list: {activity_kinds!r}")
         visible_bubbles = bubbles if isinstance(bubbles, list) else []
         if isinstance(bubbles, list):
             if len(bubbles) > 4:
@@ -173,9 +201,14 @@ while time.time() < deadline:
                 raise SystemExit(f"live app bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
             if tones and len(tones) != len(bubbles):
                 raise SystemExit(f"live app bubble tones did not match bubble text count: tones={tones} bubbles={bubbles}")
+            if activity_kinds and len(activity_kinds) != len(bubbles):
+                raise SystemExit(f"live app bubble activity kinds did not match bubble text count: activity_kinds={activity_kinds} bubbles={bubbles}")
             unknown_tones = [tone for tone in tones if tone not in {"neutral", "active", "waiting", "review", "failed", "overflow"}]
             if unknown_tones:
                 raise SystemExit(f"live app bubble tones contained unknown values: {unknown_tones}")
+            unknown_activity_kinds = [kind for kind in activity_kinds if kind not in valid_activity_kinds]
+            if unknown_activity_kinds:
+                raise SystemExit(f"live app bubble activity kinds contained unknown values: {unknown_activity_kinds}")
             for index, bubble_text in enumerate(bubbles):
                 role = roles[index] if index < len(roles) else ("status" if index == 0 else "conversation")
                 limit = role_limits.get(role, 34)
@@ -191,6 +224,8 @@ while time.time() < deadline:
                     role = roles[index] if index < len(roles) else ("status" if index == 0 else "conversation")
                     if role not in {"focus", "conversation"}:
                         continue
+                    if activity_kinds and activity_kinds[index] == "none":
+                        raise SystemExit(f"live app thread context bubble lost activity kind: activity_kinds={activity_kinds} bubbles={bubbles}")
                     title = bubble_title(bubble_text)
                     if title in expected_titles:
                         title_match_seen = True

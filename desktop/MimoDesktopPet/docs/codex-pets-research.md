@@ -233,6 +233,11 @@ Conversation behavior:
   logs: `active`, `waiting`, `review`, `failed`, `overflow`, or `neutral`.
   SwiftUI uses the tone for compact state markers and accent color, while tests
   use it to verify that multiple thread bubbles are not just a flat text list.
+- Production bubble logs also include `bubbleActivityKinds`, and SwiftUI uses
+  those kinds for ordinary activity marker symbols when the tone is not a
+  higher-priority failed/waiting/review/overflow state. This lets simultaneous
+  thread bubbles distinguish plan, command/test, file, browser, image, skill,
+  mention, and status work without showing raw commands or payload arguments.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary bubble text is still showing a timed moment or an older queue
   item.
@@ -335,13 +340,15 @@ Manual or visual checks:
   text, bearer-token shaped text, password/stdout fragments, and local
   `.env` paths, then rejects any production bubble log that leaks those
   fragments.
-- `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, and
-  `bubbleRoles`; stacked bubble-only updates should be logged for deterministic
-  E2E evidence. Fake production E2E also enforces the four-bubble visible
-  limit, the primary/secondary/overflow text-length caps, and a three-thread
-  simultaneous bubble case with one focused primary bubble plus three
-  conversation bubbles. Overflow E2E separately verifies one focused primary
-  bubble, two concrete conversation bubbles, and one overflow counter bubble.
+- `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, `bubbleRoles`,
+  `bubbleTones`, and `bubbleActivityKinds`; stacked bubble-only updates should
+  be logged for deterministic E2E evidence. Fake production E2E also enforces
+  the four-bubble visible limit, the primary/secondary/overflow text-length
+  caps, activity-kind marker propagation, and a three-thread simultaneous
+  bubble case with one focused primary bubble plus three conversation bubbles.
+  Overflow E2E separately verifies one focused primary bubble, two concrete
+  conversation bubbles, and one overflow counter bubble with no activity kind
+  on the counter.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI. Production menu builds
   should not expose the debug toggle unless `MIMO_DEBUG_MENU=1` or

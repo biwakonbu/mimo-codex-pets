@@ -137,6 +137,68 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.tone), [.active, .failed, .waiting, .review])
     }
 
+    func testProductionBubblesCarryActivityKindsForVisualMarkers() {
+        let current = line(
+            threadId: "current",
+            speaker: "tool",
+            text: "テストを実行中",
+            isAssistant: true,
+            activityKind: .test
+        )
+        let lines = [
+            current,
+            line(
+                threadId: "image",
+                speaker: "tool",
+                text: "画像を生成中",
+                isAssistant: true,
+                activityKind: .imageGeneration
+            ),
+            line(
+                threadId: "browser",
+                speaker: "tool",
+                text: "ページを確認中",
+                isAssistant: true,
+                activityKind: .browser
+            ),
+            line(
+                threadId: "plan",
+                speaker: "codex",
+                text: "計画を更新中",
+                isAssistant: true,
+                activityKind: .plan
+            ),
+            line(
+                threadId: "files",
+                speaker: "tool",
+                text: "ファイルを確認中",
+                isAssistant: true,
+                activityKind: .fileRead
+            )
+        ]
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            primaryActivityKind: primary.activityKind,
+            limit: 4
+        )
+
+        XCTAssertEqual(primary.activityKind, .test)
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
+        XCTAssertEqual(bubbles.map(\.activityKind), [.test, .fileRead, .plan, nil])
+        XCTAssertTrue(bubbles[0].id.contains("test"))
+        XCTAssertTrue(bubbles[1].id.contains("fileRead"))
+        XCTAssertTrue(bubbles[2].id.contains("plan"))
+    }
+
     func testProductionBubblesUseOverflowToneWhenMoreThreadsAreHidden() {
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
         let lines = [
@@ -462,14 +524,16 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         threadId: String,
         speaker: String,
         text: String,
-        isAssistant: Bool
+        isAssistant: Bool,
+        activityKind: CodexConversationActivityKind = .message
     ) -> CodexConversationLine {
         CodexConversationLine(
             threadId: threadId,
             threadTitle: threadId,
             speaker: speaker,
             text: text,
-            isAssistant: isAssistant
+            isAssistant: isAssistant,
+            activityKind: activityKind
         )
     }
 }
