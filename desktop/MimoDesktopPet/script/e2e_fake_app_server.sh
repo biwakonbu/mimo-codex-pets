@@ -246,6 +246,28 @@ for row in rows:
 else:
     raise SystemExit("presentation log never showed three thread bubbles at once")
 
+action_required_primary_seen = False
+for row in rows:
+    bubbles = row.get("bubbleTexts", [])
+    roles = row.get("bubbleRoles", [])
+    tones = row.get("bubbleTones", [])
+    if not bubbles or not roles or not tones:
+        continue
+    if (
+        roles[0] == "focus"
+        and tones[0] in {"waiting", "review", "failed"}
+        and any(
+            marker in str(bubbles[0])
+            for marker in ("ステータスだけで進捗を伝", "別スレッドの確認", "新しい実装スレッド")
+        )
+        and any("Mimo runtime" in str(text) for text in bubbles[1:])
+    ):
+        action_required_primary_seen = True
+        break
+
+if not action_required_primary_seen:
+    raise SystemExit("action-required secondary thread was never promoted into the primary Mimo report")
+
 closed_thread_markers = ("別スレッドの確認", "更新された別スレッド")
 tail_rows = rows[-5:]
 if any(

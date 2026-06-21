@@ -223,7 +223,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         )
 
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
-        XCTAssertEqual(bubbles.map(\.tone), [.active, .waiting, .review, .overflow])
+        XCTAssertEqual(bubbles.map(\.tone), [.waiting, .review, .active, .overflow])
     }
 
     func testProductionBubblesRespectProductStackTextLimits() {
@@ -402,6 +402,38 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation])
     }
 
+    func testPrimaryBubblePromotesActionRequiredThreadAheadOfActivePreferredThread() {
+        let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+        let lines = [
+            current,
+            line(threadId: "docs", speaker: "codex", text: "資料作業を進めています", isAssistant: true),
+            line(threadId: "waiting", speaker: "thread", text: "確認待ち", isAssistant: true)
+        ]
+
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: "Codex が作業中",
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            limit: 4
+        )
+
+        XCTAssertEqual(primary.threadId, "waiting")
+        XCTAssertEqual(primary.activityKind, .message)
+        XCTAssertEqual(bubbles.map(\.text), [
+            "ご主人、「waiting」は確認待ちです",
+            "「current」実行中",
+            "「docs」作業中"
+        ])
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation])
+        XCTAssertEqual(bubbles.map(\.tone), [.waiting, .active, .active])
+    }
+
     func testFocusedPrimaryThreadUsesFocusRoleAndKeepsOverflowForExtraThreads() {
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
         let lines = [
@@ -425,9 +457,14 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             limit: 4
         )
 
-        XCTAssertEqual(primary.threadId, "current")
+        XCTAssertEqual(primary.threadId, "waiting")
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
-        XCTAssertEqual(bubbles.first?.text, "ご主人、「current」はコマンドを実行中です")
+        XCTAssertEqual(bubbles.first?.text, "ご主人、「waiting」は確認待ちです")
+        XCTAssertEqual(bubbles.dropFirst().map(\.text), [
+            "「review」レビュー可",
+            "「current」実行中",
+            "ほか2件も見ています"
+        ])
         XCTAssertEqual(bubbles.last?.text, "ほか2件も見ています")
     }
 

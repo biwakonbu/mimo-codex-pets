@@ -126,7 +126,7 @@ public enum CodexConversationBubblePlanner {
         }
 
         if !isOffline,
-           let focusedLine = CodexConversationFocus.select(
+           let focusedLine = primaryFocusLine(
             from: conversationLines,
             preferredThreadId: preferredThreadId
            ) {
@@ -274,6 +274,31 @@ public enum CodexConversationBubblePlanner {
         if !overflowText.isEmpty {
             bubbles.append(BubbleCandidate(text: overflowText, role: .overflow, tone: .overflow, activityKind: nil))
         }
+    }
+
+    private static func primaryFocusLine(
+        from lines: [CodexConversationLine],
+        preferredThreadId: String?
+    ) -> CodexConversationLine? {
+        let focusedLine = CodexConversationFocus.select(
+            from: lines,
+            preferredThreadId: preferredThreadId
+        )
+        let focusedPriority = focusedLine.map(displayPriority(for:)) ?? 3
+        guard focusedPriority > 0 else {
+            return focusedLine
+        }
+
+        let actionableLine = orderedThreadUpdates(
+            from: lines,
+            preferredThreadId: preferredThreadId
+        )
+        .first { line in
+            let priority = displayPriority(for: line)
+            return priority < focusedPriority && priority <= 2
+        }
+
+        return actionableLine ?? focusedLine
     }
 
     private static func isProgressLine(_ line: CodexConversationLine) -> Bool {

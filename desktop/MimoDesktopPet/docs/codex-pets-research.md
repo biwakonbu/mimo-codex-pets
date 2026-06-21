@@ -382,6 +382,12 @@ Manual or visual checks:
   Overflow E2E separately verifies one focused primary bubble, two concrete
   conversation bubbles, and one overflow counter bubble with no activity kind
   on the counter.
+- Primary bubble selection is not a transcript cursor. Mimo normally favors the
+  focused Codex thread, but a failure, confirmation-waiting thread, or
+  review-ready thread can take the primary report ahead of a merely active
+  focused thread. The active focused thread remains as a secondary context chip,
+  which better matches the multi-thread companion role: Mimo reports the state
+  that most needs the user's attention first.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI. Production menu builds
   should not expose the debug toggle unless `MIMO_DEBUG_MENU=1` or
