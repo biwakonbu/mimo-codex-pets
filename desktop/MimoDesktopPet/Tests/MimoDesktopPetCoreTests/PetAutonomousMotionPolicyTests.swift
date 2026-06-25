@@ -1,0 +1,41 @@
+import XCTest
+@testable import MimoDesktopPetCore
+
+final class PetAutonomousMotionPolicyTests: XCTestCase {
+    func testProductionHoldsPositionWhileConversationBubblesAreActive() {
+        XCTAssertTrue(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
+            hasPendingConversationBubbles: true,
+            autonomousTestMode: false,
+            autonomousEnergyTestMode: false
+        ))
+    }
+
+    func testConversationHoldDoesNotBlockDeterministicMotionTestModes() {
+        XCTAssertFalse(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
+            hasPendingConversationBubbles: true,
+            autonomousTestMode: true,
+            autonomousEnergyTestMode: false
+        ))
+        XCTAssertFalse(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
+            hasPendingConversationBubbles: true,
+            autonomousTestMode: false,
+            autonomousEnergyTestMode: true
+        ))
+    }
+
+    func testIdleProductionMayStillUseTinyAutonomousMotion() {
+        XCTAssertFalse(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
+            hasPendingConversationBubbles: false,
+            autonomousTestMode: false,
+            autonomousEnergyTestMode: false
+        ))
+    }
+
+    func testConversationHoldRestUsesProductionDwell() {
+        XCTAssertEqual(
+            PetAutonomousMotionPolicy.conversationHoldRestUntil(now: 42),
+            42 + PetAutonomousMotionTuning.productionConversationHoldSeconds,
+            accuracy: 0.0001
+        )
+    }
+}

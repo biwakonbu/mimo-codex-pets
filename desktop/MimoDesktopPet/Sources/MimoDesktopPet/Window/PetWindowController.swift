@@ -17,6 +17,7 @@ final class PetWindowController: NSObject {
     private let showcaseMode = ProcessInfo.processInfo.environment["MIMO_SHOWCASE_MODE"] == "1"
     private let autonomousTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1"
     private let autonomousEnergyTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_ENERGY_TEST_MODE"] == "1"
+    private let autonomousForceBegin = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_FORCE_BEGIN"] == "1"
     private let autonomousDisabled = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_DISABLED"] == "1" ||
         ProcessInfo.processInfo.environment["MIMO_SHOWCASE_MODE"] == "1"
     private var movementHandler = PetMovementEventHandler()
@@ -279,6 +280,11 @@ final class PetWindowController: NSObject {
 
         guard panel.isVisible, !manualDragActive, !autonomousDisabled else { return false }
 
+        if shouldHoldPositionForConversation() {
+            holdAutonomousPositionForConversation(now: now)
+            return false
+        }
+
         autonomousEnergy.update(
             now: now,
             isMoving: autonomousMotion != nil,
@@ -415,6 +421,9 @@ final class PetWindowController: NSObject {
         if autonomousEnergyTestMode {
             return true
         }
+        if autonomousForceBegin {
+            return true
+        }
         return Double.random(in: 0...1) < PetAutonomousMotionTuning.productionBeginMotionProbability
     }
 
@@ -442,6 +451,30 @@ final class PetWindowController: NSObject {
             return 1.6
         }
         return Double.random(in: PetAutonomousMotionTuning.productionRetargetDelayRange)
+    }
+
+    private func shouldHoldPositionForConversation() -> Bool {
+        PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
+            hasPendingConversationBubbles: viewModel.hasPendingConversationBubbles,
+            autonomousTestMode: autonomousTestMode,
+            autonomousEnergyTestMode: autonomousEnergyTestMode
+        )
+    }
+
+    private func holdAutonomousPositionForConversation(now: TimeInterval) {
+        autonomousEnergy.update(now: now, isMoving: false, isResting: true)
+        stopAutonomousMotion()
+        let holdUntil = PetAutonomousMotionPolicy.conversationHoldRestUntil(now: now)
+        autonomousRestUntil = max(autonomousRestUntil, holdUntil)
+        nextAutonomousRetargetAt = max(nextAutonomousRetargetAt, holdUntil)
+        nextIdleMomentAt = max(nextIdleMomentAt, holdUntil)
+    }
+
+    private func stopAutonomousMotion() {
+        autonomousMotion = nil
+        autonomousMotionAnimation = nil
+        clearMovementAnimationIfNeeded()
+        movementHandler.reset()
     }
 
     private func currentScreen() -> NSScreen? {

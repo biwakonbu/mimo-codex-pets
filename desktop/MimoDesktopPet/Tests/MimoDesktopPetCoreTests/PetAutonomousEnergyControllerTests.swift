@@ -2,7 +2,7 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class PetAutonomousEnergyControllerTests: XCTestCase {
-    func testHighStaminaMovesBrisklyWithoutPeggingMaximumSpeed() {
+    func testHighStaminaRunsNearMaximumSpeed() {
         let controller = PetAutonomousEnergyController(stamina: 1)
 
         XCTAssertGreaterThan(

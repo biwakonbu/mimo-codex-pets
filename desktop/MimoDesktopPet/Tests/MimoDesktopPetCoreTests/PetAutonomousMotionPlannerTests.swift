@@ -3,17 +3,18 @@ import XCTest
 
 final class PetAutonomousMotionPlannerTests: XCTestCase {
     func testProductionAutonomousTuningKeepsWanderGentle() {
-        XCTAssertEqual(PetAutonomousMotionTuning.productionMaximumSpeed, 14)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionMinimumStepDistance, 4)
-        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionMaximumStepDistance, 28)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionVerticalStepScale, 0.35)
-        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionBeginMotionProbability, 0.08)
-        XCTAssertGreaterThanOrEqual(PetAutonomousMotionTuning.productionInitialRestSeconds, 10)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveAmplitudeRange, 0.0...0.04)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveCyclesRange, 0.25...0.8)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionRetargetDelayRange, 40.0...90.0)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionIdleMomentDelayRange, 8.0...20.0)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionRestMomentDelayRange, 12.0...26.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionMaximumSpeed, 7)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionMinimumStepDistance, 1)
+        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionMaximumStepDistance, 12)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionVerticalStepScale, 0.18)
+        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionBeginMotionProbability, 0.018)
+        XCTAssertGreaterThanOrEqual(PetAutonomousMotionTuning.productionInitialRestSeconds, 24)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveAmplitudeRange, 0.0...0.015)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveCyclesRange, 0.15...0.45)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionRetargetDelayRange, 110.0...220.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionIdleMomentDelayRange, 5.0...14.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionRestMomentDelayRange, 20.0...50.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionConversationHoldSeconds, 30)
     }
 
     func testProductionTuningStillCapsFallbackLongAutonomousSteps() {
@@ -68,7 +69,7 @@ final class PetAutonomousMotionPlannerTests: XCTestCase {
             distanceUnit: 0.5
         )
 
-        XCTAssertLessThan(hypot(target.x - start.x, target.y - start.y), 12)
+        XCTAssertLessThan(hypot(target.x - start.x, target.y - start.y), 5)
     }
 
     func testNearbyTargetStaysInCurrentVisibleFrame() {
