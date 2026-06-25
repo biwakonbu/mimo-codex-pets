@@ -267,20 +267,24 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.typewriterCharactersPerSecond, 10)
         XCTAssertEqual(PetSpeechBubbleLayout.typewriterFrameInterval, 1.0 / 30.0)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryHorizontalJitter, 68)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryHorizontalJitter, 214)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowHorizontalJitter, 236)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryHorizontalJitter, 252)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowHorizontalJitter, 286)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryVerticalJitter, 26)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryVerticalJitter, 118)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapDrop, 78)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapJitter, 132)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryVerticalJitter, 148)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapDrop, 96)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapJitter, 168)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMaximumHorizontalOffset, 74)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMinimumVerticalOffset, -12)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMaximumVerticalOffset, 30)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumHorizontalOffset, 206)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumVerticalOffset, -178)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumVerticalOffset, -6)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumHorizontalOffset, 220)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumVerticalOffset, -166)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumVerticalOffset, -2)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumDistanceFromMimo, 54)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumDistanceFromMimo, 222)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryOrbitMinimumAngleDegrees, 14)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryOrbitMaximumAngleDegrees, 166)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryRotationJitter, 2.4)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryRotationJitter, 12.5)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryRotationJitter, 14.5)
         XCTAssertEqual(PetSpeechBubbleLayout.organicTailMaximumHorizontalOffset, 86)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryFloatingHorizontalMaximum, 5)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryFloatingVerticalMaximum, 4)
@@ -522,16 +526,20 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertTrue(placements.allSatisfy {
             abs($0.rotationDegrees) <= PetSpeechBubbleLayout.organicSecondaryRotationJitter
         })
-        XCTAssertGreaterThanOrEqual((horizontalOffsets.max() ?? 0) - (horizontalOffsets.min() ?? 0), 270)
+        XCTAssertGreaterThanOrEqual((horizontalOffsets.max() ?? 0) - (horizontalOffsets.min() ?? 0), 220)
         XCTAssertGreaterThanOrEqual((verticalOffsets.max() ?? 0) - (verticalOffsets.min() ?? 0), 128)
         XCTAssertGreaterThanOrEqual((rotations.max() ?? 0) - (rotations.min() ?? 0), 10)
+        XCTAssertTrue(placements.contains { $0.horizontalOffset <= -90 })
+        XCTAssertTrue(placements.contains { $0.horizontalOffset >= 90 })
+        XCTAssertTrue(placements.contains { $0.verticalOffset <= -138 })
+        XCTAssertTrue(placements.contains { $0.verticalOffset >= -42 })
         XCTAssertTrue(placements.contains { $0.index == 1 && $0.horizontalOffset > -40 })
         XCTAssertTrue(placements.contains { $0.index == 2 && $0.horizontalOffset < 40 })
         XCTAssertTrue(placements.allSatisfy {
             hypot(
                 abs($0.horizontalOffset) + abs($0.floatingHorizontalOffset),
                 abs($0.verticalOffset) + abs($0.floatingVerticalOffset)
-            ) <= 236
+            ) <= PetSpeechBubbleLayout.organicSecondaryMaximumDistanceFromMimo + 16
         })
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.tailHorizontalOffset == 0 })
     }
@@ -604,7 +612,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
                             abs(placement.horizontalOffset) + abs(placement.floatingHorizontalOffset),
                             abs(placement.verticalOffset) + abs(placement.floatingVerticalOffset)
                         ),
-                        236
+                        PetSpeechBubbleLayout.organicSecondaryMaximumDistanceFromMimo + 16
                     )
                 }
             }
