@@ -11,6 +11,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
     public let scale: Double
     public let fontScale: Double
     public let rotationDegrees: Double
+    public let tailHorizontalOffset: Double
     public let zIndex: Double
 
     public init(
@@ -24,6 +25,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         scale: Double,
         fontScale: Double = 1,
         rotationDegrees: Double = 0,
+        tailHorizontalOffset: Double = 0,
         zIndex: Double
     ) {
         self.index = index
@@ -36,6 +38,7 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         self.scale = scale
         self.fontScale = fontScale
         self.rotationDegrees = rotationDegrees
+        self.tailHorizontalOffset = tailHorizontalOffset
         self.zIndex = zIndex
     }
 }
@@ -77,26 +80,27 @@ public enum PetSpeechBubbleLayout {
     public static let contentAnimationDuration = 0.46
     public static let typewriterCharactersPerSecond = 10.0
     public static let typewriterFrameInterval = 1.0 / 30.0
-    public static let organicPrimaryHorizontalJitter = 30.0
-    public static let organicSecondaryHorizontalJitter = 118.0
-    public static let organicTopRowHorizontalJitter = 172.0
-    public static let organicPrimaryVerticalJitter = 13.0
-    public static let organicSecondaryVerticalJitter = 58.0
-    public static let organicTopRowOverlapDrop = 48.0
-    public static let organicTopRowOverlapJitter = 70.0
+    public static let organicPrimaryHorizontalJitter = 54.0
+    public static let organicSecondaryHorizontalJitter = 172.0
+    public static let organicTopRowHorizontalJitter = 196.0
+    public static let organicPrimaryVerticalJitter = 20.0
+    public static let organicSecondaryVerticalJitter = 88.0
+    public static let organicTopRowOverlapDrop = 64.0
+    public static let organicTopRowOverlapJitter = 96.0
     public static let organicPrimaryWidthJitter = 44.0
     public static let organicConversationWidthJitter = 46.0
     public static let organicOverflowWidthJitter = 28.0
     public static let organicPrimaryScaleJitter = 0.045
     public static let organicSecondaryScaleJitter = 0.055
-    public static let organicPrimaryMaximumHorizontalOffset = 42.0
-    public static let organicPrimaryMinimumVerticalOffset = -16.0
-    public static let organicPrimaryMaximumVerticalOffset = 14.0
-    public static let organicSecondaryMaximumHorizontalOffset = 170.0
-    public static let organicSecondaryMinimumVerticalOffset = -172.0
-    public static let organicSecondaryMaximumVerticalOffset = -32.0
-    public static let organicPrimaryRotationJitter = 1.2
-    public static let organicSecondaryRotationJitter = 7.2
+    public static let organicPrimaryMaximumHorizontalOffset = 62.0
+    public static let organicPrimaryMinimumVerticalOffset = -10.0
+    public static let organicPrimaryMaximumVerticalOffset = 22.0
+    public static let organicSecondaryMaximumHorizontalOffset = 184.0
+    public static let organicSecondaryMinimumVerticalOffset = -166.0
+    public static let organicSecondaryMaximumVerticalOffset = -18.0
+    public static let organicPrimaryRotationJitter = 1.8
+    public static let organicSecondaryRotationJitter = 9.6
+    public static let organicTailMaximumHorizontalOffset = 76.0
     public static let organicPrimaryMinimumFontScale = 0.94
     public static let organicPrimaryMaximumFontScale = 1.12
     public static let organicSecondaryMinimumFontScale = 0.86
@@ -269,20 +273,7 @@ public enum PetSpeechBubbleLayout {
             min(maxTextWidth - 12, max(118, $0 + widthCenter * widthJitter * 0.58))
         }
         let isPrimary = base.index == 0
-        let horizontalAnchor = isPrimary ? base.horizontalOffset : base.horizontalOffset * 0.42
-        let rawHorizontalOffset = horizontalAnchor +
-            variationCentered(seed: seed, salt: "x-\(base.index)") * organicHorizontalJitter(for: base.index, isPrimary: isPrimary)
-        let horizontalOffset = isPrimary
-            ? clamp(
-                rawHorizontalOffset,
-                minimum: -organicPrimaryMaximumHorizontalOffset,
-                maximum: organicPrimaryMaximumHorizontalOffset
-            )
-            : clamp(
-                clampedHorizontalOffset(rawHorizontalOffset, maxTextWidth: maxTextWidth),
-                minimum: -organicSecondaryMaximumHorizontalOffset,
-                maximum: organicSecondaryMaximumHorizontalOffset
-            )
+        let horizontalOffset = organicHorizontalOffset(from: base, maxTextWidth: maxTextWidth, seed: seed)
         let verticalOffset = organicVerticalOffset(from: base, seed: seed)
         let scale = clampedScale(
             base.scale + variationCentered(seed: seed, salt: "scale-\(base.index)") * scaleJitter(isPrimary: isPrimary),
@@ -296,6 +287,16 @@ public enum PetSpeechBubbleLayout {
         let widthBias = (widthCenter + 1) / 2
         let fontBias = variationUnit(seed: seed, salt: "font-\(base.index)") * 0.34 + widthBias * 0.66
         let fontScale = fontScale(role: base.role, isPrimary: base.index == 0, bias: fontBias)
+        let tailHorizontalOffset = isPrimary
+            ? clamp(
+                -horizontalOffset,
+                minimum: -organicTailMaximumHorizontalOffset,
+                maximum: organicTailMaximumHorizontalOffset
+            )
+            : 0
+        let zIndex = isPrimary
+            ? base.zIndex
+            : base.zIndex + variationUnit(seed: seed, salt: "depth-\(base.index)") * 0.72
 
         return PetSpeechBubblePlacement(
             index: base.index,
@@ -308,7 +309,8 @@ public enum PetSpeechBubbleLayout {
             scale: scale,
             fontScale: fontScale,
             rotationDegrees: rotationDegrees,
-            zIndex: base.zIndex
+            tailHorizontalOffset: tailHorizontalOffset,
+            zIndex: zIndex
         )
     }
 
@@ -334,6 +336,42 @@ public enum PetSpeechBubbleLayout {
         return organicSecondaryHorizontalJitter
     }
 
+    private static func organicHorizontalOffset(
+        from base: PetSpeechBubblePlacement,
+        maxTextWidth: Double,
+        seed: String
+    ) -> Double {
+        let isPrimary = base.index == 0
+        if isPrimary {
+            let rawOffset = base.horizontalOffset +
+                variationCentered(seed: seed, salt: "x-\(base.index)") *
+                organicHorizontalJitter(for: base.index, isPrimary: true)
+            return clamp(
+                rawOffset,
+                minimum: -organicPrimaryMaximumHorizontalOffset,
+                maximum: organicPrimaryMaximumHorizontalOffset
+            )
+        }
+
+        let maximumOffset = min(
+            organicSecondaryMaximumHorizontalOffset,
+            maximumHorizontalOffset(maxTextWidth: maxTextWidth)
+        )
+        guard maximumOffset > 0 else { return 0 }
+
+        let side = variationUnit(seed: seed, salt: "side-\(base.index)") < 0.5 ? -1.0 : 1.0
+        let minimumDistance = min(maximumOffset, max(22.0, maximumOffset * 0.22))
+        let distance = minimumDistance +
+            variationUnit(seed: seed, salt: "x-distance-\(base.index)") *
+            max(0, maximumOffset - minimumDistance)
+        let fixedRowBias = base.horizontalOffset * 0.16
+        let looseDrift = variationCentered(seed: seed, salt: "x-\(base.index)") *
+            organicHorizontalJitter(for: base.index, isPrimary: false) * 0.22
+        let rawOffset = side * distance + fixedRowBias + looseDrift
+
+        return clamp(rawOffset, minimum: -maximumOffset, maximum: maximumOffset)
+    }
+
     private static func verticalJitter(isPrimary: Bool) -> Double {
         isPrimary ? organicPrimaryVerticalJitter : organicSecondaryVerticalJitter
     }
@@ -349,19 +387,19 @@ public enum PetSpeechBubbleLayout {
                 maximum: organicPrimaryMaximumVerticalOffset
             )
         }
-        if base.index >= 3 {
-            let topOffset = base.verticalOffset +
-                organicTopRowOverlapDrop +
-                variationCentered(seed: seed, salt: "y-\(base.index)") * organicTopRowOverlapJitter
-            return clamp(
-                topOffset,
-                minimum: organicSecondaryMinimumVerticalOffset,
-                maximum: organicSecondaryMaximumVerticalOffset
-            )
-        }
+
+        let anchorOffset = base.index >= 3
+            ? base.verticalOffset + organicTopRowOverlapDrop
+            : base.verticalOffset
+        let randomOffset = organicSecondaryMinimumVerticalOffset +
+            variationUnit(seed: seed, salt: "y-band-\(base.index)") *
+            (organicSecondaryMaximumVerticalOffset - organicSecondaryMinimumVerticalOffset)
+        let drift = variationCentered(seed: seed, salt: "y-\(base.index)") *
+            (base.index >= 3 ? organicTopRowOverlapJitter : verticalJitter(isPrimary: false)) * 0.18
+        let rawOffset = anchorOffset * 0.24 + randomOffset * 0.76 + drift
+
         return clamp(
-            base.verticalOffset +
-                variationCentered(seed: seed, salt: "y-\(base.index)") * verticalJitter(isPrimary: base.index == 0),
+            rawOffset,
             minimum: organicSecondaryMinimumVerticalOffset,
             maximum: organicSecondaryMaximumVerticalOffset
         )
@@ -404,13 +442,9 @@ public enum PetSpeechBubbleLayout {
         return bounds.minimum + clamp(bias, minimum: 0, maximum: 1) * (bounds.maximum - bounds.minimum)
     }
 
-    private static func clampedHorizontalOffset(
-        _ value: Double,
-        maxTextWidth: Double
-    ) -> Double {
+    private static func maximumHorizontalOffset(maxTextWidth: Double) -> Double {
         let inset = 8.0
-        let maximumOffset = max(0, productionStackWidth / 2 - maxTextWidth / 2 - inset)
-        return clamp(value, minimum: -maximumOffset, maximum: maximumOffset)
+        return max(0, productionStackWidth / 2 - maxTextWidth / 2 - inset)
     }
 
     private static func clampedRotationDegrees(_ value: Double, isPrimary: Bool) -> Double {

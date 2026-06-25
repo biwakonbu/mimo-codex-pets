@@ -159,14 +159,13 @@ if requiresMultiBubbleHierarchy {
     let secondaryComponents = bubbleComponents.filter {
         $0.minX != primary.minX || $0.minY != primary.minY || $0.maxX != primary.maxX || $0.maxY != primary.maxY
     }
-    let maxSecondaryWidth = secondaryComponents.map(\.width).max() ?? 0
     let maxSecondaryArea = secondaryComponents.map(\.area).max() ?? 0
 
-    guard primary.width >= maxSecondaryWidth + 4 else {
-        fail("primary bubble is not visually dominant enough when secondary cards overlap: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    guard primary.area >= Int(Double(maxSecondaryArea) * 0.92) else {
+        fail("primary bubble is too visually weak when secondary bubbles overlap: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
-    guard primary.area >= Int(Double(maxSecondaryArea) * 1.25) else {
-        fail("primary bubble is not visibly more prominent than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    guard secondaryComponents.allSatisfy({ primary.centerY > $0.centerY }) else {
+        fail("primary bubble should remain the closest bubble to Mimo: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
     let secondaryCentersX = secondaryComponents.map(\.centerX)
     let secondaryCentersY = secondaryComponents.map(\.centerY)
@@ -175,13 +174,19 @@ if requiresMultiBubbleHierarchy {
     let closestSecondaryVerticalDistance = secondaryComponents
         .map { abs($0.centerY - primary.centerY) }
         .min() ?? 0
+    let farthestSecondaryDistance = secondaryComponents
+        .map { hypot($0.centerX - primary.centerX, $0.centerY - primary.centerY) }
+        .max() ?? 0
     if secondaryComponents.count >= 2 {
-        guard secondaryHorizontalSpread >= 120, secondaryVerticalSpread <= 80 else {
-            fail("secondary context bubbles are not arranged as compact chat cards: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
+        guard secondaryHorizontalSpread >= 96, secondaryVerticalSpread <= 150 else {
+            fail("secondary context bubbles are not arranged as a nearby irregular chat cloud: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
         }
     }
-    guard closestSecondaryVerticalDistance >= 34 else {
-        fail("primary speech bubble is not visually separated from the secondary chat cards: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    guard closestSecondaryVerticalDistance >= 20 else {
+        fail("primary speech bubble is too buried under secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    }
+    guard farthestSecondaryDistance <= 220 else {
+        fail("secondary context bubbles drifted too far away from Mimo's primary speech: distance=\(farthestSecondaryDistance), primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
 
     guard hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: primary, allowsDetachedTail: true) else {
@@ -212,6 +217,7 @@ if requiresMultiBubbleHierarchy {
         "Multi-bubble stacked hierarchy inspection passed: " +
         "primary=\(describe(primary)), " +
         "secondary=\(describe(secondaryComponents)), " +
+        "farthestSecondaryDistance=\(String(format: "%.1f", farthestSecondaryDistance)), " +
         "markers=\(markerDescriptions)"
     )
 }

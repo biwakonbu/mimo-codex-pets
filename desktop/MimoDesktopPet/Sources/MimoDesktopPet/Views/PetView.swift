@@ -72,6 +72,7 @@ private struct ProductionBubbleStackView: View {
                     maxTextWidth: placement.maxTextWidth,
                     fillOpacity: placement.fillOpacity,
                     fontScale: placement.fontScale,
+                    tailHorizontalOffset: placement.tailHorizontalOffset,
                     accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone),
                     accessibilityIndex: index
                 )
@@ -299,6 +300,7 @@ struct BubbleView: View {
     var maxTextWidth: Double?
     var fillOpacity: Double?
     var fontScale: Double = 1
+    var tailHorizontalOffset: Double = 0
     var accentColor: Color?
     var accessibilityIndex: Int?
 
@@ -386,7 +388,7 @@ struct BubbleView: View {
                             )
                     )
                     .frame(width: tailWidth, height: tailHeight)
-                    .offset(y: -1)
+                    .offset(x: CGFloat(tailHorizontalOffset), y: -1)
                     .shadow(color: glowColor.opacity(0.08), radius: 2, x: 0, y: 1)
             }
         }

@@ -180,15 +180,18 @@ Verified runtime behavior:
   notifications, and rejects unsafe or non-Mimo speech.
 - The production bubble panel intentionally uses nearly the full 432pt window
   width for primary Mimo speech and reserves a taller stack area for text. The
-  primary bubble can render three lines, secondary session rows can render two
-  lines, and `PetSpeechBubblePaginator` splits longer Mimo speech into timed
-  pages so conversation-sketch playback can continue without truncating the
-  whole message into one chip.
-- The production bubble panel treats each visible stack slot as a stable visual
-  control. Additions fade and rise from the primary/Mimo side, removals fade
-  upward, stack-position changes use a short spring, and text-only updates
-  cross-fade in place. This avoids the Codex status surface feeling like a
-  hard-refreshing log panel when app-server notifications arrive close together.
+  primary bubble can render three lines, jitters only inside Mimo's near speech
+  area, and keeps its speech tail pulled back toward Mimo when the bubble body
+  shifts sideways. Secondary session rows can render two lines and scatter as a
+  bounded irregular chat cloud near Mimo, while `PetSpeechBubblePaginator`
+  splits longer Mimo speech into timed pages so conversation-sketch playback can
+  continue without truncating the whole message into one chip.
+- The production bubble panel treats each visible bubble identity as stable, but
+  does not pin secondary summaries to a fixed row grid. Additions fade and rise
+  from the primary/Mimo side, removals fade upward, stack-position changes use a
+  short spring, and text-only updates cross-fade in place. This avoids the Codex
+  status surface feeling like a hard-refreshing log panel when app-server
+  notifications arrive close together.
 
 Computer Use limitation:
 
@@ -242,8 +245,11 @@ State behavior:
 - manual or autonomous movement uses directional `running-right` / `running-left` based on observed movement direction.
 - autonomous movement uses a 60Hz time-based tween with smooth speed variation,
   rather than per-frame random speed changes.
-- autonomous movement caps production speed at `52 pt/s`, limits each hop distance, and
-  intentionally inserts rest/idle moments between hops.
+- autonomous movement caps production speed at `5 pt/s`, limits each tiny hop
+  to `8 pt`, keeps production targets inside a `16 pt` home radius, and
+  intentionally inserts rest/idle moments between hops. During conversation
+  bubbles, Mimo holds position and uses in-place animation instead of moving the
+  panel.
 - Deterministic QA can pin the initial panel origin with
   `MIMO_WINDOW_ORIGIN=x,y`. Visual inspection runs may set
   `MIMO_AUTONOMOUS_DISABLED=1` to keep the pet stationary without changing the
@@ -328,15 +334,15 @@ Conversation behavior:
   it uses the `focus` presentation role, a stronger accent marker, and the
   Mimo-style report for that session instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
-  Secondary session bubbles are smaller fixed-width context rows above it: they
+  Secondary session bubbles are smaller bounded context rows around it: they
   stay white, use compact accent markers, omit the longer `ご主人、...です`
-  phrase, and align into a centered layered stack using the same tested row
-  offsets as `PetSpeechBubbleLayout`, so concurrent session status is readable
-  without becoming a transcript panel. The fixed secondary widths keep
-  short and long session titles from making the bubble stack jitter as Codex
-  notifications arrive. This keeps Codex Pets-like multi-thread awareness in
-  the production surface without rendering a console, transcript feed, or debug
-  panel.
+  phrase, and use seeded organic offsets from `PetSpeechBubbleLayout`, so
+  concurrent session status feels like a lively nearby chat cloud without
+  becoming a transcript panel. The secondary width bounds keep short and long
+  session titles readable while the placement stays intentionally irregular as
+  Codex notifications arrive. This keeps Codex Pets-like multi-thread awareness
+  in the production surface without rendering a console, transcript feed, or
+  debug panel.
 - Status bubbles are capped at 44 characters, focused-thread primary bubbles at
   48 characters, secondary thread rows at 34 characters, and overflow bubbles
   at 22 characters. Secondary bubbles render as one-line compact summaries such
@@ -371,12 +377,12 @@ Conversation behavior:
   screen-reader and Computer Use-visible text match the product bubble surface
   instead of introducing a second transcript channel.
 - The multi-bubble production capture gate verifies more than raw bubble count:
-  it requires four or five separated white bubble components, a larger primary
-  bubble below the secondary thread rows, a centered stacked alignment, a single
-  primary speech tail, no secondary tails, and one compact colored
-  activity/state marker inside every bubble. This keeps the Codex Pets-style
-  simultaneous thread surface from regressing into a scattered cluster, flat
-  transcript list, or anonymous white cards.
+  it requires visible white bubble components, a larger primary bubble closest
+  to Mimo, a bounded irregular secondary chat cloud, a single primary speech
+  tail, no secondary tails, and one compact colored activity/state marker inside
+  every bubble. This keeps the Codex Pets-style simultaneous thread surface from
+  regressing into a flat transcript list, distant scattered cards, or anonymous
+  white cards.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary bubble text is still showing a timed moment or an older queue
   item.
@@ -490,16 +496,19 @@ Manual or visual checks:
   color pixels.
 - Multi-thread state captures additionally run
   `inspect_production_capture.swift --multi-bubble-hierarchy`, which segments
-  white bubble components and verifies four or five bubble surfaces: the
-  primary Mimo report must be widest, visually largest, and separated below the
-  secondary context bubbles. The same hierarchy check verifies that only the
+  white bubble components and verifies the visual hierarchy: the primary Mimo
+  report must be widest, visually largest, closest to Mimo, and not buried by
+  the secondary context bubbles. The same hierarchy check verifies that only the
   primary Mimo report has a speech tail; secondary thread context rows must stay
-  tailless. Secondary thread rows must stay horizontally aligned while preserving
-  enough vertical spread, so the UI cannot regress into scattered cards,
-  anonymous badges, or one merged white panel while still passing a raw
-  bubble-count check.
+  tailless and within a nearby distance threshold. Secondary bubbles are allowed
+  to overlap and vary in both axes, but they must not drift into distant cards,
+  anonymous badges, or one unreadable merged white panel while still passing a
+  raw bubble-count check.
 - Fake app-server E2E samples the live window position during autonomous
-  movement and rejects large per-sample jumps.
+  movement and rejects large per-sample jumps. Dedicated stationary E2E also
+  verifies that conversation bubbles hold the panel still, while home-radius
+  unit tests prevent long-term autonomous drift away from the user's chosen
+  position.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
   production bubble text is a Mimo-style summary of the active session title,
   safe session-derived `workSummary`, and latest progress/tool activity,

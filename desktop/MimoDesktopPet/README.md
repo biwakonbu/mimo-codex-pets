@@ -152,12 +152,15 @@ speech in tests, `MIMO_CODEX_DIALOGUE_MODEL=gpt-5.4-mini` to override the Codex
 model, and `MIMO_CODEX_DIALOGUE_REFRESH_SECONDS=45` to control per-session
 regeneration cadence.
 Production bubbles use compact readable columns instead of forcing the full
-panel width. The primary bubble can grow to four text lines, secondary session
-rows keep a bounded title/summary shape, and overlong Mimo speech is split into
-readable pages that advance on the same timed conversation-sketch loop as normal
-session updates. Bubble changes use stable visual slots: new bubbles fade and
-rise in from the Mimo side, removed bubbles fade upward, stack position changes
-use a short spring, and text-only updates cross-fade inside the existing bubble
+panel width. The primary bubble can grow to four text lines, jitters only within
+Mimo's near speech area, and keeps its tail visually pulled back toward Mimo.
+Secondary session rows keep a bounded title/summary shape but scatter as a
+nearby irregular chat cloud, so simultaneous Codex sessions feel alive instead
+of fixed to a grid. Overlong Mimo speech is split into readable pages that
+advance on the same timed conversation-sketch loop as normal session updates.
+Bubble changes preserve each bubble identity while new bubbles fade and rise in
+from the Mimo side, removed bubbles fade upward, stack position changes use a
+short spring, and text-only updates cross-fade inside the existing bubble
 instead of replacing the whole surface abruptly.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
@@ -210,8 +213,8 @@ falls back to direct stdio without exposing a debug surface or opaque window.
 waiting, multi-thread, review, and failed fake-Codex states, then runs the same
 transparent-surface inspection on every capture. The multi-thread capture also
 checks that the primary Mimo report is the largest, lowest bubble and that the
-secondary thread summaries remain smaller, subtly staggered context bubbles
-above it without speech tails.
+secondary thread summaries remain smaller, nearby, irregular context bubbles
+around it without speech tails.
 `./script/e2e_autonomous_energy.sh` launches the production app with a
 deterministic fast-drain stamina setup and verifies that Mimo moves, pauses for
 rest after stamina drops, shows a non-running rest animation, and keeps the
@@ -248,13 +251,16 @@ item is hidden in normal production launches and appears only when
 
 When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
-When not being dragged, Mimo periodically wanders to a random visible-screen
-position with a 60Hz time-based tween capped at `52 pt/s`. Autonomous movement
-has a stamina model: high stamina keeps Mimo near the maximum speed, movement
-drains stamina, and resting quickly recovers it to full. Once stamina drops
-below 50%, Mimo's mood can interrupt the next hop or stop the current one for a
-short break. During breaks Mimo plays idle, waiting, note-taking, waving, or
-jumping moments instead of walking endlessly.
+When not being dragged, Mimo stays around the current home position instead of
+wandering across the visible screen. Autonomous movement uses a 60Hz time-based
+tween capped at `5 pt/s`, each tiny step is limited to `8 pt`, and production
+targets stay within a `16 pt` home radius. Autonomous movement has a stamina
+model: high stamina keeps Mimo near the tiny maximum speed, movement drains
+stamina, and resting quickly recovers it to full. Once stamina drops below 50%,
+Mimo's mood can interrupt the next hop or stop the current one for a short
+break. During conversation bubbles Mimo holds position; during breaks Mimo plays
+idle, waiting, note-taking, waving, or jumping moments instead of walking
+endlessly.
 
 For deterministic QA, set `MIMO_WINDOW_ORIGIN=x,y` to pin the initial panel
 origin inside the main visible screen. Set `MIMO_AUTONOMOUS_DISABLED=1` only for
@@ -265,9 +271,9 @@ stacked list of white speech bubbles. When Codex conversation context is
 available, the primary bubble sits closest to Mimo, keeps the speech tail, and
 promotes the focused session into a short Mimo-style report. The visible stack is
 capped at five bubbles total: one primary Mimo report plus up to four smaller
-secondary context bubbles above it. Those secondary bubbles are compact
-session-status rows with accent markers and no tails, forming a small readable
-session dashboard rather than a transcript panel. Session bubbles render
+secondary context bubbles around it. Those secondary bubbles are compact
+session-status rows with accent markers and no tails, forming a small irregular
+chat cloud near Mimo rather than a transcript panel. Session bubbles render
 `「session title」summary` as a colored title plus one-line Mimo summary, so
 multiple bubbles can be scanned quickly. They do not repeat the longer
 `ご主人、...です` phrase, and they do not dump raw model output, commands, or

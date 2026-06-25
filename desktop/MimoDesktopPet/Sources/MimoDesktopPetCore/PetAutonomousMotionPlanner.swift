@@ -123,6 +123,70 @@ public enum PetAutonomousMotionPlanner {
         )
     }
 
+    public static func homeBoundedTarget(
+        visibleFrame: PetDragFrame,
+        petWidth: Double,
+        petHeight: Double,
+        home: PetWanderPoint,
+        start: PetWanderPoint,
+        homeRadius: Double,
+        minimumDistance: Double,
+        maximumStepDistance: Double,
+        verticalScale: Double,
+        angleUnit: Double,
+        distanceUnit: Double
+    ) -> PetWanderPoint {
+        let bounds = movementBounds(
+            visibleFrame: visibleFrame,
+            petWidth: petWidth,
+            petHeight: petHeight
+        )
+        let home = PetWanderPoint(
+            x: clamp(home.x, minimum: bounds.minX, maximum: bounds.maxX),
+            y: clamp(home.y, minimum: bounds.minY, maximum: bounds.maxY)
+        )
+        let homeRadius = max(0, homeRadius)
+        let maximumStepDistance = max(0, maximumStepDistance)
+        let minimumDistance = min(max(0, minimumDistance), max(homeRadius, maximumStepDistance))
+
+        if hypot(start.x - home.x, start.y - home.y) > homeRadius {
+            let target = limitedTarget(
+                start: start,
+                rawTarget: home,
+                maximumDistance: maximumStepDistance
+            )
+            return PetWanderPoint(
+                x: clamp(target.x, minimum: bounds.minX, maximum: bounds.maxX),
+                y: clamp(target.y, minimum: bounds.minY, maximum: bounds.maxY)
+            )
+        }
+
+        let easedDistanceUnit = pow(clampUnit(distanceUnit), 1.8)
+        let radius = interpolate(
+            from: minimumDistance,
+            to: homeRadius,
+            unit: easedDistanceUnit
+        )
+        let angle = clampUnit(angleUnit) * 2 * Double.pi
+        let rawTarget = PetWanderPoint(
+            x: home.x + cos(angle) * radius,
+            y: home.y + sin(angle) * radius * max(0, verticalScale)
+        )
+        let clampedTarget = PetWanderPoint(
+            x: clamp(rawTarget.x, minimum: bounds.minX, maximum: bounds.maxX),
+            y: clamp(rawTarget.y, minimum: bounds.minY, maximum: bounds.maxY)
+        )
+        let limited = limitedTarget(
+            start: start,
+            rawTarget: clampedTarget,
+            maximumDistance: maximumStepDistance
+        )
+        return PetWanderPoint(
+            x: clamp(limited.x, minimum: bounds.minX, maximum: bounds.maxX),
+            y: clamp(limited.y, minimum: bounds.minY, maximum: bounds.maxY)
+        )
+    }
+
     public static func step(
         current: PetWanderPoint,
         target: PetWanderPoint,

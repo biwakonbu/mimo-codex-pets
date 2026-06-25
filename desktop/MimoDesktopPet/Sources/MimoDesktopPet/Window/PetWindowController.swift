@@ -29,6 +29,7 @@ final class PetWindowController: NSObject {
     private var autonomousEnergy = PetWindowController.makeAutonomousEnergyController()
     private var autonomousMotion: PetAutonomousMotionTween?
     private var autonomousMotionAnimation: PetAnimationState?
+    private var autonomousHomeOrigin = PetWanderPoint(x: 0, y: 0)
     private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + PetWindowController.environmentDouble(
         "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS",
         default: PetAutonomousMotionTuning.productionInitialRestSeconds
@@ -58,6 +59,7 @@ final class PetWindowController: NSObject {
             defer: false
         )
         super.init()
+        autonomousHomeOrigin = PetWanderPoint(x: origin.x, y: origin.y)
 
         if autonomousTestMode || autonomousEnergyTestMode {
             let now = Date.timeIntervalSinceReferenceDate
@@ -111,6 +113,7 @@ final class PetWindowController: NSObject {
             onDragEnded: { [weak self, weak viewModel] in
                 if let self {
                     self.endManualMovementTracking()
+                    self.rememberAutonomousHomeOrigin()
                     self.scheduleAutonomousRest(
                         now: Date.timeIntervalSinceReferenceDate,
                         includeMoment: false
@@ -377,16 +380,18 @@ final class PetWindowController: NSObject {
             speedWaveCycles = 0.8
             speedWavePhase = 0
         } else {
-            target = PetAutonomousMotionPlanner.nearbyTarget(
+            target = PetAutonomousMotionPlanner.homeBoundedTarget(
                 visibleFrame: PetDragFrame(visibleFrame),
                 petWidth: panel.frame.width,
                 petHeight: panel.frame.height,
+                home: autonomousHomeOrigin,
                 start: start,
+                homeRadius: PetAutonomousMotionTuning.productionHomeRadius,
                 minimumDistance: PetAutonomousMotionTuning.productionMinimumStepDistance,
-                maximumDistance: PetAutonomousMotionTuning.productionMaximumStepDistance,
+                maximumStepDistance: PetAutonomousMotionTuning.productionMaximumStepDistance,
                 verticalScale: PetAutonomousMotionTuning.productionVerticalStepScale,
-                angleUnit: Double.random(in: 0...1),
-                distanceUnit: Double.random(in: 0...1)
+                angleUnit: autonomousForceBegin ? 0 : Double.random(in: 0...1),
+                distanceUnit: autonomousForceBegin ? 1 : Double.random(in: 0...1)
             )
             baseSpeed = autonomousEnergy.speed(
                 maximumSpeed: PetAutonomousMotionTuning.productionMaximumSpeed,
@@ -503,6 +508,10 @@ final class PetWindowController: NSObject {
 
     private func currentOnScreenFrame() -> PetDragFrame {
         PetDragFrame(panel.frame)
+    }
+
+    private func rememberAutonomousHomeOrigin() {
+        autonomousHomeOrigin = PetWanderPoint(x: panel.frame.minX, y: panel.frame.minY)
     }
 
     private func beginManualMovementTracking() {

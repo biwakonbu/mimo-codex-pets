@@ -226,7 +226,8 @@ def require_mimicry_contract() -> None:
 
 def require_stamina_contract() -> None:
     stamina_terms = [
-        "52 pt/s",
+        "5 pt/s",
+        "16 pt",
         "stamina",
         "below 50%",
         "MIMO_AUTONOMOUS_DISABLED=1",
@@ -236,7 +237,9 @@ def require_stamina_contract() -> None:
     require_text(
         RESEARCH,
         [
-            "52 pt/s",
+            "5 pt/s",
+            "16 pt",
+            "holds position",
             "rest/idle moments",
             "Fake app-server E2E samples the live window position during autonomous",
         ],
