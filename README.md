@@ -21,8 +21,11 @@ This repository also includes a SwiftPM-based macOS companion app at
 `desktop/MimoDesktopPet`. It reuses the same Mimo pet package, displays Mimo in a
 transparent always-on-top desktop panel, and reads Codex state through the
 public `codex app-server` JSON-RPC interface. Production mode shows short status
-and sanitized multi-thread conversation updates in stacked speech bubbles. The
-white conversation feed exists only in the opt-in debug overlay.
+and sanitized multi-thread conversation updates in stacked speech bubbles. Those
+bubbles form a dynamic nearby bubble cloud around Mimo: the main speech stays
+attached to Mimo, while secondary chat summaries use seeded irregular placement
+and unsynchronized drift so they feel playful without becoming a transcript
+panel. The white conversation feed exists only in the opt-in debug overlay.
 
 Run it with:
 

@@ -12,6 +12,10 @@ The v1 app keeps user work sessions read-only:
 - it maps Codex app-server thread state to Mimo animation states
 - it shows short status and sanitized multi-thread conversation updates in
   speech bubbles
+- production bubbles form a dynamic nearby bubble cloud: Mimo's primary speech
+  stays visually attached to the pet, while secondary chat summaries use seeded
+  irregular placement and unsynchronized drift so the layout feels playful
+  without becoming a transcript panel
 - it derives a safe `workSummary` from session items with
   `CodexSessionSummarizer`, then lets Mimo explain the current work in its own
   short report style

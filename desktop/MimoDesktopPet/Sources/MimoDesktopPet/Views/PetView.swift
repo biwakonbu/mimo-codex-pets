@@ -49,6 +49,7 @@ private struct ProductionBubbleStackView: View {
     @State private var previousVisibleIDs: [String] = []
     @State private var birthPulseVisible = false
     @State private var birthPulseGeneration = 0
+    @State private var cloudFloatPhase = false
 
     var body: some View {
         let visible = Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit))
@@ -79,8 +80,14 @@ private struct ProductionBubbleStackView: View {
                 .scaleEffect(CGFloat(placement.scale), anchor: .center)
                 .rotationEffect(.degrees(placement.rotationDegrees), anchor: .center)
                 .offset(
-                    x: CGFloat(placement.horizontalOffset),
-                    y: CGFloat(placement.verticalOffset)
+                    x: CGFloat(
+                        placement.horizontalOffset +
+                            (cloudFloatPhase ? placement.floatingHorizontalOffset : -placement.floatingHorizontalOffset)
+                    ),
+                    y: CGFloat(
+                        placement.verticalOffset +
+                            (cloudFloatPhase ? placement.floatingVerticalOffset : -placement.floatingVerticalOffset)
+                    )
                 )
                 .zIndex(placement.zIndex)
                 .transition(ProductionBubbleMotion.transition(for: index, visibleCount: visible.count))
@@ -91,6 +98,7 @@ private struct ProductionBubbleStackView: View {
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: placement.rotationDegrees)
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: stackSignature)
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: visible.count)
+                .animation(ProductionBubbleMotion.floatAnimation(for: placement), value: cloudFloatPhase)
             }
         }
         .overlay(alignment: .bottom) {
@@ -106,6 +114,7 @@ private struct ProductionBubbleStackView: View {
         )
         .onAppear {
             previousVisibleIDs = visible.map(\.id)
+            cloudFloatPhase = true
         }
         .onChange(of: stackSignature) {
             updateBirthPulse(nextIDs: visible.map(\.id))
@@ -167,6 +176,15 @@ private enum ProductionBubbleMotion {
     static let contentAnimation = Animation.easeInOut(
         duration: PetSpeechBubbleLayout.contentAnimationDuration
     )
+
+    static func floatAnimation(for placement: PetSpeechBubblePlacement) -> Animation {
+        guard placement.floatingDuration > 0 else {
+            return .linear(duration: 0)
+        }
+        return Animation.easeInOut(duration: placement.floatingDuration)
+            .delay(placement.floatingDelay)
+            .repeatForever(autoreverses: true)
+    }
 
     static func transition(for index: Int, visibleCount: Int) -> AnyTransition {
         let insertionScale = PetSpeechBubbleLayout.transitionInsertionScale

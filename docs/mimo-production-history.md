@@ -208,9 +208,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   primary Mimo report plus up to four compact context bubbles, while the app
   tracks up to six Codex thread contexts internally for overflow reporting
 - secondary thread bubbles use short context-row text such as
-  `「資料整理」作業中`, omit the longer Mimo address phrase, and align into a
-  centered stacked list so multiple Codex threads read as a compact reporting
-  surface; only the primary Mimo report keeps a speech tail
+  `「資料整理」作業中`, omit the longer Mimo address phrase, and form a dynamic
+  nearby bubble cloud so multiple Codex threads read as a playful compact
+  reporting surface rather than a centered list; only the primary Mimo report
+  keeps a speech tail
 - thread bubble text is rendered as a colored thread title plus a one-line Mimo
   report, so simultaneous bubbles are scan-friendly without becoming a
   transcript or debug feed
@@ -342,6 +343,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   secondary chat rows keep a bounded three-line title/summary shape, and
   `PetSpeechBubblePaginator` advances overlong Mimo speech as timed pages before
   the next chat update is shown
+- secondary chat bubbles use wider seeded position variation plus a tiny
+  unsynchronized drift envelope; the primary speech stays visually attached to
+  Mimo, while surrounding chat summaries can overlap slightly and settle into an
+  irregular nearby cloud
 - chat names are treated as primary user-facing information: formatter output
   keeps readable chat titles up to the shared title limit instead of shortening
   them before layout, and secondary chat bubbles render the title on its own

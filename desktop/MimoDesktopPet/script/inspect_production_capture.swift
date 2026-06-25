@@ -177,15 +177,19 @@ if requiresMultiBubbleHierarchy {
     let farthestSecondaryDistance = secondaryComponents
         .map { hypot($0.centerX - primary.centerX, $0.centerY - primary.centerY) }
         .max() ?? 0
+    let tallestSecondaryHeight = secondaryComponents.map(\.height).max() ?? 0
+    let hasLayeredOverlapCluster = tallestSecondaryHeight >= 72
     if secondaryComponents.count >= 2 {
-        guard secondaryHorizontalSpread >= 96, secondaryVerticalSpread <= 150 else {
+        guard secondaryHorizontalSpread >= 112,
+              (secondaryVerticalSpread >= 24 || hasLayeredOverlapCluster),
+              secondaryVerticalSpread <= 168 else {
             fail("secondary context bubbles are not arranged as a nearby irregular chat cloud: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
         }
     }
     guard closestSecondaryVerticalDistance >= 20 else {
         fail("primary speech bubble is too buried under secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
-    guard farthestSecondaryDistance <= 220 else {
+    guard farthestSecondaryDistance <= 238 else {
         fail("secondary context bubbles drifted too far away from Mimo's primary speech: distance=\(farthestSecondaryDistance), primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
 
@@ -389,7 +393,7 @@ func hasCenteredTailTaper(
     component: WhiteComponent,
     allowsDetachedTail: Bool
 ) -> Bool {
-    let centerX = (component.minX + component.maxX) / 2
+    let targetCenterX = allowsDetachedTail ? width / 2 : (component.minX + component.maxX) / 2
     let startY = allowsDetachedTail ? max(component.minY, component.maxY - 4) : max(component.minY, component.maxY - 6)
     let endY = allowsDetachedTail ? min(height - 1, component.maxY + 32) : component.maxY
     var centeredNarrowRows = 0
@@ -403,7 +407,7 @@ func hasCenteredTailTaper(
         }
         let spanWidth = span.maxX - span.minX + 1
         let spanCenterX = (span.minX + span.maxX) / 2
-        guard spanWidth >= 2, spanWidth <= maxTailWidth, abs(spanCenterX - centerX) <= 12 else {
+        guard spanWidth >= 2, spanWidth <= maxTailWidth, abs(spanCenterX - targetCenterX) <= 28 else {
             continue
         }
         if let previousSpanWidth, spanWidth > previousSpanWidth + 8 {

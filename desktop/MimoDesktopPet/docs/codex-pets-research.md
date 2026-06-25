@@ -342,11 +342,14 @@ Conversation behavior:
   Secondary session bubbles are smaller bounded context rows around it: they
   stay white, use compact accent markers, omit the longer `ご主人、...です`
   phrase, and use seeded organic offsets from `PetSpeechBubbleLayout`, so
-  concurrent session status feels like a lively nearby chat cloud without
-  becoming a transcript panel. Bubble bodies use a soft organic shape rather
-  than a strict rounded rectangle, secondary rows include tiny pastel pips, and
-  the secondary width bounds keep short and long session titles readable while
-  the placement stays intentionally irregular as Codex notifications arrive.
+  concurrent session status feels like a lively dynamic nearby bubble cloud
+  without becoming a transcript panel. Bubble bodies use a soft organic shape
+  rather than a strict rounded rectangle, secondary rows include tiny pastel
+  pips, and the secondary width bounds keep short and long session titles
+  readable while the placement stays intentionally irregular as Codex
+  notifications arrive. Each organic placement also carries a tiny
+  unsynchronized drift envelope, keeping the bubbles lightly in motion while the
+  primary speech remains close enough to read as Mimo's own voice.
   This keeps Codex Pets-like multi-thread awareness in the production surface
   without rendering a console, transcript feed, or debug panel.
 - Status bubbles are capped at 44 characters, focused-thread primary bubbles at
@@ -384,11 +387,11 @@ Conversation behavior:
   instead of introducing a second transcript channel.
 - The multi-bubble production capture gate verifies more than raw bubble count:
   it requires visible white bubble components, a larger primary bubble closest
-  to Mimo, a bounded irregular secondary chat cloud, a single primary speech
-  tail, no secondary tails, and one compact colored activity/state marker inside
-  every bubble. This keeps the Codex Pets-style simultaneous thread surface from
-  regressing into a flat transcript list, distant scattered cards, or anonymous
-  white cards.
+  to Mimo, a dynamic nearby bubble cloud with bounded irregular secondary
+  placement, a single primary speech tail, no secondary tails, and one compact
+  colored activity/state marker inside every bubble. This keeps the Codex
+  Pets-style simultaneous thread surface from regressing into a flat transcript
+  list, distant scattered cards, or anonymous white cards.
 - The stacked bubble list refreshes whenever conversation context changes, even
   if the primary bubble text is still showing a timed moment or an older queue
   item.

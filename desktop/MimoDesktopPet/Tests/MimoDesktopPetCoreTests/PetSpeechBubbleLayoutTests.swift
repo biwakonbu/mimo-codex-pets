@@ -266,22 +266,29 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.contentAnimationDuration, 0.46)
         XCTAssertEqual(PetSpeechBubbleLayout.typewriterCharactersPerSecond, 10)
         XCTAssertEqual(PetSpeechBubbleLayout.typewriterFrameInterval, 1.0 / 30.0)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryHorizontalJitter, 54)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryHorizontalJitter, 172)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowHorizontalJitter, 196)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryVerticalJitter, 20)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryVerticalJitter, 88)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapDrop, 64)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapJitter, 96)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMaximumHorizontalOffset, 62)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMinimumVerticalOffset, -10)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMaximumVerticalOffset, 22)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumHorizontalOffset, 184)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumVerticalOffset, -166)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumVerticalOffset, -18)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryRotationJitter, 1.8)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryRotationJitter, 9.6)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTailMaximumHorizontalOffset, 76)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryHorizontalJitter, 68)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryHorizontalJitter, 214)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowHorizontalJitter, 236)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryVerticalJitter, 26)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryVerticalJitter, 118)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapDrop, 78)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicTopRowOverlapJitter, 132)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMaximumHorizontalOffset, 74)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMinimumVerticalOffset, -12)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMaximumVerticalOffset, 30)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumHorizontalOffset, 206)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumVerticalOffset, -178)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumVerticalOffset, -6)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryRotationJitter, 2.4)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryRotationJitter, 12.5)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicTailMaximumHorizontalOffset, 86)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryFloatingHorizontalMaximum, 5)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryFloatingVerticalMaximum, 4)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryFloatingHorizontalMaximum, 13)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryFloatingVerticalMaximum, 9)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicFloatingMinimumDuration, 5.8)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicFloatingMaximumDuration, 9.8)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicFloatingMaximumDelay, 1.2)
     }
 
     func testBubbleStackMotionStaggersCardsSoTheyCanOverlapBeforeSettling() {
@@ -409,7 +416,10 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             abs($0.rotationDegrees) <= PetSpeechBubbleLayout.organicPrimaryRotationJitter
         })
         XCTAssertTrue(placements.allSatisfy {
-            hypot($0.horizontalOffset, $0.verticalOffset) <= 68
+            hypot(
+                abs($0.horizontalOffset) + abs($0.floatingHorizontalOffset),
+                abs($0.verticalOffset) + abs($0.floatingVerticalOffset)
+            ) <= 86
         })
         XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.horizontalOffset * 10).rounded()) }).count, 3)
         XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.verticalOffset * 10).rounded()) }).count, 3)
@@ -440,6 +450,43 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertTrue(placements.allSatisfy {
             abs($0.tailHorizontalOffset) <= PetSpeechBubbleLayout.organicTailMaximumHorizontalOffset
         })
+    }
+
+    func testOrganicBubbleFloatAddsSubtleUnsynchronizedMotion() {
+        let seeds = [
+            "Mimo runtime QA",
+            "資料整理",
+            "リリース準備",
+            "別チャットの確認",
+            "吹き出し演出",
+            "長めのチャット名でサイズ確認"
+        ]
+        let placements = seeds.enumerated().map { index, seed in
+            PetSpeechBubbleLayout.placement(
+                for: index % PetSpeechBubbleLayout.productionVisibleLimit,
+                role: index == 0 ? .focus : .conversation,
+                visibleCount: PetSpeechBubbleLayout.productionVisibleLimit,
+                variationSeed: seed
+            )
+        }
+
+        XCTAssertTrue(placements.allSatisfy { $0.floatingDuration >= PetSpeechBubbleLayout.organicFloatingMinimumDuration })
+        XCTAssertTrue(placements.allSatisfy { $0.floatingDuration <= PetSpeechBubbleLayout.organicFloatingMaximumDuration })
+        XCTAssertTrue(placements.allSatisfy { $0.floatingDelay >= 0 })
+        XCTAssertTrue(placements.allSatisfy { $0.floatingDelay <= PetSpeechBubbleLayout.organicFloatingMaximumDelay })
+        XCTAssertTrue(placements.allSatisfy {
+            abs($0.floatingHorizontalOffset) <= ($0.index == 0
+                ? PetSpeechBubbleLayout.organicPrimaryFloatingHorizontalMaximum
+                : PetSpeechBubbleLayout.organicSecondaryFloatingHorizontalMaximum)
+        })
+        XCTAssertTrue(placements.allSatisfy {
+            abs($0.floatingVerticalOffset) <= ($0.index == 0
+                ? PetSpeechBubbleLayout.organicPrimaryFloatingVerticalMaximum
+                : PetSpeechBubbleLayout.organicSecondaryFloatingVerticalMaximum)
+        })
+        XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.floatingDuration * 10).rounded()) }).count, 4)
+        XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.floatingDelay * 100).rounded()) }).count, 4)
+        XCTAssertGreaterThanOrEqual(Set(placements.map { $0.floatingHorizontalOffset > 0 }).count, 2)
     }
 
     func testOrganicSecondaryBubblesUseDynamicScatteredRange() {
@@ -475,15 +522,34 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertTrue(placements.allSatisfy {
             abs($0.rotationDegrees) <= PetSpeechBubbleLayout.organicSecondaryRotationJitter
         })
-        XCTAssertGreaterThanOrEqual((horizontalOffsets.max() ?? 0) - (horizontalOffsets.min() ?? 0), 240)
-        XCTAssertGreaterThanOrEqual((verticalOffsets.max() ?? 0) - (verticalOffsets.min() ?? 0), 100)
-        XCTAssertGreaterThanOrEqual((rotations.max() ?? 0) - (rotations.min() ?? 0), 8)
+        XCTAssertGreaterThanOrEqual((horizontalOffsets.max() ?? 0) - (horizontalOffsets.min() ?? 0), 270)
+        XCTAssertGreaterThanOrEqual((verticalOffsets.max() ?? 0) - (verticalOffsets.min() ?? 0), 128)
+        XCTAssertGreaterThanOrEqual((rotations.max() ?? 0) - (rotations.min() ?? 0), 10)
         XCTAssertTrue(placements.contains { $0.index == 1 && $0.horizontalOffset > -40 })
         XCTAssertTrue(placements.contains { $0.index == 2 && $0.horizontalOffset < 40 })
         XCTAssertTrue(placements.allSatisfy {
-            hypot($0.horizontalOffset, $0.verticalOffset) <= 214
+            hypot(
+                abs($0.horizontalOffset) + abs($0.floatingHorizontalOffset),
+                abs($0.verticalOffset) + abs($0.floatingVerticalOffset)
+            ) <= 236
         })
         XCTAssertTrue(placements.dropFirst().allSatisfy { $0.tailHorizontalOffset == 0 })
+    }
+
+    func testOrganicSecondaryBubblesDoNotCollapseIntoOneHorizontalBand() {
+        let placements = (1..<PetSpeechBubbleLayout.productionVisibleLimit).map { index in
+            PetSpeechBubbleLayout.placement(
+                for: index,
+                role: index == PetSpeechBubbleLayout.productionVisibleLimit - 1 ? .overflow : .conversation,
+                visibleCount: PetSpeechBubbleLayout.productionVisibleLimit,
+                variationSeed: "Mimo runtime QA"
+            )
+        }
+        let verticalOffsets = placements.map(\.verticalOffset)
+
+        XCTAssertGreaterThanOrEqual((verticalOffsets.max() ?? 0) - (verticalOffsets.min() ?? 0), 36)
+        XCTAssertTrue(placements.contains { $0.verticalOffset <= -120 })
+        XCTAssertTrue(placements.contains { $0.verticalOffset >= -96 })
     }
 
     func testOrganicBubblePlacementKeepsIrregularCardsInsideReadableBounds() {
@@ -533,6 +599,13 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
                     )
                     XCTAssertGreaterThanOrEqual(placement.verticalOffset, PetSpeechBubbleLayout.organicSecondaryMinimumVerticalOffset)
                     XCTAssertLessThanOrEqual(placement.verticalOffset, PetSpeechBubbleLayout.organicSecondaryMaximumVerticalOffset)
+                    XCTAssertLessThanOrEqual(
+                        hypot(
+                            abs(placement.horizontalOffset) + abs(placement.floatingHorizontalOffset),
+                            abs(placement.verticalOffset) + abs(placement.floatingVerticalOffset)
+                        ),
+                        236
+                    )
                 }
             }
         }

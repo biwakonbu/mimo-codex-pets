@@ -169,6 +169,8 @@ def require_mimicry_contract() -> None:
         "multi-thread",
         "stacked",
         "speech bubbles",
+        "dynamic nearby bubble cloud",
+        "unsynchronized drift",
         "workSummary",
         "CodexSessionSummarizer",
         "raw",
