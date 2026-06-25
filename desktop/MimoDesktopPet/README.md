@@ -156,12 +156,15 @@ panel width. The primary bubble can grow to four text lines, jitters only within
 Mimo's near speech area, and keeps its tail visually pulled back toward Mimo.
 Secondary session rows keep a bounded title/summary shape but scatter as a
 nearby irregular chat cloud, so simultaneous Codex sessions feel alive instead
-of fixed to a grid. Overlong Mimo speech is split into readable pages that
-advance on the same timed conversation-sketch loop as normal session updates.
-Bubble changes preserve each bubble identity while new bubbles fade and rise in
-from the Mimo side, removed bubbles fade upward, stack position changes use a
-short spring, and text-only updates cross-fade inside the existing bubble
-instead of replacing the whole surface abruptly.
+of fixed to a grid. The current cute UI direction is tracked in
+`design/ui-proposals/mimo-perfect-cute-ui-board-05.png`; production follows it
+with soft organic bubble shapes, pastel activity pins, and tiny decorative pips
+instead of hard rectangular cards. Overlong Mimo speech is split into readable
+pages that advance on the same timed conversation-sketch loop as normal session
+updates. Bubble changes preserve each bubble identity while new bubbles fade
+and rise in from the Mimo side, removed bubbles fade upward, stack position
+changes use a short spring, and text-only updates cross-fade inside the existing
+bubble instead of replacing the whole surface abruptly.
 `./script/live_app_server_smoke.py` performs the same read-only initialize,
 loaded-list, thread-list, and thread-read calls against the local app-server.
 By default it mirrors production transport selection: bounded daemon start,
@@ -253,8 +256,8 @@ When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
 When not being dragged, Mimo stays around the current home position instead of
 wandering across the visible screen. Autonomous movement uses a 60Hz time-based
-tween capped at `5 pt/s`, each tiny step is limited to `8 pt`, and production
-targets stay within a `16 pt` home radius. Autonomous movement has a stamina
+tween capped at `2.4 pt/s`, each tiny step is limited to `4 pt`, and production
+targets stay within an `8 pt` home radius. Autonomous movement has a stamina
 model: high stamina keeps Mimo near the tiny maximum speed, movement drains
 stamina, and resting quickly recovers it to full. Once stamina drops below 50%,
 Mimo's mood can interrupt the next hop or stop the current one for a short

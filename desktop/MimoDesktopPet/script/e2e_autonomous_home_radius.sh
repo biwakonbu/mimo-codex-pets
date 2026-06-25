@@ -74,12 +74,12 @@ let deltas = zip(samples.dropFirst(), samples).map { current, previous in
 let largestDelta = deltas.max() ?? 0
 let movingSamples = deltas.filter { $0 > 0.02 }.count
 
-guard movingSamples >= 4 else {
+guard movingSamples >= 3 else {
     fputs("autonomous home-radius test did not observe tiny movement: \(movingSamples)\n", stderr)
     exit(1)
 }
 
-guard maxDistanceFromHome <= 20 else {
+guard maxDistanceFromHome <= 12 else {
     fputs("autonomous home-radius movement drifted too far: \(maxDistanceFromHome)\n", stderr)
     exit(1)
 }

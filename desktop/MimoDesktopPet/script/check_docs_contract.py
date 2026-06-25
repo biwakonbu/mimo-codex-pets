@@ -23,6 +23,7 @@ DIALOGUE_PROMPT = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexMimoDialog
 SUMMARIZER = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexSessionSummarizer.swift"
 ENERGY = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "PetAutonomousEnergyController.swift"
 ENERGY_TESTS = ROOT_DIR / "Tests" / "MimoDesktopPetCoreTests" / "PetAutonomousEnergyControllerTests.swift"
+PERFECT_CUTE_UI_BOARD = ROOT_DIR / "design" / "ui-proposals" / "mimo-perfect-cute-ui-board-05.png"
 
 
 def fail(message: str) -> None:
@@ -178,6 +179,18 @@ def require_mimicry_contract() -> None:
         "production",
     ]
     require_text(README, mimicry_terms, label="README mimicry contract")
+    require_text(
+        README,
+        ["design/ui-proposals/mimo-perfect-cute-ui-board-05.png"],
+        label="README cute UI proposal contract",
+    )
+    require_text(
+        RESEARCH,
+        ["design/ui-proposals/mimo-perfect-cute-ui-board-05.png"],
+        label="research cute UI proposal contract",
+    )
+    if not PERFECT_CUTE_UI_BOARD.is_file():
+        fail("cute UI proposal board is missing: design/ui-proposals/mimo-perfect-cute-ui-board-05.png")
     require_text(RESEARCH, mimicry_terms, label="research mimicry contract")
     require_text(
         FORMATTER,
@@ -226,8 +239,8 @@ def require_mimicry_contract() -> None:
 
 def require_stamina_contract() -> None:
     stamina_terms = [
-        "5 pt/s",
-        "16 pt",
+        "2.4 pt/s",
+        "8 pt",
         "stamina",
         "below 50%",
         "MIMO_AUTONOMOUS_DISABLED=1",
@@ -237,8 +250,8 @@ def require_stamina_contract() -> None:
     require_text(
         RESEARCH,
         [
-            "5 pt/s",
-            "16 pt",
+            "2.4 pt/s",
+            "8 pt",
             "holds position",
             "rest/idle moments",
             "Fake app-server E2E samples the live window position during autonomous",

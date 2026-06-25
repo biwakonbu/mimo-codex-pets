@@ -186,6 +186,11 @@ Verified runtime behavior:
   bounded irregular chat cloud near Mimo, while `PetSpeechBubblePaginator`
   splits longer Mimo speech into timed pages so conversation-sketch playback can
   continue without truncating the whole message into one chip.
+- `design/ui-proposals/mimo-perfect-cute-ui-board-05.png` records the current
+  cute UI direction generated from the Mimo identity prompt: soft organic white
+  bubbles, pastel activity pins, tiny decorative pips, and a barely-there
+  home-radius movement feel. Production SwiftUI uses those elements without
+  adding readable decorative text or a separate dashboard panel.
 - The production bubble panel treats each visible bubble identity as stable, but
   does not pin secondary summaries to a fixed row grid. Additions fade and rise
   from the primary/Mimo side, removals fade upward, stack-position changes use a
@@ -245,8 +250,8 @@ State behavior:
 - manual or autonomous movement uses directional `running-right` / `running-left` based on observed movement direction.
 - autonomous movement uses a 60Hz time-based tween with smooth speed variation,
   rather than per-frame random speed changes.
-- autonomous movement caps production speed at `5 pt/s`, limits each tiny hop
-  to `8 pt`, keeps production targets inside a `16 pt` home radius, and
+- autonomous movement caps production speed at `2.4 pt/s`, limits each tiny hop
+  to `4 pt`, keeps production targets inside an `8 pt` home radius, and
   intentionally inserts rest/idle moments between hops. During conversation
   bubbles, Mimo holds position and uses in-place animation instead of moving the
   panel.
@@ -338,11 +343,12 @@ Conversation behavior:
   stay white, use compact accent markers, omit the longer `ご主人、...です`
   phrase, and use seeded organic offsets from `PetSpeechBubbleLayout`, so
   concurrent session status feels like a lively nearby chat cloud without
-  becoming a transcript panel. The secondary width bounds keep short and long
-  session titles readable while the placement stays intentionally irregular as
-  Codex notifications arrive. This keeps Codex Pets-like multi-thread awareness
-  in the production surface without rendering a console, transcript feed, or
-  debug panel.
+  becoming a transcript panel. Bubble bodies use a soft organic shape rather
+  than a strict rounded rectangle, secondary rows include tiny pastel pips, and
+  the secondary width bounds keep short and long session titles readable while
+  the placement stays intentionally irregular as Codex notifications arrive.
+  This keeps Codex Pets-like multi-thread awareness in the production surface
+  without rendering a console, transcript feed, or debug panel.
 - Status bubbles are capped at 44 characters, focused-thread primary bubbles at
   48 characters, secondary thread rows at 34 characters, and overflow bubbles
   at 22 characters. Secondary bubbles render as one-line compact summaries such

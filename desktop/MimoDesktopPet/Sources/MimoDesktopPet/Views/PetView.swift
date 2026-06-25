@@ -308,6 +308,7 @@ struct BubbleView: View {
         let resolvedFillOpacity = fillOpacity ?? defaultFillOpacity
         let accent = accentColor ?? Color(red: 0.36, green: 0.58, blue: 0.86)
         let cornerRadius = bubbleCornerRadius
+        let bubbleShape = BubbleBodyShape(cornerRadius: cornerRadius, waviness: bubbleWaviness)
         let tailFill = Color.white
         let borderColor = role == .status && tone == .neutral
             ? Color(red: 0.54, green: 0.67, blue: 0.88).opacity(0.24)
@@ -352,7 +353,7 @@ struct BubbleView: View {
                 alignment: .leading
             )
             .background(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                bubbleShape
                     .fill(
                         LinearGradient(
                             colors: [
@@ -365,17 +366,24 @@ struct BubbleView: View {
                         )
                     )
             )
+            .overlay(alignment: .bottomTrailing) {
+                if showsDecorativePips {
+                    BubbleDecorativePips(color: accent, count: decorativePipCount)
+                        .padding(.trailing, decorativePipsTrailingPadding)
+                        .padding(.bottom, decorativePipsBottomPadding)
+                }
+            }
             .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                bubbleShape
                     .strokeBorder(Color.white.opacity(isPrimaryBubble ? 0.92 : 0.78), lineWidth: isPrimaryBubble ? 1.2 : 0.8)
                     .padding(isPrimaryBubble ? 2 : 1.2)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                bubbleShape
                     .strokeBorder(borderColor, lineWidth: isPrimaryBubble ? 1.5 : 1.0)
             )
-            .shadow(color: glowColor.opacity(isPrimaryBubble ? 0.12 : 0.055), radius: isPrimaryBubble ? 5 : 2.5, x: 0, y: isPrimaryBubble ? 2 : 1)
-            .shadow(color: Color.black.opacity(isPrimaryBubble ? 0.08 : 0.045), radius: isPrimaryBubble ? 4 : 2.5, x: 0, y: isPrimaryBubble ? 2 : 1.2)
+            .shadow(color: glowColor.opacity(isPrimaryBubble ? 0.14 : 0.075), radius: isPrimaryBubble ? 6 : 3.2, x: 0, y: isPrimaryBubble ? 2 : 1)
+            .shadow(color: Color.black.opacity(isPrimaryBubble ? 0.065 : 0.035), radius: isPrimaryBubble ? 4 : 2.2, x: 0, y: isPrimaryBubble ? 2 : 1.0)
 
             if showsTail {
                 BubbleTail()
@@ -434,13 +442,13 @@ struct BubbleView: View {
     private var borderOpacity: Double {
         switch role {
         case .status:
-            return 0.2
-        case .focus:
-            return 0.28
-        case .conversation:
             return 0.18
+        case .focus:
+            return 0.24
+        case .conversation:
+            return 0.16
         case .overflow:
-            return 0.2
+            return 0.18
         }
     }
 
@@ -539,13 +547,61 @@ struct BubbleView: View {
     private var bubbleCornerRadius: CGFloat {
         switch role {
         case .focus:
-            return 26
+            return 25
         case .status:
-            return 24
+            return 23
+        case .conversation:
+            return 14
+        case .overflow:
+            return 13
+        }
+    }
+
+    private var bubbleWaviness: CGFloat {
+        switch role {
+        case .status, .focus:
+            return 1.0
+        case .conversation:
+            return 0.72
+        case .overflow:
+            return 0.58
+        }
+    }
+
+    private var showsDecorativePips: Bool {
+        switch role {
+        case .status:
+            return tone != .neutral
+        case .focus:
+            return false
+        case .conversation, .overflow:
+            return true
+        }
+    }
+
+    private var decorativePipCount: Int {
+        role == .overflow ? 2 : 3
+    }
+
+    private var decorativePipsTrailingPadding: CGFloat {
+        switch role {
         case .conversation:
             return 12
         case .overflow:
-            return 12
+            return 10
+        case .status, .focus:
+            return 14
+        }
+    }
+
+    private var decorativePipsBottomPadding: CGFloat {
+        switch role {
+        case .conversation:
+            return 8
+        case .overflow:
+            return 7
+        case .status, .focus:
+            return 10
         }
     }
 
@@ -568,6 +624,90 @@ struct BubbleView: View {
 
     private var tailHeight: CGFloat {
         isPrimaryBubble ? 18 : 12
+    }
+}
+
+private struct BubbleBodyShape: InsettableShape {
+    var cornerRadius: CGFloat
+    var waviness: CGFloat
+    var insetAmount: CGFloat = 0
+
+    func path(in rect: CGRect) -> Path {
+        let rect = rect.insetBy(dx: insetAmount, dy: insetAmount)
+        let width = rect.width
+        let height = rect.height
+        let radius = min(cornerRadius, min(width, height) * 0.42)
+        let wave = min(max(waviness, 0), 1.4)
+        let topLift = 2.0 * wave
+        let sideWave = 4.2 * wave
+        let bottomDrop = 3.6 * wave
+
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + radius * 1.05, y: rect.minY + topLift))
+        path.addCurve(
+            to: CGPoint(x: rect.midX - width * 0.12, y: rect.minY + topLift * 0.15),
+            control1: CGPoint(x: rect.minX + width * 0.22, y: rect.minY - topLift * 0.35),
+            control2: CGPoint(x: rect.midX - width * 0.28, y: rect.minY + topLift * 0.45)
+        )
+        path.addCurve(
+            to: CGPoint(x: rect.maxX - radius * 1.04, y: rect.minY + topLift),
+            control1: CGPoint(x: rect.midX + width * 0.14, y: rect.minY - topLift * 0.45),
+            control2: CGPoint(x: rect.maxX - width * 0.24, y: rect.minY + topLift * 0.45)
+        )
+        path.addCurve(
+            to: CGPoint(x: rect.maxX - sideWave, y: rect.midY),
+            control1: CGPoint(x: rect.maxX - radius * 0.24, y: rect.minY + radius * 0.1),
+            control2: CGPoint(x: rect.maxX + sideWave * 0.36, y: rect.midY - height * 0.25)
+        )
+        path.addCurve(
+            to: CGPoint(x: rect.maxX - radius * 0.92, y: rect.maxY - radius * 0.32),
+            control1: CGPoint(x: rect.maxX + sideWave * 0.22, y: rect.midY + height * 0.22),
+            control2: CGPoint(x: rect.maxX - radius * 0.12, y: rect.maxY - radius * 0.06)
+        )
+        path.addCurve(
+            to: CGPoint(x: rect.midX + width * 0.12, y: rect.maxY - bottomDrop),
+            control1: CGPoint(x: rect.maxX - width * 0.22, y: rect.maxY + bottomDrop * 0.3),
+            control2: CGPoint(x: rect.midX + width * 0.28, y: rect.maxY - bottomDrop * 0.35)
+        )
+        path.addCurve(
+            to: CGPoint(x: rect.minX + radius * 0.94, y: rect.maxY - radius * 0.28),
+            control1: CGPoint(x: rect.midX - width * 0.15, y: rect.maxY + bottomDrop * 0.28),
+            control2: CGPoint(x: rect.minX + width * 0.23, y: rect.maxY - bottomDrop * 0.35)
+        )
+        path.addCurve(
+            to: CGPoint(x: rect.minX + sideWave, y: rect.midY),
+            control1: CGPoint(x: rect.minX + radius * 0.12, y: rect.maxY - radius * 0.06),
+            control2: CGPoint(x: rect.minX - sideWave * 0.3, y: rect.midY + height * 0.24)
+        )
+        path.addCurve(
+            to: CGPoint(x: rect.minX + radius * 1.05, y: rect.minY + topLift),
+            control1: CGPoint(x: rect.minX - sideWave * 0.22, y: rect.midY - height * 0.24),
+            control2: CGPoint(x: rect.minX + radius * 0.18, y: rect.minY + radius * 0.1)
+        )
+        path.closeSubpath()
+        return path
+    }
+
+    func inset(by amount: CGFloat) -> BubbleBodyShape {
+        var shape = self
+        shape.insetAmount += amount
+        return shape
+    }
+}
+
+private struct BubbleDecorativePips: View {
+    let color: Color
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<max(0, count), id: \.self) { index in
+                Circle()
+                    .fill(color.opacity(index == 0 ? 0.58 : 0.44))
+                    .frame(width: 5, height: 5)
+            }
+        }
+        .allowsHitTesting(false)
     }
 }
 
@@ -767,16 +907,19 @@ private struct BubbleStateMarker: View {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .strokeBorder(Color.white.opacity(0.72), lineWidth: 1)
                 )
+                .shadow(color: accentColor.opacity(0.16), radius: 3, x: 0, y: 1)
         case .status:
             Circle()
                 .fill(accentColor.opacity(0.88))
                 .frame(width: 22, height: 22)
                 .overlay(markerImage.font(.system(size: 10, weight: .bold)))
+                .shadow(color: accentColor.opacity(0.16), radius: 2.5, x: 0, y: 1)
         case .conversation:
             Circle()
                 .fill(accentColor.opacity(0.82))
                 .frame(width: 15, height: 15)
                 .overlay(markerImage.font(.system(size: 7.2, weight: .bold)))
+                .shadow(color: accentColor.opacity(0.14), radius: 2, x: 0, y: 0.8)
         case .overflow:
             ZStack {
                 Capsule(style: .continuous)
@@ -786,6 +929,7 @@ private struct BubbleStateMarker: View {
                     .offset(y: -0.5)
             }
             .frame(width: 18, height: 18)
+            .shadow(color: accentColor.opacity(0.14), radius: 2, x: 0, y: 0.8)
         }
     }
 
@@ -865,11 +1009,11 @@ private enum BubbleAccentPalette {
     static func color(for index: Int, role: PetSpeechBubbleRole, tone: PetSpeechBubbleTone) -> Color? {
         switch tone {
         case .failed:
-            return Color(red: 0.74, green: 0.30, blue: 0.28)
+            return Color(red: 0.78, green: 0.36, blue: 0.42)
         case .waiting:
-            return Color(red: 0.76, green: 0.56, blue: 0.25)
+            return Color(red: 0.78, green: 0.58, blue: 0.28)
         case .review:
-            return Color(red: 0.25, green: 0.58, blue: 0.44)
+            return Color(red: 0.28, green: 0.62, blue: 0.50)
         case .overflow:
             return Color(red: 0.42, green: 0.47, blue: 0.55)
         case .active, .neutral:
@@ -877,15 +1021,15 @@ private enum BubbleAccentPalette {
         }
         guard role != .status else { return nil }
         if role == .focus {
-            return Color(red: 0.34, green: 0.53, blue: 0.84)
+            return Color(red: 0.36, green: 0.56, blue: 0.86)
         }
         if role == .overflow {
             return Color(red: 0.42, green: 0.47, blue: 0.55)
         }
         let colors = [
-            Color(red: 0.34, green: 0.54, blue: 0.84),
-            Color(red: 0.22, green: 0.55, blue: 0.51),
-            Color(red: 0.70, green: 0.45, blue: 0.30)
+            Color(red: 0.36, green: 0.56, blue: 0.86),
+            Color(red: 0.26, green: 0.60, blue: 0.55),
+            Color(red: 0.74, green: 0.50, blue: 0.34)
         ]
         return colors[max(0, index - 1) % colors.count]
     }
