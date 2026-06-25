@@ -2,17 +2,24 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class PetAutonomousEnergyControllerTests: XCTestCase {
-    func testHighStaminaRunsNearMaximumSpeed() {
+    func testHighStaminaMovesBrisklyWithoutPeggingMaximumSpeed() {
         let controller = PetAutonomousEnergyController(stamina: 1)
 
-        XCTAssertEqual(
+        XCTAssertGreaterThan(
             controller.speed(maximumSpeed: 52, moodUnit: 0.5),
-            52,
-            accuracy: 0.0001
+            42
+        )
+        XCTAssertLessThan(
+            controller.speed(maximumSpeed: 52, moodUnit: 0.5),
+            46
         )
         XCTAssertGreaterThan(
             controller.speed(maximumSpeed: 52, moodUnit: 0),
-            48
+            40
+        )
+        XCTAssertLessThanOrEqual(
+            controller.speed(maximumSpeed: 52, moodUnit: 1),
+            52 * 0.88
         )
     }
 
@@ -26,7 +33,7 @@ final class PetAutonomousEnergyControllerTests: XCTestCase {
         )
         XCTAssertLessThan(
             tired.speed(maximumSpeed: 52, moodUnit: 0.5),
-            35
+            28
         )
     }
 
@@ -70,6 +77,7 @@ final class PetAutonomousEnergyControllerTests: XCTestCase {
             controller.restDuration(moodUnit: 0) * 0.5,
             1 - controller.stamina
         )
-        XCTAssertLessThanOrEqual(controller.restDuration(moodUnit: 1), 6.5)
+        XCTAssertGreaterThanOrEqual(controller.restDuration(moodUnit: 0), 3)
+        XCTAssertLessThanOrEqual(controller.restDuration(moodUnit: 1), 12)
     }
 }

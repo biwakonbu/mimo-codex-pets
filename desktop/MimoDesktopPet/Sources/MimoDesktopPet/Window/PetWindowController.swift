@@ -10,8 +10,6 @@ final class PetWindowController: NSObject {
         height: CGFloat(PetSpeechBubbleLayout.productionWindowHeight)
     )
     private static let debugSize = NSSize(width: 320, height: 430)
-    private static let maximumProductionSpeed = 52.0
-    private static let maximumProductionStepDistance = 170.0
 
     private let panel: NSPanel
     private let viewModel: PetViewModel
@@ -32,10 +30,12 @@ final class PetWindowController: NSObject {
     private var autonomousMotionAnimation: PetAnimationState?
     private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + PetWindowController.environmentDouble(
         "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS",
-        default: 2.0
+        default: PetAutonomousMotionTuning.productionInitialRestSeconds
     )
-    private var nextAutonomousRetargetAt = Date.timeIntervalSinceReferenceDate + 10.0
-    private var nextIdleMomentAt = Date.timeIntervalSinceReferenceDate + 4.0
+    private var nextAutonomousRetargetAt = Date.timeIntervalSinceReferenceDate +
+        PetAutonomousMotionTuning.productionRetargetDelayRange.lowerBound
+    private var nextIdleMomentAt = Date.timeIntervalSinceReferenceDate +
+        PetAutonomousMotionTuning.productionInitialRestSeconds
     private var cancellables: Set<AnyCancellable> = []
 
     init(viewModel: PetViewModel) {
@@ -287,7 +287,7 @@ final class PetWindowController: NSObject {
 
         if now >= nextIdleMomentAt, autonomousMotion == nil {
             playRandomRestingMoment()
-            nextIdleMomentAt = now + Double.random(in: 3.0...6.5)
+            nextIdleMomentAt = now + Double.random(in: PetAutonomousMotionTuning.productionIdleMomentDelayRange)
         }
 
         if autonomousMotion == nil, now >= autonomousRestUntil {
@@ -365,14 +365,14 @@ final class PetWindowController: NSObject {
             target = PetAutonomousMotionPlanner.limitedTarget(
                 start: start,
                 rawTarget: rawTarget,
-                maximumDistance: Self.maximumProductionStepDistance
+                maximumDistance: PetAutonomousMotionTuning.productionMaximumStepDistance
             )
             baseSpeed = autonomousEnergy.speed(
-                maximumSpeed: Self.maximumProductionSpeed,
+                maximumSpeed: PetAutonomousMotionTuning.productionMaximumSpeed,
                 moodUnit: autonomousEnergyTestMode ? 0.5 : Double.random(in: 0...1)
             )
-            speedWaveAmplitude = Double.random(in: 0.08...0.18)
-            speedWaveCycles = Double.random(in: 1.0...2.4)
+            speedWaveAmplitude = Double.random(in: PetAutonomousMotionTuning.productionSpeedWaveAmplitudeRange)
+            speedWaveCycles = Double.random(in: PetAutonomousMotionTuning.productionSpeedWaveCyclesRange)
             speedWavePhase = Double.random(in: 0...(2 * Double.pi))
         }
         let motion = PetAutonomousMotionTween.make(
@@ -380,7 +380,7 @@ final class PetWindowController: NSObject {
             target: target,
             startTime: now,
             baseSpeed: baseSpeed,
-            maximumSpeed: Self.maximumProductionSpeed,
+            maximumSpeed: autonomousTestMode ? baseSpeed : PetAutonomousMotionTuning.productionMaximumSpeed,
             speedWaveAmplitude: speedWaveAmplitude,
             speedWaveCycles: speedWaveCycles,
             speedWavePhase: speedWavePhase
@@ -400,7 +400,7 @@ final class PetWindowController: NSObject {
         if autonomousEnergyTestMode {
             return true
         }
-        return Double.random(in: 0...1) < 0.52
+        return Double.random(in: 0...1) < PetAutonomousMotionTuning.productionBeginMotionProbability
     }
 
     private func shouldInterruptAutonomousMotionForRest() -> Bool {
@@ -413,7 +413,7 @@ final class PetWindowController: NSObject {
             moodUnit: autonomousEnergyTestMode ? 0 : Double.random(in: 0...1)
         )
         autonomousRestUntil = now + duration
-        nextIdleMomentAt = now + Double.random(in: 2.5...6.0)
+        nextIdleMomentAt = now + Double.random(in: PetAutonomousMotionTuning.productionRestMomentDelayRange)
         if includeMoment {
             playRandomRestingMoment()
         }
@@ -426,7 +426,7 @@ final class PetWindowController: NSObject {
         if autonomousEnergyTestMode {
             return 0.8
         }
-        return Double.random(in: 10.0...22.0)
+        return Double.random(in: PetAutonomousMotionTuning.productionRetargetDelayRange)
     }
 
     private func fatigueMoodUnit() -> Double {

@@ -41,8 +41,8 @@ public struct PetAutonomousEnergyController: Equatable, Sendable {
 
     public func speed(maximumSpeed: Double, moodUnit: Double) -> Double {
         let maximumSpeed = max(maximumSpeed, 1)
-        let moodOffset = (Self.clampUnit(moodUnit) - 0.5) * 0.1
-        let ratio = min(max(0.42 + 0.58 * stamina + moodOffset, 0.32), 1.0)
+        let moodOffset = (Self.clampUnit(moodUnit) - 0.5) * 0.08
+        let ratio = min(max(0.30 + 0.54 * stamina + moodOffset, 0.24), 0.88)
         return maximumSpeed * ratio
     }
 
@@ -61,8 +61,8 @@ public struct PetAutonomousEnergyController: Equatable, Sendable {
 
     public func restDuration(moodUnit: Double) -> TimeInterval {
         let timeToFull = (1 - stamina) / recoveryPerSecond
-        let moodPadding = 0.4 + Self.clampUnit(moodUnit) * 1.2
-        return min(max(timeToFull + moodPadding, 0.8), 6.5)
+        let moodPadding = 1.6 + Self.clampUnit(moodUnit) * 3.4
+        return min(max(timeToFull + moodPadding, 2.2), 12.0)
     }
 
     private static func clampUnit(_ value: Double) -> Double {

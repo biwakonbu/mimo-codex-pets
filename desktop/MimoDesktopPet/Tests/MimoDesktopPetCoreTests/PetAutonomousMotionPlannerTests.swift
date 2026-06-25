@@ -2,6 +2,32 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class PetAutonomousMotionPlannerTests: XCTestCase {
+    func testProductionAutonomousTuningKeepsWanderGentle() {
+        XCTAssertEqual(PetAutonomousMotionTuning.productionMaximumSpeed, 34)
+        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionMaximumStepDistance, 100)
+        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionBeginMotionProbability, 0.30)
+        XCTAssertGreaterThanOrEqual(PetAutonomousMotionTuning.productionInitialRestSeconds, 4)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveAmplitudeRange, 0.04...0.10)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveCyclesRange, 0.7...1.5)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionRetargetDelayRange, 18.0...38.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionIdleMomentDelayRange, 5.5...12.5)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionRestMomentDelayRange, 5.0...11.0)
+    }
+
+    func testProductionTuningCapsTargetsToShortNearbySteps() {
+        let target = PetAutonomousMotionPlanner.limitedTarget(
+            start: PetWanderPoint(x: 10, y: 20),
+            rawTarget: PetWanderPoint(x: 310, y: 420),
+            maximumDistance: PetAutonomousMotionTuning.productionMaximumStepDistance
+        )
+
+        XCTAssertEqual(
+            hypot(target.x - 10, target.y - 20),
+            PetAutonomousMotionTuning.productionMaximumStepDistance,
+            accuracy: 0.0001
+        )
+    }
+
     func testTargetStaysInsideVisibleFrameWithPetSizeAndMargin() {
         let visible = PetDragFrame(x: 100, y: 200, width: 800, height: 600)
         let bounds = PetAutonomousMotionPlanner.movementBounds(
