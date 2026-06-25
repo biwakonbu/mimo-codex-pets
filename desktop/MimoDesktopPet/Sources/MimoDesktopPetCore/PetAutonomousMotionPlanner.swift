@@ -87,6 +87,42 @@ public enum PetAutonomousMotionPlanner {
         )
     }
 
+    public static func nearbyTarget(
+        visibleFrame: PetDragFrame,
+        petWidth: Double,
+        petHeight: Double,
+        start: PetWanderPoint,
+        minimumDistance: Double,
+        maximumDistance: Double,
+        verticalScale: Double,
+        angleUnit: Double,
+        distanceUnit: Double
+    ) -> PetWanderPoint {
+        let bounds = movementBounds(
+            visibleFrame: visibleFrame,
+            petWidth: petWidth,
+            petHeight: petHeight
+        )
+        let maximumDistance = max(0, maximumDistance)
+        let minimumDistance = min(max(0, minimumDistance), maximumDistance)
+        let easedDistanceUnit = pow(clampUnit(distanceUnit), 1.8)
+        let distance = interpolate(
+            from: minimumDistance,
+            to: maximumDistance,
+            unit: easedDistanceUnit
+        )
+        let angle = clampUnit(angleUnit) * 2 * Double.pi
+        let proposed = PetWanderPoint(
+            x: start.x + cos(angle) * distance,
+            y: start.y + sin(angle) * distance * max(0, verticalScale)
+        )
+
+        return PetWanderPoint(
+            x: clamp(proposed.x, minimum: bounds.minX, maximum: bounds.maxX),
+            y: clamp(proposed.y, minimum: bounds.minY, maximum: bounds.maxY)
+        )
+    }
+
     public static func step(
         current: PetWanderPoint,
         target: PetWanderPoint,
@@ -120,7 +156,14 @@ public enum PetAutonomousMotionPlanner {
     }
 
     private static func interpolate(from start: Double, to end: Double, unit: Double) -> Double {
-        let clamped = min(max(unit, 0), 1)
-        return start + (end - start) * clamped
+        start + (end - start) * clampUnit(unit)
+    }
+
+    private static func clampUnit(_ value: Double) -> Double {
+        clamp(value, minimum: 0, maximum: 1)
+    }
+
+    private static func clamp(_ value: Double, minimum: Double, maximum: Double) -> Double {
+        min(max(value, minimum), maximum)
     }
 }

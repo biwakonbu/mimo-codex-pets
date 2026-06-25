@@ -61,7 +61,7 @@ final class PetWindowController: NSObject {
         if autonomousTestMode || autonomousEnergyTestMode {
             let now = Date.timeIntervalSinceReferenceDate
             autonomousRestUntil = now
-            nextAutonomousRetargetAt = now + (autonomousEnergyTestMode ? 0.8 : 60)
+            nextAutonomousRetargetAt = now + (autonomousEnergyTestMode ? 1.6 : 60)
             nextIdleMomentAt = .greatestFiniteMagnitude
         }
 
@@ -328,8 +328,7 @@ final class PetWindowController: NSObject {
     }
 
     private func chooseNextAutonomousMotion(now: TimeInterval) {
-        let screens = NSScreen.screens
-        let screen = screens.randomElement() ?? NSScreen.main
+        let screen = currentScreen()
         let visibleFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1_280, height: 800)
         let start = PetWanderPoint(x: panel.frame.minX, y: panel.frame.minY)
         let target: PetWanderPoint
@@ -354,18 +353,34 @@ final class PetWindowController: NSObject {
             speedWaveAmplitude = 0.12
             speedWaveCycles = 1.5
             speedWavePhase = 0
+        } else if autonomousEnergyTestMode {
+            let bounds = PetAutonomousMotionPlanner.movementBounds(
+                visibleFrame: PetDragFrame(visibleFrame),
+                petWidth: panel.frame.width,
+                petHeight: panel.frame.height
+            )
+            let targetX = start.x + 88 <= bounds.maxX
+                ? start.x + 88
+                : max(bounds.minX, start.x - 88)
+            target = PetWanderPoint(
+                x: targetX,
+                y: min(max(start.y + 18, bounds.minY), bounds.maxY)
+            )
+            baseSpeed = 32
+            speedWaveAmplitude = 0.06
+            speedWaveCycles = 0.8
+            speedWavePhase = 0
         } else {
-            let rawTarget = PetAutonomousMotionPlanner.target(
+            target = PetAutonomousMotionPlanner.nearbyTarget(
                 visibleFrame: PetDragFrame(visibleFrame),
                 petWidth: panel.frame.width,
                 petHeight: panel.frame.height,
-                randomX: Double.random(in: 0...1),
-                randomY: Double.random(in: 0...1)
-            )
-            target = PetAutonomousMotionPlanner.limitedTarget(
                 start: start,
-                rawTarget: rawTarget,
-                maximumDistance: PetAutonomousMotionTuning.productionMaximumStepDistance
+                minimumDistance: PetAutonomousMotionTuning.productionMinimumStepDistance,
+                maximumDistance: PetAutonomousMotionTuning.productionMaximumStepDistance,
+                verticalScale: PetAutonomousMotionTuning.productionVerticalStepScale,
+                angleUnit: Double.random(in: 0...1),
+                distanceUnit: Double.random(in: 0...1)
             )
             baseSpeed = autonomousEnergy.speed(
                 maximumSpeed: PetAutonomousMotionTuning.productionMaximumSpeed,
@@ -424,9 +439,15 @@ final class PetWindowController: NSObject {
             return 60
         }
         if autonomousEnergyTestMode {
-            return 0.8
+            return 1.6
         }
         return Double.random(in: PetAutonomousMotionTuning.productionRetargetDelayRange)
+    }
+
+    private func currentScreen() -> NSScreen? {
+        NSScreen.screens.first { $0.visibleFrame.intersects(panel.frame) } ??
+            NSScreen.main ??
+            NSScreen.screens.first
     }
 
     private func fatigueMoodUnit() -> Double {
