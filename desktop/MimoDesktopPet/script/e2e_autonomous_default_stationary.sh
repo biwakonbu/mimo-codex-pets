@@ -104,6 +104,9 @@ while time.time() < deadline:
         continue
     if any(row.get("debugOverlay") is not False for row in rows):
         raise SystemExit("default stationary run unexpectedly enabled debug overlay")
+    directional = [row for row in rows if row.get("animation") in {"running-left", "running-right"}]
+    if directional:
+        raise SystemExit(f"default stationary run unexpectedly used movement animation: {directional[-3:]}")
     if any(row.get("isOffline") is False for row in rows):
         print("Default stationary presentation reached connected production mode.")
         raise SystemExit(0)

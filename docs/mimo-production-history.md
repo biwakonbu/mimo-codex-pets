@@ -328,7 +328,9 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - default production keeps the desktop panel anchored; Mimo's ambient life comes
   from in-place rest/idle moments and bubble-cloud motion unless
   `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1` or a deterministic QA mode enables window
-  movement
+  movement. Anchored mode uses an about `8s` first in-place moment and a calm
+  `18-34s` follow-up cadence so Mimo feels present without pacing around the
+  desktop
 - opt-in autonomous wandering uses a test-covered planner that chooses
   visible-screen targets, caps production speed at `2.4 pt/s`, limits each tiny
   hop to `4 pt` inside an `8 pt` home radius, and uses a 60Hz time-based tween

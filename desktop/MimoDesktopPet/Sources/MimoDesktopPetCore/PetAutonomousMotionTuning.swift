@@ -14,4 +14,7 @@ public enum PetAutonomousMotionTuning {
     public static let productionIdleMomentDelayRange = 4.0...10.0
     public static let productionRestMomentDelayRange = 45.0...120.0
     public static let productionConversationHoldSeconds = 90.0
+    public static let productionAnchoredInitialMomentSeconds = 8.0
+    public static let productionAnchoredIdleMomentDelayRange = 18.0...34.0
+    public static let productionAnchoredRestMomentDelayRange = 22.0...48.0
 }

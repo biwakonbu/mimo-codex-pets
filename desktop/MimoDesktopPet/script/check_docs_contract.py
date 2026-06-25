@@ -242,6 +242,8 @@ def require_mimicry_contract() -> None:
 def require_stamina_contract() -> None:
     stamina_terms = [
         "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1",
+        "8s",
+        "18-34s",
         "2.4 pt/s",
         "8 pt",
         "stamina",
@@ -256,6 +258,8 @@ def require_stamina_contract() -> None:
         [
             "default production keeps the desktop panel anchored",
             "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1",
+            "8s",
+            "18-34s",
             "2.4 pt/s",
             "8 pt",
             "holds position",
@@ -282,6 +286,7 @@ def require_stamina_contract() -> None:
             "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS=0",
             "default production launch moved the window unexpectedly",
             "default production launch had moving samples",
+            "default stationary run unexpectedly used movement animation",
             "keeps Mimo anchored unless autonomous window movement is explicitly enabled",
         ],
         label="default stationary E2E contract",

@@ -66,6 +66,12 @@ final class PetWindowController: NSObject {
         )
         super.init()
         autonomousHomeOrigin = PetWanderPoint(x: origin.x, y: origin.y)
+        if !autonomousWindowMovementEnabled {
+            nextIdleMomentAt = Date.timeIntervalSinceReferenceDate + PetWindowController.environmentDouble(
+                "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS",
+                default: PetAutonomousMotionPolicy.initialIdleMomentDelay(windowMovementEnabled: false)
+            )
+        }
 
         if autonomousTestMode || autonomousEnergyTestMode {
             let now = Date.timeIntervalSinceReferenceDate
@@ -302,7 +308,11 @@ final class PetWindowController: NSObject {
 
         if now >= nextIdleMomentAt, autonomousMotion == nil {
             playRandomRestingMoment()
-            nextIdleMomentAt = now + Double.random(in: PetAutonomousMotionTuning.productionIdleMomentDelayRange)
+            nextIdleMomentAt = now + Double.random(
+                in: PetAutonomousMotionPolicy.idleMomentDelayRange(
+                    windowMovementEnabled: autonomousWindowMovementEnabled
+                )
+            )
         }
 
         if !autonomousWindowMovementEnabled {
@@ -458,7 +468,11 @@ final class PetWindowController: NSObject {
             moodUnit: autonomousEnergyTestMode ? 0 : Double.random(in: 0...1)
         )
         autonomousRestUntil = now + duration
-        nextIdleMomentAt = now + Double.random(in: PetAutonomousMotionTuning.productionRestMomentDelayRange)
+        nextIdleMomentAt = now + Double.random(
+            in: PetAutonomousMotionPolicy.restMomentDelayRange(
+                windowMovementEnabled: autonomousWindowMovementEnabled
+            )
+        )
         if includeMoment {
             playRandomRestingMoment()
         }

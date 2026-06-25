@@ -59,6 +59,40 @@ final class PetAutonomousMotionPolicyTests: XCTestCase {
         ))
     }
 
+    func testAnchoredProductionUsesEarlierInPlaceMomentsThanWindowMovementMode() {
+        XCTAssertEqual(
+            PetAutonomousMotionPolicy.initialIdleMomentDelay(windowMovementEnabled: false),
+            PetAutonomousMotionTuning.productionAnchoredInitialMomentSeconds
+        )
+        XCTAssertEqual(
+            PetAutonomousMotionPolicy.initialIdleMomentDelay(windowMovementEnabled: true),
+            PetAutonomousMotionTuning.productionInitialRestSeconds
+        )
+        XCTAssertLessThan(
+            PetAutonomousMotionPolicy.initialIdleMomentDelay(windowMovementEnabled: false),
+            PetAutonomousMotionPolicy.initialIdleMomentDelay(windowMovementEnabled: true)
+        )
+    }
+
+    func testAnchoredProductionUsesGentleInPlaceMomentCadence() {
+        XCTAssertEqual(
+            PetAutonomousMotionPolicy.idleMomentDelayRange(windowMovementEnabled: false),
+            PetAutonomousMotionTuning.productionAnchoredIdleMomentDelayRange
+        )
+        XCTAssertEqual(
+            PetAutonomousMotionPolicy.restMomentDelayRange(windowMovementEnabled: false),
+            PetAutonomousMotionTuning.productionAnchoredRestMomentDelayRange
+        )
+        XCTAssertEqual(
+            PetAutonomousMotionPolicy.idleMomentDelayRange(windowMovementEnabled: true),
+            PetAutonomousMotionTuning.productionIdleMomentDelayRange
+        )
+        XCTAssertEqual(
+            PetAutonomousMotionPolicy.restMomentDelayRange(windowMovementEnabled: true),
+            PetAutonomousMotionTuning.productionRestMomentDelayRange
+        )
+    }
+
     func testConversationHoldRestUsesProductionDwell() {
         XCTAssertEqual(
             PetAutonomousMotionPolicy.conversationHoldRestUntil(now: 42),

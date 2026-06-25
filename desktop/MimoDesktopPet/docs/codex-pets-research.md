@@ -252,7 +252,9 @@ State behavior:
 - default production keeps the desktop panel anchored unless
   `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1` or a deterministic autonomous QA mode is
   set; Mimo's ambient life comes from in-place rest/idle moments and the dynamic
-  nearby bubble cloud.
+  nearby bubble cloud. Anchored mode schedules the first in-place moment after
+  about `8s`, then uses a calm `18-34s` cadence so Mimo feels present without
+  pacing around the desktop.
 - opt-in autonomous window movement uses a 60Hz time-based tween with smooth
   speed variation, rather than per-frame random speed changes.
 - opt-in autonomous movement caps production speed at `2.4 pt/s`, limits each

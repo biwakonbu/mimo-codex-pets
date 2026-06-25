@@ -262,14 +262,17 @@ When not being dragged, the normal production default keeps Mimo anchored at the
 current home position; Mimo shows life through small in-place moments and the
 nearby bubble cloud rather than moving the whole desktop panel. Window movement
 is opt-in with `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1`, or enabled by deterministic
-QA modes. In that opt-in mode autonomous movement uses a 60Hz time-based tween
-capped at `2.4 pt/s`, each tiny step is limited to `4 pt`, and production targets
-stay within an `8 pt` home radius. Autonomous movement has a stamina model: high
-stamina keeps Mimo near the tiny maximum speed, movement drains stamina, and
-resting quickly recovers it to full. Once stamina drops below 50%, Mimo's mood
-can interrupt the next hop or stop the current one for a short break. During
-conversation bubbles Mimo holds position; during breaks Mimo plays idle,
-waiting, note-taking, waving, or jumping moments instead of walking endlessly.
+QA modes. Anchored mode schedules the first in-place moment after about `8s`,
+then uses a calm `18-34s` cadence so Mimo feels alive without pacing around. In
+that opt-in movement mode autonomous movement uses a 60Hz time-based tween
+capped at `2.4 pt/s`, each tiny step is limited to `4 pt`, and production
+targets stay within an `8 pt` home radius. Autonomous movement has a stamina
+model: high stamina keeps Mimo near the tiny maximum speed, movement drains
+stamina, and resting quickly recovers it to full. Once stamina drops below 50%,
+Mimo's mood can interrupt the next hop or stop the current one for a short
+break. During conversation bubbles Mimo holds position; during breaks Mimo plays
+idle, waiting, note-taking, waving, or jumping moments instead of walking
+endlessly.
 
 For deterministic QA, set `MIMO_WINDOW_ORIGIN=x,y` to pin the initial panel
 origin inside the main visible screen. Set `MIMO_AUTONOMOUS_DISABLED=1` only for

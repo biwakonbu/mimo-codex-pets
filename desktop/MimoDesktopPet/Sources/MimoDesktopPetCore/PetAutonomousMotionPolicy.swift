@@ -13,6 +13,24 @@ public enum PetAutonomousMotionPolicy {
             autonomousForceBegin
     }
 
+    public static func initialIdleMomentDelay(windowMovementEnabled: Bool) -> TimeInterval {
+        windowMovementEnabled
+            ? PetAutonomousMotionTuning.productionInitialRestSeconds
+            : PetAutonomousMotionTuning.productionAnchoredInitialMomentSeconds
+    }
+
+    public static func idleMomentDelayRange(windowMovementEnabled: Bool) -> ClosedRange<TimeInterval> {
+        windowMovementEnabled
+            ? PetAutonomousMotionTuning.productionIdleMomentDelayRange
+            : PetAutonomousMotionTuning.productionAnchoredIdleMomentDelayRange
+    }
+
+    public static func restMomentDelayRange(windowMovementEnabled: Bool) -> ClosedRange<TimeInterval> {
+        windowMovementEnabled
+            ? PetAutonomousMotionTuning.productionRestMomentDelayRange
+            : PetAutonomousMotionTuning.productionAnchoredRestMomentDelayRange
+    }
+
     public static func shouldHoldPositionForConversation(
         hasPendingConversationBubbles: Bool,
         autonomousTestMode: Bool,
