@@ -1,15 +1,15 @@
 import Foundation
 
 public enum PetAutonomousMotionTuning {
-    public static let productionMaximumSpeed = 22.0
-    public static let productionMinimumStepDistance = 10.0
-    public static let productionMaximumStepDistance = 64.0
-    public static let productionVerticalStepScale = 0.55
-    public static let productionInitialRestSeconds = 7.0
-    public static let productionBeginMotionProbability = 0.18
-    public static let productionSpeedWaveAmplitudeRange = 0.02...0.07
-    public static let productionSpeedWaveCyclesRange = 0.4...1.1
-    public static let productionRetargetDelayRange = 24.0...52.0
-    public static let productionIdleMomentDelayRange = 7.0...16.0
-    public static let productionRestMomentDelayRange = 7.0...15.0
+    public static let productionMaximumSpeed = 14.0
+    public static let productionMinimumStepDistance = 4.0
+    public static let productionMaximumStepDistance = 28.0
+    public static let productionVerticalStepScale = 0.35
+    public static let productionInitialRestSeconds = 10.0
+    public static let productionBeginMotionProbability = 0.08
+    public static let productionSpeedWaveAmplitudeRange = 0.0...0.04
+    public static let productionSpeedWaveCyclesRange = 0.25...0.8
+    public static let productionRetargetDelayRange = 40.0...90.0
+    public static let productionIdleMomentDelayRange = 8.0...20.0
+    public static let productionRestMomentDelayRange = 12.0...26.0
 }

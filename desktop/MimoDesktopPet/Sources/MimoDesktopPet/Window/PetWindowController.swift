@@ -395,7 +395,7 @@ final class PetWindowController: NSObject {
             target: target,
             startTime: now,
             baseSpeed: baseSpeed,
-            maximumSpeed: autonomousTestMode ? baseSpeed : PetAutonomousMotionTuning.productionMaximumSpeed,
+            maximumSpeed: (autonomousTestMode || autonomousEnergyTestMode) ? baseSpeed : PetAutonomousMotionTuning.productionMaximumSpeed,
             speedWaveAmplitude: speedWaveAmplitude,
             speedWaveCycles: speedWaveCycles,
             speedWavePhase: speedWavePhase

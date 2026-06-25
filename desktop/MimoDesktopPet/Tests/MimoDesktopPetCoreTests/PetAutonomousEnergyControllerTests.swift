@@ -77,7 +77,7 @@ final class PetAutonomousEnergyControllerTests: XCTestCase {
             controller.restDuration(moodUnit: 0) * 0.5,
             1 - controller.stamina
         )
-        XCTAssertGreaterThanOrEqual(controller.restDuration(moodUnit: 0), 3)
-        XCTAssertLessThanOrEqual(controller.restDuration(moodUnit: 1), 12)
+        XCTAssertGreaterThanOrEqual(controller.restDuration(moodUnit: 0), 7)
+        XCTAssertLessThanOrEqual(controller.restDuration(moodUnit: 1), 18)
     }
 }

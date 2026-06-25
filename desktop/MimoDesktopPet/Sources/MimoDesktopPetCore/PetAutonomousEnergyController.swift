@@ -61,8 +61,8 @@ public struct PetAutonomousEnergyController: Equatable, Sendable {
 
     public func restDuration(moodUnit: Double) -> TimeInterval {
         let timeToFull = (1 - stamina) / recoveryPerSecond
-        let moodPadding = 1.6 + Self.clampUnit(moodUnit) * 3.4
-        return min(max(timeToFull + moodPadding, 2.2), 12.0)
+        let moodPadding = 6.0 + Self.clampUnit(moodUnit) * 8.0
+        return min(max(timeToFull + moodPadding, 5.0), 18.0)
     }
 
     private static func clampUnit(_ value: Double) -> Double {
