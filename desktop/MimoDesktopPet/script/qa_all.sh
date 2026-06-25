@@ -93,6 +93,7 @@ run_from_repo "shell syntax checks" bash -n \
   desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh \
   desktop/MimoDesktopPet/script/test_live_app_server_smoke_retry.sh \
   desktop/MimoDesktopPet/script/test_live_app_server_smoke_transport.sh \
+  desktop/MimoDesktopPet/script/e2e_autonomous_default_stationary.sh \
   desktop/MimoDesktopPet/script/e2e_autonomous_energy.sh \
   desktop/MimoDesktopPet/script/e2e_autonomous_home_radius.sh \
   desktop/MimoDesktopPet/script/e2e_conversation_stationary.sh \
@@ -143,6 +144,7 @@ else
   printf '\n==> skipping live app-server checks in fake-only mode\n'
 fi
 
+run_app_from_root "default stationary production E2E" ./script/e2e_autonomous_default_stationary.sh
 run_app_from_root "autonomous stamina production E2E" ./script/e2e_autonomous_energy.sh
 run_app_from_root "autonomous home-radius production E2E" ./script/e2e_autonomous_home_radius.sh
 run_app_from_root "conversation stationary production E2E" ./script/e2e_conversation_stationary.sh

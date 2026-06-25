@@ -247,17 +247,22 @@ State behavior:
 - failed turn or system error uses `failed`.
 - recently completed assistant output uses `review`.
 - no known active state uses `idle`.
-- manual or autonomous movement uses directional `running-right` / `running-left` based on observed movement direction.
-- autonomous movement uses a 60Hz time-based tween with smooth speed variation,
-  rather than per-frame random speed changes.
-- autonomous movement caps production speed at `2.4 pt/s`, limits each tiny hop
-  to `4 pt`, keeps production targets inside an `8 pt` home radius, and
+- manual movement uses directional `running-right` / `running-left` based on
+  observed movement direction.
+- default production keeps the desktop panel anchored unless
+  `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1` or a deterministic autonomous QA mode is
+  set; Mimo's ambient life comes from in-place rest/idle moments and the dynamic
+  nearby bubble cloud.
+- opt-in autonomous window movement uses a 60Hz time-based tween with smooth
+  speed variation, rather than per-frame random speed changes.
+- opt-in autonomous movement caps production speed at `2.4 pt/s`, limits each
+  tiny hop to `4 pt`, keeps production targets inside an `8 pt` home radius, and
   intentionally inserts rest/idle moments between hops. During conversation
   bubbles, Mimo holds position and uses in-place animation instead of moving the
   panel.
 - Deterministic QA can pin the initial panel origin with
   `MIMO_WINDOW_ORIGIN=x,y`. Visual inspection runs may set
-  `MIMO_AUTONOMOUS_DISABLED=1` to keep the pet stationary without changing the
+  `MIMO_AUTONOMOUS_DISABLED=1` to disable autonomous timers without changing the
   production default.
 
 Conversation behavior:

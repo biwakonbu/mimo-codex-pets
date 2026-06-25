@@ -325,13 +325,19 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   later healthy proxy or stdio session can restore connected thread-summary
   bubbles
   without restarting Mimo
-- autonomous wandering uses a test-covered planner that chooses visible-screen
-  targets, caps production speed at `52 pt/s`, limits each hop distance, and
-  uses a 60Hz time-based tween that moves smoothly without overshooting
-- autonomous wandering also has a stamina controller: movement drains stamina,
-  high stamina keeps speed near the production cap, resting quickly recovers to
-  full, and below 50% stamina Mimo may stop based on mood to show a resting
-  action before running again; `e2e_autonomous_energy.sh` verifies the
+- default production keeps the desktop panel anchored; Mimo's ambient life comes
+  from in-place rest/idle moments and bubble-cloud motion unless
+  `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1` or a deterministic QA mode enables window
+  movement
+- opt-in autonomous wandering uses a test-covered planner that chooses
+  visible-screen targets, caps production speed at `2.4 pt/s`, limits each tiny
+  hop to `4 pt` inside an `8 pt` home radius, and uses a 60Hz time-based tween
+  that moves smoothly without overshooting
+- opt-in autonomous wandering also has a stamina controller: movement drains
+  stamina, high stamina keeps speed near the production cap, resting quickly
+  recovers to full, and below 50% stamina Mimo may stop based on mood to show a
+  resting action before running again; `e2e_autonomous_default_stationary.sh`
+  verifies the default anchored path, and `e2e_autonomous_energy.sh` verifies the
   move-then-rest production path with a deterministic fast-drain environment
 - Codex-backed Mimo speech uses a separate ephemeral app-server session created
   by `thread/start` and driven with sanitized `turn/start` prompts; the app

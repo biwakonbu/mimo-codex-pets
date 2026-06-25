@@ -1,6 +1,18 @@
 import Foundation
 
 public enum PetAutonomousMotionPolicy {
+    public static func shouldAllowWindowMovement(
+        explicitWindowMovementEnabled: Bool,
+        autonomousTestMode: Bool,
+        autonomousEnergyTestMode: Bool,
+        autonomousForceBegin: Bool
+    ) -> Bool {
+        explicitWindowMovementEnabled ||
+            autonomousTestMode ||
+            autonomousEnergyTestMode ||
+            autonomousForceBegin
+    }
+
     public static func shouldHoldPositionForConversation(
         hasPendingConversationBubbles: Bool,
         autonomousTestMode: Bool,

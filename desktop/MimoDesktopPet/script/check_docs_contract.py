@@ -241,17 +241,21 @@ def require_mimicry_contract() -> None:
 
 def require_stamina_contract() -> None:
     stamina_terms = [
+        "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1",
         "2.4 pt/s",
         "8 pt",
         "stamina",
         "below 50%",
         "MIMO_AUTONOMOUS_DISABLED=1",
+        "e2e_autonomous_default_stationary.sh",
         "e2e_autonomous_energy.sh",
     ]
     require_text(README, stamina_terms, label="README stamina contract")
     require_text(
         RESEARCH,
         [
+            "default production keeps the desktop panel anchored",
+            "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1",
             "2.4 pt/s",
             "8 pt",
             "holds position",
@@ -271,6 +275,16 @@ def require_stamina_contract() -> None:
             "restDuration",
         ],
         label="stamina controller contract",
+    )
+    require_text(
+        SCRIPT_DIR / "e2e_autonomous_default_stationary.sh",
+        [
+            "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS=0",
+            "default production launch moved the window unexpectedly",
+            "default production launch had moving samples",
+            "keeps Mimo anchored unless autonomous window movement is explicitly enabled",
+        ],
+        label="default stationary E2E contract",
     )
     require_text(
         ENERGY_TESTS,

@@ -258,20 +258,25 @@ item is hidden in normal production launches and appears only when
 
 When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
-When not being dragged, Mimo stays around the current home position instead of
-wandering across the visible screen. Autonomous movement uses a 60Hz time-based
-tween capped at `2.4 pt/s`, each tiny step is limited to `4 pt`, and production
-targets stay within an `8 pt` home radius. Autonomous movement has a stamina
-model: high stamina keeps Mimo near the tiny maximum speed, movement drains
-stamina, and resting quickly recovers it to full. Once stamina drops below 50%,
-Mimo's mood can interrupt the next hop or stop the current one for a short
-break. During conversation bubbles Mimo holds position; during breaks Mimo plays
-idle, waiting, note-taking, waving, or jumping moments instead of walking
-endlessly.
+When not being dragged, the normal production default keeps Mimo anchored at the
+current home position; Mimo shows life through small in-place moments and the
+nearby bubble cloud rather than moving the whole desktop panel. Window movement
+is opt-in with `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1`, or enabled by deterministic
+QA modes. In that opt-in mode autonomous movement uses a 60Hz time-based tween
+capped at `2.4 pt/s`, each tiny step is limited to `4 pt`, and production targets
+stay within an `8 pt` home radius. Autonomous movement has a stamina model: high
+stamina keeps Mimo near the tiny maximum speed, movement drains stamina, and
+resting quickly recovers it to full. Once stamina drops below 50%, Mimo's mood
+can interrupt the next hop or stop the current one for a short break. During
+conversation bubbles Mimo holds position; during breaks Mimo plays idle,
+waiting, note-taking, waving, or jumping moments instead of walking endlessly.
 
 For deterministic QA, set `MIMO_WINDOW_ORIGIN=x,y` to pin the initial panel
 origin inside the main visible screen. Set `MIMO_AUTONOMOUS_DISABLED=1` only for
-visual inspection runs where Mimo must stay still.
+visual inspection runs where timers should not schedule even in-place autonomous
+moments. `e2e_autonomous_default_stationary.sh` verifies the default anchored
+production behavior, while the force/energy autonomous E2Es verify the opt-in
+movement path.
 
 In production mode the panel stays transparent and shows only Mimo plus a
 stacked list of white speech bubbles. When Codex conversation context is

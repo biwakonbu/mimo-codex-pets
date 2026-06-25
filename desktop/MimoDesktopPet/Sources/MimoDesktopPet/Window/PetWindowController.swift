@@ -18,6 +18,12 @@ final class PetWindowController: NSObject {
     private let autonomousTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1"
     private let autonomousEnergyTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_ENERGY_TEST_MODE"] == "1"
     private let autonomousForceBegin = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_FORCE_BEGIN"] == "1"
+    private let autonomousWindowMovementEnabled = PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+        explicitWindowMovementEnabled: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_WINDOW_MOVEMENT"] == "1",
+        autonomousTestMode: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1",
+        autonomousEnergyTestMode: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_ENERGY_TEST_MODE"] == "1",
+        autonomousForceBegin: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_FORCE_BEGIN"] == "1"
+    )
     private let autonomousDisabled = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_DISABLED"] == "1" ||
         ProcessInfo.processInfo.environment["MIMO_SHOWCASE_MODE"] == "1"
     private var movementHandler = PetMovementEventHandler()
@@ -297,6 +303,16 @@ final class PetWindowController: NSObject {
         if now >= nextIdleMomentAt, autonomousMotion == nil {
             playRandomRestingMoment()
             nextIdleMomentAt = now + Double.random(in: PetAutonomousMotionTuning.productionIdleMomentDelayRange)
+        }
+
+        if !autonomousWindowMovementEnabled {
+            if autonomousMotion != nil {
+                stopAutonomousMotion()
+            }
+            if now >= autonomousRestUntil {
+                scheduleAutonomousRest(now: now, includeMoment: true)
+            }
+            return false
         }
 
         if autonomousMotion == nil, now >= autonomousRestUntil {

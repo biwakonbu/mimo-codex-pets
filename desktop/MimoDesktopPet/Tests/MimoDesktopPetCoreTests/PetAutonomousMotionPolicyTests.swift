@@ -23,11 +23,39 @@ final class PetAutonomousMotionPolicyTests: XCTestCase {
         ))
     }
 
-    func testIdleProductionMayStillUseTinyAutonomousMotion() {
-        XCTAssertFalse(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
-            hasPendingConversationBubbles: false,
+    func testProductionDoesNotMoveWindowUnlessExplicitlyEnabled() {
+        XCTAssertFalse(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+            explicitWindowMovementEnabled: false,
             autonomousTestMode: false,
-            autonomousEnergyTestMode: false
+            autonomousEnergyTestMode: false,
+            autonomousForceBegin: false
+        ))
+    }
+
+    func testWindowMovementIsAllowedForExplicitOptInAndDeterministicQA() {
+        XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+            explicitWindowMovementEnabled: true,
+            autonomousTestMode: false,
+            autonomousEnergyTestMode: false,
+            autonomousForceBegin: false
+        ))
+        XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+            explicitWindowMovementEnabled: false,
+            autonomousTestMode: true,
+            autonomousEnergyTestMode: false,
+            autonomousForceBegin: false
+        ))
+        XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+            explicitWindowMovementEnabled: false,
+            autonomousTestMode: false,
+            autonomousEnergyTestMode: true,
+            autonomousForceBegin: false
+        ))
+        XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+            explicitWindowMovementEnabled: false,
+            autonomousTestMode: false,
+            autonomousEnergyTestMode: false,
+            autonomousForceBegin: true
         ))
     }
 
