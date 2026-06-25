@@ -76,6 +76,7 @@ private struct ProductionBubbleStackView: View {
                     accessibilityIndex: index
                 )
                 .scaleEffect(CGFloat(placement.scale), anchor: .center)
+                .rotationEffect(.degrees(placement.rotationDegrees), anchor: .center)
                 .offset(
                     x: CGFloat(placement.horizontalOffset),
                     y: CGFloat(placement.verticalOffset)
@@ -86,6 +87,7 @@ private struct ProductionBubbleStackView: View {
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: placement.horizontalOffset)
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: placement.scale)
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: placement.fontScale)
+                .animation(ProductionBubbleMotion.stackAnimation(for: index), value: placement.rotationDegrees)
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: stackSignature)
                 .animation(ProductionBubbleMotion.stackAnimation(for: index), value: visible.count)
             }
