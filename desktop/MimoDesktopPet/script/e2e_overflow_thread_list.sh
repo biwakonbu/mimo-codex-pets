@@ -34,7 +34,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 520 --max-height 560)"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -63,19 +63,19 @@ while time.time() < deadline:
         if row.get("isOffline") is not False:
             last_error = f"latest row was offline: {bubbles!r}"
             continue
-        if len(bubbles) != 5:
-            last_error = f"expected five production bubbles, got {bubbles!r}"
+        if len(bubbles) != 4:
+            last_error = f"expected four production bubbles, got {bubbles!r}"
             continue
-        if roles != ["focus", "conversation", "conversation", "conversation", "overflow"]:
+        if roles != ["focus", "conversation", "conversation", "overflow"]:
             last_error = f"expected overflow bubble role, got roles={roles} bubbles={bubbles}"
             continue
         if not isinstance(activity_kinds, list) or len(activity_kinds) != len(bubbles):
             last_error = f"activity kinds did not match overflow bubble count: activity_kinds={activity_kinds} bubbles={bubbles}"
             continue
-        if activity_kinds[:4].count("none") > 0 or activity_kinds[4] != "none":
+        if activity_kinds[:3].count("none") > 0 or activity_kinds[3] != "none":
             last_error = f"overflow bubble stack had wrong activity-kind markers: {activity_kinds}"
             continue
-        if "ほか2件も見ています" not in bubbles:
+        if "ほか3件も見てるよ" not in bubbles:
             last_error = f"overflow note missing from {bubbles!r}"
             continue
         thread_titles = [
@@ -96,22 +96,34 @@ PY
 swift ./script/inspect_accessibility_surface.swift \
   --pid "$APP_PID" \
   --value-contains "本番表示。" \
-  --value-contains "ほか2件も見ています" \
+  --value-contains "ほか3件も見てるよ" \
   --child-description "Mimo" \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.0.focus" \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.1.conversation" \
   --node-identifier "MimoDesktopPet.productionSurface.bubble.2.conversation" \
-  --node-identifier "MimoDesktopPet.productionSurface.bubble.3.conversation" \
+  --node-identifier "MimoDesktopPet.productionSurface.bubble.3.overflow" \
   --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.focus=「主作業」は作業を進めているよ" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.4.overflow=ほか2件も見ています" \
+  --node-description-contains "MimoDesktopPet.productionSurface.bubble.3.overflow=ほか3件も見てるよ" \
   --forbid-identifier "MimoDesktopPet.productionSurface.bubble.debug.status" \
   --forbid-description-contains "Mimo speech bubble:" \
   --forbid-description-contains "Codex の会話を待っています" \
   --forbid-value-contains "デバッグ表示" \
-  --ordered-identifiers "MimoDesktopPet.productionSurface.bubble.0.focus,MimoDesktopPet.productionSurface.bubble.1.conversation,MimoDesktopPet.productionSurface.bubble.2.conversation,MimoDesktopPet.productionSurface.bubble.3.conversation,MimoDesktopPet.productionSurface.bubble.4.overflow"
+  --ordered-identifiers "MimoDesktopPet.productionSurface.bubble.0.focus,MimoDesktopPet.productionSurface.bubble.1.conversation,MimoDesktopPet.productionSurface.bubble.2.conversation,MimoDesktopPet.productionSurface.bubble.3.overflow"
 
-screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
-swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$SCREENSHOT_PATH"
+sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
+capture_output=""
+for _ in {1..20}; do
+  screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
+  if capture_output="$(swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$SCREENSHOT_PATH" 2>&1)"; then
+    printf '%s\n' "$capture_output"
+    break
+  fi
+  sleep 0.2
+done
+if [[ -z "$capture_output" ]] || ! grep -q "Multi-bubble stacked hierarchy inspection passed" <<<"$capture_output"; then
+  printf '%s\n' "$capture_output" >&2
+  exit 1
+fi
 
 grep -Eq '"method":"thread\\?/loaded\\?/list"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/list"' "$FAKE_LOG"

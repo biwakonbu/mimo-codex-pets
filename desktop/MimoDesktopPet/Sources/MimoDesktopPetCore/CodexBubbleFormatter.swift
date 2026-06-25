@@ -21,6 +21,43 @@ public enum CodexBubbleFormatter {
         return compact("「\(title)」\(contextDisplaySummary(summary))", limit: limit)
     }
 
+    public static func statusSpeechText(for text: String) -> String {
+        let cleaned = displaySpeechVocabulary(text)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty else { return "" }
+        if isAlreadySpoken(cleaned) {
+            return cleaned
+        }
+
+        let lowered = cleaned.lowercased()
+        if lowered.contains("接続待ち") || lowered.contains("つながる") {
+            return CodexMimoStatusSpeech.connecting
+        }
+        if lowered.contains("途切れ") || lowered.contains("切断") || lowered.contains("disconnect") {
+            return CodexMimoStatusSpeech.disconnected
+        }
+        if lowered.contains("timeout") || lowered.contains("タイムアウト") || lowered.contains("遅い") {
+            return CodexMimoStatusSpeech.timedOut
+        }
+        if lowered.contains("失敗") || lowered.contains("エラー") || lowered.contains("failed") || lowered.contains("systemerror") {
+            return CodexMimoStatusSpeech.failed
+        }
+        if lowered.contains("確認待ち") || lowered.contains("入力待ち") || lowered.contains("承認") {
+            return CodexMimoStatusSpeech.waiting
+        }
+        if lowered.contains("レビュー") || lowered.contains("確認してよさそう") || lowered.contains("完了") || lowered.contains("停止") {
+            return CodexMimoStatusSpeech.review
+        }
+        if lowered.contains("待機") || lowered == "idle" {
+            return CodexMimoStatusSpeech.idle
+        }
+        if lowered.contains("作業中") || lowered.contains("動作中") || lowered.contains("実行") ||
+            lowered.contains("検証") || lowered.contains("応答") || lowered.contains("計画") {
+            return CodexMimoStatusSpeech.active
+        }
+        return contextSentence(cleaned)
+    }
+
     public static func compact(_ text: String, limit: Int = 42) -> String {
         let collapsed = text
             .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
@@ -77,6 +114,36 @@ public enum CodexBubbleFormatter {
                 options: .regularExpression
             )
             .replacingOccurrences(
+                of: #"「([^」]+)」は確認待ちです"#,
+                with: #"「$1」は確認を待っているよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」は確認待ち"#,
+                with: #"「$1」は確認を待っているよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」は作業中です"#,
+                with: #"「$1」で作業を進めているよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」は作業中"#,
+                with: #"「$1」で作業を進めているよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」は待機中です"#,
+                with: #"「$1」は少し待っているよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"「([^」]+)」は待機中"#,
+                with: #"「$1」は少し待っているよ"#,
+                options: .regularExpression
+            )
+            .replacingOccurrences(
                 of: #"「([^」]+)」は動作中です"#,
                 with: #"「$1」で作業を進めているよ"#,
                 options: .regularExpression
@@ -102,6 +169,9 @@ public enum CodexBubbleFormatter {
             .replacingOccurrences(of: "レビュー可能", with: "確認してよさそう")
             .replacingOccurrences(of: "レビュー可", with: "確認してよさそう")
             .replacingOccurrences(of: "レビューできます", with: "確認してよさそう")
+            .replacingOccurrences(of: "確認待ちです", with: "確認を待っているよ")
+            .replacingOccurrences(of: "待機中です", with: "少し待っているよ")
+            .replacingOccurrences(of: "作業中です", with: "作業を進めているよ")
             .replacingOccurrences(of: "動作中です", with: "作業を進めているよ")
             .replacingOccurrences(of: "動作中で", with: "作業を進めていて")
             .replacingOccurrences(of: "動作中", with: "作業中")
@@ -113,13 +183,13 @@ public enum CodexBubbleFormatter {
         if let topic {
             switch summary {
             case "失敗を確認しました":
-                return "\(topic)つまずき"
+                return topicMentionsOutcome(topic, terms: ["失敗", "エラー", "つまずき", "問題"]) ? topic : "\(topic)つまずき"
             case "レビューできます":
-                return "\(topic)ひと段落"
+                return topicMentionsOutcome(topic, terms: ["ひと段落", "確認してよさそう", "完了", "レビュー"]) ? topic : "\(topic)ひと段落"
             case "レビュー中です":
                 return "\(topic)見直し中"
             case "確認待ちです":
-                return "\(topic)返事待ち"
+                return topicMentionsOutcome(topic, terms: ["確認待ち", "返事待ち", "待ち", "入力待ち", "承認待ち"]) ? topic : "\(topic)返事待ち"
             case "依頼を確認しました":
                 return "\(topic)依頼確認"
             case "応答をまとめています":
@@ -288,6 +358,18 @@ public enum CodexBubbleFormatter {
         }
     }
 
+    private static func topicMentionsOutcome(_ topic: String, terms: [String]) -> Bool {
+        let normalizedTopic = topic
+            .lowercased()
+            .replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
+        return terms.contains { term in
+            let normalizedTerm = term
+                .lowercased()
+                .replacingOccurrences(of: "\\s+", with: "", options: .regularExpression)
+            return normalizedTopic.contains(normalizedTerm)
+        }
+    }
+
     private static func primarySpeechSummary(
         _ summary: String,
         state: CodexSessionActivityState?
@@ -362,12 +444,50 @@ public enum CodexBubbleFormatter {
     }
 
     private static func contextDisplaySummary(_ summary: String) -> String {
-        summary
+        let spoken = summary
             .replacingOccurrences(of: "レビュー可能", with: "ひと段落")
             .replacingOccurrences(of: "レビュー可", with: "ひと段落")
             .replacingOccurrences(of: "確認してよさそう", with: "ひと段落")
+            .replacingOccurrences(of: "失敗あり", with: "つまずきがある")
             .replacingOccurrences(of: "失敗", with: "つまずき")
             .replacingOccurrences(of: "確認待ち", with: "返事待ち")
+            .replacingOccurrences(of: "作業中", with: "進めてる")
+            .replacingOccurrences(of: "実行中", with: "実行してる")
+            .replacingOccurrences(of: "応答中", with: "応答してる")
+            .replacingOccurrences(of: "計画中", with: "計画してる")
+            .replacingOccurrences(of: "考察中", with: "考えてる")
+            .replacingOccurrences(of: "調査中", with: "調べてる")
+            .replacingOccurrences(of: "検証中", with: "検証してる")
+            .replacingOccurrences(of: "テスト中", with: "テストしてる")
+            .replacingOccurrences(of: "反映中", with: "反映してる")
+            .replacingOccurrences(of: "確認中", with: "確認してる")
+            .replacingOccurrences(of: "進捗あり", with: "進捗がある")
+            .replacingOccurrences(of: "更新あり", with: "更新がある")
+            .replacingOccurrences(of: "待機中", with: "待ってる")
+        return contextSentence(spoken)
+    }
+
+    private static func isAlreadySpoken(_ text: String) -> Bool {
+        text.hasSuffix("よ") ||
+            text.hasSuffix("ね") ||
+            text.hasSuffix("みたい") ||
+            text.hasSuffix("してる") ||
+            text.hasSuffix("している") ||
+            text.hasSuffix("待ってる")
+    }
+
+    private static func contextSentence(_ text: String) -> String {
+        guard !text.isEmpty else { return text }
+        if text.hasSuffix("よ") || text.hasSuffix("ね") {
+            return text
+        }
+        if text.hasSuffix("てる") || text.hasSuffix("ある") {
+            return "\(text)よ"
+        }
+        if text.hasSuffix("確認") {
+            return "\(text)してるよ"
+        }
+        return "\(text)だよ"
     }
 
     private static func mimoSummary(for line: CodexConversationLine) -> String {

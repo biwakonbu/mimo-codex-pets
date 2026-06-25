@@ -18,6 +18,63 @@ cleanup() {
 }
 trap cleanup EXIT
 
+wait_for_presentation_patterns() {
+  local timeout_seconds="${MIMO_E2E_PRESENTATION_TIMEOUT_SECONDS:-45}"
+  python3 - "$PRESENTATION_LOG" "$timeout_seconds" <<'PY'
+import re
+import sys
+import time
+from pathlib import Path
+
+log_path = Path(sys.argv[1])
+timeout_seconds = float(sys.argv[2])
+patterns = [
+    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をツールで確認中だよ",
+    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をまとめているよ",
+    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)を計画中だよ",
+    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)でコマンドを実行中だよ",
+    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)で端末入力を確認中だよ",
+    r"差分確認",
+    r"Mimo が見やすく伝える準備を進めています",
+    r"承認確認",
+    r"承認確認済み",
+    r"フック確認",
+    r"確認反映",
+    r"目標確認",
+    r"文脈整理済み",
+    r"モデル調整",
+    r"モデル確認",
+    r"安全確認",
+    r"問題確認",
+    r"警告確認",
+    r"安全警告",
+    r"MCP 確認",
+    r"Mimo runtime.*吹き出し要約.*(返事待ち|確認を待)",
+    r"「別チャットの確認」検証ひと段落",
+    r"「別チャットの確認」進めてるよ",
+    r"「更新された別チャット」進めてるよ",
+    r"ステータスだけで進捗を伝",
+    r"「資料整理」進めてるよ",
+    r"新しい実装チャット",
+]
+
+deadline = time.monotonic() + timeout_seconds
+last_missing = patterns
+while time.monotonic() < deadline:
+    text = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
+    missing = [pattern for pattern in patterns if not re.search(pattern, text)]
+    if not missing:
+        sys.exit(0)
+    last_missing = missing
+    time.sleep(0.25)
+
+print("presentation log did not contain expected Mimo speech patterns before timeout:", file=sys.stderr)
+for pattern in last_missing:
+    print(f"  missing: {pattern}", file=sys.stderr)
+sys.exit(1)
+PY
+}
+
 cd "$ROOT_DIR"
 ./script/build_and_run.sh --verify
 pkill -x "$APP_NAME" >/dev/null 2>&1 || true
@@ -35,7 +92,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 520 --max-height 560)"
 
 swift - "$WINDOW_ID" <<'SWIFT'
 import CoreGraphics
@@ -92,7 +149,7 @@ guard largestDeltaChange <= 14 else {
 }
 SWIFT
 
-sleep 10
+wait_for_presentation_patterns
 kill -0 "$APP_PID" >/dev/null
 
 grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をツールで確認中だよ' "$PRESENTATION_LOG"
@@ -118,10 +175,10 @@ grep -Fq '安全警告' "$PRESENTATION_LOG"
 grep -Fq 'MCP 確認' "$PRESENTATION_LOG"
 grep -Eq 'Mimo runtime.*吹き出し要約.*(返事待ち|確認を待)' "$PRESENTATION_LOG"
 grep -Fq '「別チャットの確認」検証ひと段落' "$PRESENTATION_LOG"
-grep -Fq '「別チャットの確認」作業中' "$PRESENTATION_LOG"
-grep -Fq '「更新された別チャット」作業中' "$PRESENTATION_LOG"
+grep -Fq '「別チャットの確認」進めてるよ' "$PRESENTATION_LOG"
+grep -Fq '「更新された別チャット」進めてるよ' "$PRESENTATION_LOG"
 grep -Fq 'ステータスだけで進捗を伝' "$PRESENTATION_LOG"
-grep -Fq '「資料整理」作業中' "$PRESENTATION_LOG"
+grep -Fq '「資料整理」進めてるよ' "$PRESENTATION_LOG"
 grep -Fq '新しい実装チャット' "$PRESENTATION_LOG"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
@@ -304,6 +361,7 @@ if not any(
     raise SystemExit("notification-only started thread was not retained across later production bubble refreshes")
 PY
 
+sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 

@@ -58,33 +58,33 @@ public enum CodexPetStateMapper {
         connectionAvailable: Bool = true
     ) -> PetPresentationState {
         guard connectionAvailable else {
-            return PetPresentationState(animation: .idle, bubbleText: "Codex 接続待ち", isOffline: true)
+            return PetPresentationState(animation: .idle, bubbleText: CodexMimoStatusSpeech.connecting, isOffline: true)
         }
 
         if case .systemError = threadStatus {
-            return PetPresentationState(animation: .failed, bubbleText: "Codex で問題が発生")
+            return PetPresentationState(animation: .failed, bubbleText: CodexMimoStatusSpeech.systemError)
         }
 
         if latestTurnStatus == .failed {
-            return PetPresentationState(animation: .failed, bubbleText: "実行に失敗しました")
+            return PetPresentationState(animation: .failed, bubbleText: CodexMimoStatusSpeech.failed)
         }
 
         if case let .active(flags) = threadStatus {
             if flags.contains(.waitingOnApproval) || flags.contains(.waitingOnUserInput) {
-                return PetPresentationState(animation: .waiting, bubbleText: "確認を待っています")
+                return PetPresentationState(animation: .waiting, bubbleText: CodexMimoStatusSpeech.waiting)
             }
-            return PetPresentationState(animation: .running, bubbleText: "Codex が作業中")
+            return PetPresentationState(animation: .running, bubbleText: CodexMimoStatusSpeech.active)
         }
 
         if latestTurnStatus == .completed && hasRecentAssistantFinal {
-            return PetPresentationState(animation: .review, bubbleText: "確認してよさそう")
+            return PetPresentationState(animation: .review, bubbleText: CodexMimoStatusSpeech.review)
         }
 
-        return PetPresentationState(animation: .idle, bubbleText: "待機中")
+        return PetPresentationState(animation: .idle, bubbleText: CodexMimoStatusSpeech.idle)
     }
 
     public static func dragPresentation(deltaX: Double) -> PetPresentationState {
         let animation: PetAnimationState = deltaX < 0 ? .runningLeft : .runningRight
-        return PetPresentationState(animation: animation, bubbleText: "移動中")
+        return PetPresentationState(animation: animation, bubbleText: CodexMimoStatusSpeech.moving)
     }
 }

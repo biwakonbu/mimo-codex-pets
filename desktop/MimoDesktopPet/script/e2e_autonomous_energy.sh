@@ -37,7 +37,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 520 --max-height 560)"
 
 swift - "$WINDOW_ID" <<'SWIFT'
 import CoreGraphics
@@ -153,6 +153,7 @@ while time.time() < deadline:
 raise SystemExit(last_error)
 PY
 
+sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 

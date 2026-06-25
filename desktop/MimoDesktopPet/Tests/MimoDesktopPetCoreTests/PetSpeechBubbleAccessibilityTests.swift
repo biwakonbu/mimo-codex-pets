@@ -4,7 +4,7 @@ import XCTest
 final class PetSpeechBubbleAccessibilityTests: XCTestCase {
     func testProductionAccessibilityValueUsesVisibleBubbleText() {
         let value = PetSpeechBubbleAccessibility.value(
-            presentation: PetPresentationState(animation: .running, bubbleText: "Codex が作業中"),
+            presentation: PetPresentationState(animation: .running, bubbleText: CodexMimoStatusSpeech.active),
             bubbles: [
                 PetSpeechBubble(
                     id: "primary",
@@ -15,7 +15,7 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
                 ),
                 PetSpeechBubble(
                     id: "secondary",
-                    text: "「QA」返事待ち",
+                    text: "「QA」返事待ちだよ",
                     role: .conversation,
                     tone: .waiting,
                     activityKind: .threadStatus
@@ -26,20 +26,20 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
 
         XCTAssertEqual(
             value,
-            "本番表示。running。「実装」は作業を進めているよ / 「QA」返事待ち"
+            "本番表示。running。「実装」は作業を進めているよ / 「QA」返事待ちだよ"
         )
     }
 
     func testDebugAccessibilityValueMarksDebugMode() {
         let value = PetSpeechBubbleAccessibility.value(
-            presentation: PetPresentationState(animation: .idle, bubbleText: "待機中"),
+            presentation: PetPresentationState(animation: .idle, bubbleText: CodexMimoStatusSpeech.idle),
             bubbles: [
-                PetSpeechBubble(id: "idle", text: "待機中", role: .status)
+                PetSpeechBubble(id: "idle", text: CodexMimoStatusSpeech.idle, role: .status)
             ],
             debugOverlay: true
         )
 
-        XCTAssertEqual(value, "デバッグ表示。idle。待機中")
+        XCTAssertEqual(value, "デバッグ表示。idle。いまはのんびり待ってるよ")
     }
 
     func testAccessibilityValueKeepsProductionVisibleLimit() {

@@ -6,6 +6,15 @@ public enum CodexConversationBubblePlanner {
         let role: PetSpeechBubbleRole
         let tone: PetSpeechBubbleTone
         let activityKind: CodexConversationActivityKind?
+
+        var stableId: String {
+            [
+                role.rawValue,
+                tone.rawValue,
+                activityKind?.rawValue ?? "none",
+                text
+            ].joined(separator: "|")
+        }
     }
 
     public struct PrimaryBubble: Equatable, Sendable {
@@ -110,14 +119,19 @@ public enum CodexConversationBubblePlanner {
         if lowered.contains("承認確認済み") {
             return .review
         }
-        if lowered.contains("確認待ち") || lowered.contains("確認を待") || lowered.contains("入力") || lowered.contains("承認") || lowered.contains("安全") {
+        if lowered.contains("確認待ち") || lowered.contains("確認を待") || lowered.contains("確認してほしい") ||
+            lowered.contains("返事待ち") || lowered.contains("入力") || lowered.contains("承認") || lowered.contains("安全") {
             return .waiting
         }
         if lowered.contains("確認してよさそう") || lowered.contains("ひと段落") ||
             lowered.contains("レビュー") || lowered.contains("完了") || lowered.contains("停止") || lowered.contains("止ま") {
             return .review
         }
-        if lowered.contains("作業") || lowered.contains("実行") || lowered.contains("検証") || lowered.contains("応答") || lowered.contains("計画") || lowered.contains("動作中") {
+        if lowered.contains("つまずき") || lowered.contains("困って") || lowered.contains("途切れ") {
+            return .failed
+        }
+        if lowered.contains("作業") || lowered.contains("進め") || lowered.contains("実行") ||
+            lowered.contains("検証") || lowered.contains("応答") || lowered.contains("計画") || lowered.contains("動作中") {
             return .active
         }
         return .neutral
@@ -167,8 +181,11 @@ public enum CodexConversationBubblePlanner {
         var bubbles: [BubbleCandidate] = []
         var usedThreadIds = Set<String>()
         let resolvedPrimaryRole = primaryRole ?? (primaryThreadId == nil ? .status : .focus)
+        let primaryDisplayText = resolvedPrimaryRole == .status
+            ? CodexBubbleFormatter.statusSpeechText(for: primaryText)
+            : primaryText
         let primary = CodexBubbleFormatter.compact(
-            primaryText,
+            primaryDisplayText,
             limit: PetSpeechBubbleLayout.textLimit(for: resolvedPrimaryRole)
         )
         if !primary.isEmpty {
@@ -216,12 +233,12 @@ public enum CodexConversationBubblePlanner {
         )
 
         if bubbles.isEmpty {
-            bubbles.append(BubbleCandidate(text: "待機中", role: .status, tone: .neutral, activityKind: nil))
+            bubbles.append(BubbleCandidate(text: CodexMimoStatusSpeech.idle, role: .status, tone: .neutral, activityKind: nil))
         }
 
-        return bubbles.prefix(visibleLimit).enumerated().map { index, bubble in
+        return bubbles.prefix(visibleLimit).map { bubble in
             PetSpeechBubble(
-                id: "\(index)-\(bubble.role.rawValue)-\(bubble.activityKind?.rawValue ?? "none")-\(bubble.text)",
+                id: bubble.stableId,
                 text: bubble.text,
                 role: bubble.role,
                 tone: bubble.tone,
@@ -292,13 +309,13 @@ public enum CodexConversationBubblePlanner {
         let text: String
         switch tone {
         case .failed:
-            text = "ほか\(hiddenCandidates.count)件に失敗あり"
+            text = "ほか\(hiddenCandidates.count)件でつまずきだよ"
         case .waiting:
-            text = "ほか\(hiddenCandidates.count)件に確認待ち"
+            text = "ほか\(hiddenCandidates.count)件が返事待ちだよ"
         case .review:
-            text = "ほか\(hiddenCandidates.count)件ひと段落"
+            text = "ほか\(hiddenCandidates.count)件ひと段落だよ"
         case .active, .neutral, .overflow:
-            text = "ほか\(hiddenCandidates.count)件も見ています"
+            text = "ほか\(hiddenCandidates.count)件も見てるよ"
         }
 
         let overflowText = CodexBubbleFormatter.compact(

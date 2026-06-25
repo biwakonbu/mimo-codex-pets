@@ -45,6 +45,16 @@ final class PetSpeechBubbleTypewriterTests: XCTestCase {
         )
     }
 
+    func testDefaultPaceIsSlowEnoughForReadableDialogue() {
+        let text = String(repeating: "ミ", count: 37)
+
+        XCTAssertEqual(PetSpeechBubbleLayout.typewriterCharactersPerSecond, 10)
+        XCTAssertGreaterThan(
+            PetSpeechBubbleTypewriter.duration(for: text),
+            3.0
+        )
+    }
+
     func testComposedCharactersRevealAsCharacters() {
         let text = "ミモが話す"
 
@@ -118,6 +128,31 @@ final class PetSpeechBubbleTypewriterTests: XCTestCase {
             ),
             1.3,
             accuracy: 0.0001
+        )
+    }
+
+    func testConversationDisplayDurationWaitsForTypingAndReadingDwell() {
+        let longText = "「長いチャット」" + String(repeating: "ミ", count: 190)
+        let duration = PetSpeechBubbleDisplayTiming.conversationBubbleDuration(
+            for: longText,
+            role: .focus
+        )
+
+        XCTAssertGreaterThan(
+            duration,
+            PetSpeechBubbleTypewriter.durationForBubbleText(for: longText, role: .focus)
+        )
+        XCTAssertGreaterThan(duration, PetSpeechBubbleDisplayTiming.minimumConversationBubbleDuration)
+        XCTAssertLessThanOrEqual(duration, PetSpeechBubbleDisplayTiming.maximumConversationBubbleDuration)
+    }
+
+    func testShortConversationDisplayDurationStillLeavesReadingTime() {
+        XCTAssertEqual(
+            PetSpeechBubbleDisplayTiming.conversationBubbleDuration(
+                for: "「短いチャット」今まとめているよ",
+                role: .focus
+            ),
+            PetSpeechBubbleDisplayTiming.minimumConversationBubbleDuration
         )
     }
 }

@@ -37,7 +37,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 520 --max-height 560)"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -93,6 +93,7 @@ grep -Eq '"method":"initialize"' "$FAKE_LOG"
 grep -Eq '"method":"thread\\?/read"' "$FAKE_LOG"
 
 kill -0 "$APP_PID" >/dev/null
+sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 

@@ -22,8 +22,8 @@ final class PetPresentationCoordinatorTests: XCTestCase {
         XCTAssertEqual(coordinator.presentation.bubbleText, "「current」はコマンドを実行中だよ")
         XCTAssertEqual(coordinator.visibleBubbles.map(\.text), [
             "「current」はコマンドを実行中だよ",
-            "「waiting」返事待ち",
-            "「docs」作業中"
+            "「waiting」返事待ちだよ",
+            "「docs」進めてるよ"
         ])
         XCTAssertEqual(coordinator.visibleBubbles.map(\.role), [.focus, .conversation, .conversation])
         XCTAssertTrue(coordinator.hasActiveConversationBubble)
@@ -51,7 +51,7 @@ final class PetPresentationCoordinatorTests: XCTestCase {
         let finished = coordinator.finishConversationBubble()
 
         XCTAssertFalse(finished.shouldScheduleConversationTimeout)
-        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .running, bubbleText: "Codex が作業中"))
+        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .running, bubbleText: CodexMimoStatusSpeech.active))
         XCTAssertFalse(coordinator.hasPendingConversationBubbles)
     }
 
@@ -119,21 +119,21 @@ final class PetPresentationCoordinatorTests: XCTestCase {
             latestTurnStatus: nil,
             hasRecentAssistantFinal: false,
             connectionAvailable: false,
-            offlineBubbleText: "Codex 接続切れ"
+            offlineBubbleText: CodexMimoStatusSpeech.disconnected
         ))
 
         XCTAssertFalse(change.shouldScheduleConversationTimeout)
         XCTAssertEqual(coordinator.presentation, PetPresentationState(
             animation: .idle,
-            bubbleText: "Codex 接続切れ",
+            bubbleText: CodexMimoStatusSpeech.disconnected,
             isOffline: true
         ))
-        XCTAssertEqual(coordinator.visibleBubbles.map(\.text), ["Codex 接続切れ"])
+        XCTAssertEqual(coordinator.visibleBubbles.map(\.text), [CodexMimoStatusSpeech.disconnected])
         XCTAssertFalse(coordinator.hasPendingConversationBubbles)
         XCTAssertTrue(coordinator.conversationLines.isEmpty)
     }
 
-    func testDragClearsConversationQueueAndRestoresLastCodexPresentation() {
+    func testDragPreservesConversationQueueAndRestoresCurrentConversation() {
         var coordinator = PetPresentationCoordinator()
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", activityKind: .command)
         let pending = line(threadId: "current", speaker: "codex", text: "応答を作成中")
@@ -148,15 +148,22 @@ final class PetPresentationCoordinatorTests: XCTestCase {
 
         _ = coordinator.beginDrag(animation: .runningRight)
 
-        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .runningRight, bubbleText: "移動中"))
-        XCTAssertFalse(coordinator.hasPendingConversationBubbles)
+        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .runningRight, bubbleText: "「current」はコマンドを実行中だよ"))
+        XCTAssertTrue(coordinator.hasPendingConversationBubbles)
+        XCTAssertEqual(coordinator.visibleBubbles.map(\.text), [
+            "「current」はコマンドを実行中だよ"
+        ])
 
         _ = coordinator.endDrag()
 
-        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .running, bubbleText: "Codex が作業中"))
+        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .running, bubbleText: "「current」はコマンドを実行中だよ"))
         XCTAssertEqual(coordinator.visibleBubbles.map(\.text), [
-            "「current」は応答をまとめているよ"
+            "「current」はコマンドを実行中だよ"
         ])
+
+        _ = coordinator.finishConversationBubble()
+
+        XCTAssertEqual(coordinator.presentation.bubbleText, "「current」は応答をまとめているよ")
     }
 
     func testAmbientMovementTemporarilyOverridesConversationAnimationAndRestoresIt() {
@@ -199,7 +206,33 @@ final class PetPresentationCoordinatorTests: XCTestCase {
 
         _ = coordinator.finishTemporaryPresentation()
 
-        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .waiting, bubbleText: "確認を待っています"))
+        XCTAssertEqual(coordinator.presentation, PetPresentationState(animation: .waiting, bubbleText: CodexMimoStatusSpeech.waiting))
+    }
+
+    func testShowcaseSceneDirectlyControlsAnimationAndBubbleStack() {
+        var coordinator = PetPresentationCoordinator()
+        let scene = PetShowcaseScene(
+            animation: .jumping,
+            bubbleText: "「吹き出し演出」は確認してよさそう。あとで見てね",
+            conversationLines: [
+                line(threadId: "mimo-ui", speaker: "codex", text: "演出を調整中", activityKind: .fileChange),
+                line(threadId: "release-dmg", speaker: "codex", text: "確認してよさそう", activityKind: .review)
+            ],
+            focusedThreadId: "mimo-ui",
+            primaryThreadId: "mimo-ui",
+            primaryActivityKind: .fileChange,
+            duration: 3.0
+        )
+
+        let change = coordinator.apply(showcaseScene: scene)
+
+        XCTAssertTrue(change.changed)
+        XCTAssertFalse(change.shouldScheduleConversationTimeout)
+        XCTAssertEqual(coordinator.presentation.animation, .jumping)
+        XCTAssertEqual(coordinator.presentation.bubbleText, scene.bubbleText)
+        XCTAssertEqual(coordinator.visibleBubbles.map(\.role), [.focus, .conversation])
+        XCTAssertEqual(coordinator.visibleBubbles.first?.text, scene.bubbleText)
+        XCTAssertFalse(coordinator.hasPendingConversationBubbles)
     }
 
     private func line(

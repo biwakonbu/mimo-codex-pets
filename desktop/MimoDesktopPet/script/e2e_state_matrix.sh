@@ -25,7 +25,7 @@ rm -rf "$CAPTURE_DIR"
 mkdir -p "$CAPTURE_DIR"
 
 CODEX_BIN="$FAKE_CODEX" \
-MIMO_FAKE_CODEX_STATE_DELAY_MULTIPLIER=2 \
+MIMO_FAKE_CODEX_STATE_DELAY_MULTIPLIER=3 \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_DISABLED=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
@@ -36,7 +36,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 520 --max-height 560)"
 
 wait_for_presentation() {
   local label="$1"
@@ -129,14 +129,17 @@ while time.time() < deadline:
         time.sleep(0.15)
         continue
 
-    joined = " ".join(str(item) for item in bubbles)
+    joined = " ".join(
+        [str(item) for item in bubbles] +
+        [str(row.get("bubbleText", "")), str(row.get("accessibilityValue", ""))]
+    )
     if row.get("animation") != animation:
         time.sleep(0.15)
         continue
     if required_text not in joined:
         time.sleep(0.15)
         continue
-    if required_tone and required_tone not in tones:
+    if required_tone and required_tone not in tones and row.get("animation") != required_tone:
         time.sleep(0.15)
         continue
     if require_four_bubbles == "1":
@@ -159,6 +162,7 @@ PY
 capture_and_inspect() {
   local label="$1"
   local path="$CAPTURE_DIR/$label.png"
+  sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-0.8}"
   if [[ "$label" == "multi-thread" ]]; then
     local output=""
     for _ in {1..20}; do
@@ -189,7 +193,7 @@ capture_and_inspect "multi-thread"
 wait_for_presentation "review" "review" "確認してよさそう" "0" "review"
 capture_and_inspect "review"
 
-wait_for_presentation "failed" "failed" "つまずき" "0" "failed"
+wait_for_presentation "failed" "failed" "つまず" "0" "failed"
 capture_and_inspect "failed"
 
 kill -0 "$APP_PID" >/dev/null

@@ -34,7 +34,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 520 --max-height 560)"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -59,7 +59,7 @@ while time.time() < deadline:
         visible = " ".join([bubble_text] + bubbles)
         if row.get("debugOverlay") is not False:
             raise SystemExit("empty-list production run unexpectedly enabled debug overlay")
-        if row.get("isOffline") is False and bubble_text == "待機中" and bubbles == ["待機中"]:
+        if row.get("isOffline") is False and bubble_text == "いまはのんびり待ってるよ" and bubbles == ["いまはのんびり待ってるよ"]:
             print("Empty thread list presentation reached connected idle state.")
             raise SystemExit(0)
         if "接続待ち" in visible or "接続タイムアウト" in visible:
@@ -74,14 +74,15 @@ PY
 swift ./script/inspect_accessibility_surface.swift \
   --pid "$APP_PID" \
   --value-contains "本番表示。" \
-  --value-contains "待機中" \
+  --value-contains "いまはのんびり待ってるよ" \
   --child-description "Mimo" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.status=待機中" \
+  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.status=いまはのんびり待ってるよ" \
   --forbid-identifier "MimoDesktopPet.productionSurface.bubble.debug.status" \
   --forbid-description-contains "Mimo speech bubble:" \
   --forbid-description-contains "Codex の会話を待っています" \
   --forbid-value-contains "デバッグ表示"
 
+sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 

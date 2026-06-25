@@ -104,17 +104,17 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: "Codex が作業中",
+            primaryText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: "current",
             limit: 4
         )
 
         XCTAssertEqual(bubbles.map(\.text), [
-            "Codex が作業中",
-            "「other」ひと段落",
-            "「current」ツール確認",
-            "「third」Mimo の動き中"
+            CodexMimoStatusSpeech.active,
+            "「other」ひと段落だよ",
+            "「current」ツール確認してるよ",
+            "「third」Mimo の動き中だよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .conversation])
     }
@@ -139,9 +139,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "「current」はコマンドを実行中だよ",
-            "「waiting」返事待ち",
-            "「review」ひと段落",
-            "「docs」作業中"
+            "「waiting」返事待ちだよ",
+            "「review」ひと段落だよ",
+            "「docs」進めてるよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation])
         XCTAssertTrue(bubbles[0].text.hasPrefix("「current」"))
@@ -157,7 +157,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: "Codex が作業中",
+            primaryText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: nil,
             limit: 4
@@ -207,7 +207,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             )
         ]
         let primary = CodexConversationBubblePlanner.primaryBubble(
-            statusText: "Codex が作業中",
+            statusText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: "current"
         )
@@ -229,6 +229,39 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertTrue(bubbles[2].id.contains("plan"))
     }
 
+    func testProductionBubbleIdsAreStableAcrossVisibleLimitChangesForPushAnimation() {
+        let lines = [
+            line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true),
+            line(threadId: "docs", speaker: "tool", text: "ファイルを確認中", isAssistant: true, activityKind: .fileRead),
+            line(threadId: "plan", speaker: "codex", text: "計画を更新しています", isAssistant: true, activityKind: .plan)
+        ]
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: CodexMimoStatusSpeech.active,
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+
+        let compact = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            primaryActivityKind: primary.activityKind,
+            limit: 3
+        )
+        let expanded = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            primaryActivityKind: primary.activityKind,
+            limit: 4
+        )
+
+        XCTAssertEqual(compact.map(\.id), Array(expanded.prefix(compact.count)).map(\.id))
+        XCTAssertTrue(expanded.allSatisfy { !$0.id.hasPrefix("0-") && !$0.id.hasPrefix("1-") })
+    }
+
     func testProductionBubblesUseOverflowToneWhenMoreThreadsAreHidden() {
         let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
         let lines = [
@@ -239,7 +272,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             line(threadId: "tests", speaker: "tool", text: "テストを実行中", isAssistant: true)
         ]
         let primary = CodexConversationBubblePlanner.primaryBubble(
-            statusText: "Codex が作業中",
+            statusText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: "current"
         )
@@ -266,17 +299,17 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: "Codex が作業中",
+            primaryText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: nil,
             limit: 4
         )
 
         XCTAssertEqual(bubbles.map(\.text), [
-            "Codex が作業中",
-            "「waiting-5」返事待ち",
-            "「waiting-4」返事待ち",
-            "ほか3件に確認待ち"
+            CodexMimoStatusSpeech.active,
+            "「waiting-5」返事待ちだよ",
+            "「waiting-4」返事待ちだよ",
+            "ほか3件が返事待ちだよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .overflow])
         XCTAssertEqual(bubbles.map(\.tone), [.active, .waiting, .waiting, .waiting])
@@ -292,17 +325,17 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: "Codex が作業中",
+            primaryText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: nil,
             limit: 4
         )
 
         XCTAssertEqual(bubbles.map(\.text), [
-            "Codex が作業中",
-            "「failed-4」つまずきあり",
-            "「failed-3」つまずきあり",
-            "ほか3件に失敗あり"
+            CodexMimoStatusSpeech.active,
+            "「failed-4」つまずきありだよ",
+            "「failed-3」つまずきありだよ",
+            "ほか3件でつまずきだよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .overflow])
         XCTAssertEqual(bubbles.map(\.tone), [.active, .failed, .failed, .failed])
@@ -346,6 +379,26 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.summaryLineLimit(for: .conversation), 1)
     }
 
+    func testProductionStatusBubbleUsesMimoSpeechInsteadOfRawStatus() {
+        let cases: [(String, String)] = [
+            ("作業中", CodexMimoStatusSpeech.active),
+            ("実行に失敗しました", CodexMimoStatusSpeech.failed),
+            ("確認待ち", CodexMimoStatusSpeech.waiting),
+            ("レビュー可", CodexMimoStatusSpeech.review)
+        ]
+
+        for (rawStatus, expectedSpeech) in cases {
+            let bubbles = CodexConversationBubblePlanner.productionBubbles(
+                primaryText: rawStatus,
+                conversationLines: [],
+                preferredThreadId: nil
+            )
+
+            XCTAssertEqual(bubbles.first?.role, .status)
+            XCTAssertEqual(bubbles.first?.text, expectedSpeech)
+        }
+    }
+
     func testProductionBubblesUseOneSummaryPerThread() {
         let lines = [
             line(threadId: "current", speaker: "tool", text: "ツールで確認中", isAssistant: true),
@@ -356,17 +409,17 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: "Codex が作業中",
+            primaryText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: "current",
             limit: 4
         )
 
         XCTAssertEqual(bubbles.map(\.text), [
-            "Codex が作業中",
-            "「other」ひと段落",
-            "「current」ツール確認",
-            "「third」作業中"
+            CodexMimoStatusSpeech.active,
+            "「other」ひと段落だよ",
+            "「current」ツール確認してるよ",
+            "「third」進めてるよ"
         ])
     }
 
@@ -380,23 +433,23 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: "Codex が作業中",
+            primaryText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: nil,
             limit: 4
         )
 
         XCTAssertEqual(bubbles.map(\.text), [
-            "Codex が作業中",
-            "「epsilon」作業中",
-            "「delta」作業中",
-            "ほか3件も見ています"
+            CodexMimoStatusSpeech.active,
+            "「epsilon」進めてるよ",
+            "「delta」進めてるよ",
+            "ほか3件も見てるよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.status, .conversation, .conversation, .overflow])
         XCTAssertLessThanOrEqual(bubbles[3].text.count, PetSpeechBubbleLayout.overflowTextLimit)
     }
 
-    func testProductionDefaultStackShowsThreeConcreteThreadsBeforeOverflow() {
+    func testProductionDefaultStackShowsTwoConcreteThreadsBeforeOverflow() {
         let focused = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
         let lines = [
             focused,
@@ -407,7 +460,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             line(threadId: "release", speaker: "codex", text: "リリース準備を進めています", isAssistant: true)
         ]
         let primary = CodexConversationBubblePlanner.primaryBubble(
-            statusText: "Codex が作業中",
+            statusText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: "current"
         )
@@ -420,13 +473,12 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         )
 
         XCTAssertEqual(bubbles.count, PetSpeechBubbleLayout.productionVisibleLimit)
-        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation, .overflow])
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
         XCTAssertEqual(bubbles.map(\.text), [
             "「waiting」は確認を待っているよ",
-            "「review」ひと段落",
-            "「current」実行中",
-            "「release」進捗あり",
-            "ほか2件も見ています"
+            "「review」ひと段落だよ",
+            "「current」実行してるよ",
+            "ほか3件も見てるよ"
         ])
     }
 
@@ -437,15 +489,15 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let bubbles = CodexConversationBubblePlanner.productionBubbles(
-            primaryText: "Codex が作業中",
+            primaryText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: nil,
             limit: 2
         )
 
         XCTAssertEqual(bubbles.map(\.text), [
-            "Codex が作業中",
-            "「beta」作業中"
+            CodexMimoStatusSpeech.active,
+            "「beta」進めてるよ"
         ])
     }
 
@@ -468,9 +520,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "「current」は応答をまとめているよ",
-            "「fourth」返事待ち",
-            "「other」ひと段落",
-            "「third」作業中"
+            "「fourth」返事待ちだよ",
+            "「other」ひと段落だよ",
+            "「third」進めてるよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .conversation])
     }
@@ -515,8 +567,8 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(primary.threadId, "current")
         XCTAssertEqual(bubbles.map(\.text), [
             "「current」はつまずいたところを見つけたよ",
-            "「waiting」返事待ち",
-            "「docs」作業中"
+            "「waiting」返事待ちだよ",
+            "「docs」進めてるよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation])
     }
@@ -530,7 +582,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         ]
 
         let primary = CodexConversationBubblePlanner.primaryBubble(
-            statusText: "Codex が作業中",
+            statusText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: "current"
         )
@@ -546,8 +598,8 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(primary.activityKind, .message)
         XCTAssertEqual(bubbles.map(\.text), [
             "「waiting」は確認を待っているよ",
-            "「current」実行中",
-            "「docs」作業中"
+            "「current」実行してるよ",
+            "「docs」進めてるよ"
         ])
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation])
         XCTAssertEqual(bubbles.map(\.tone), [.waiting, .active, .active])
@@ -563,7 +615,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             line(threadId: "tests", speaker: "tool", text: "テストを実行中", isAssistant: true)
         ]
         let primary = CodexConversationBubblePlanner.primaryBubble(
-            statusText: "Codex が作業中",
+            statusText: CodexMimoStatusSpeech.active,
             conversationLines: lines,
             preferredThreadId: "current"
         )
@@ -580,16 +632,16 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
         XCTAssertEqual(bubbles.first?.text, "「waiting」は確認を待っているよ")
         XCTAssertEqual(bubbles.dropFirst().map(\.text), [
-            "「review」ひと段落",
-            "「current」実行中",
-            "ほか2件も見ています"
+            "「review」ひと段落だよ",
+            "「current」実行してるよ",
+            "ほか2件も見てるよ"
         ])
-        XCTAssertEqual(bubbles.last?.text, "ほか2件も見ています")
+        XCTAssertEqual(bubbles.last?.text, "ほか2件も見てるよ")
     }
 
     func testPrimaryBubbleKeepsOfflineStatusText() {
         let primary = CodexConversationBubblePlanner.primaryBubble(
-            statusText: "Codex 接続待ち",
+            statusText: CodexMimoStatusSpeech.connecting,
             conversationLines: [
                 line(threadId: "current", speaker: "codex", text: "作業を進めています", isAssistant: true)
             ],
@@ -597,7 +649,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             isOffline: true
         )
 
-        XCTAssertEqual(primary, CodexConversationBubblePlanner.PrimaryBubble(text: "Codex 接続待ち", threadId: nil))
+        XCTAssertEqual(primary, CodexConversationBubblePlanner.PrimaryBubble(text: CodexMimoStatusSpeech.connecting, threadId: nil))
     }
 
     func testProductionBubblesFallbackToIdleWhenEmpty() {
@@ -607,7 +659,7 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
             preferredThreadId: nil
         )
 
-        XCTAssertEqual(bubbles.map(\.text), ["待機中"])
+        XCTAssertEqual(bubbles.map(\.text), ["いまはのんびり待ってるよ"])
     }
 
     func testConversationAnimationUsesNonWalkingMotionWhenIdle() {

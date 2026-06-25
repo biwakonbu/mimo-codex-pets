@@ -49,9 +49,9 @@ public struct PetPresentationCoordinatorChange: Equatable, Sendable {
 }
 
 public struct PetPresentationCoordinator: Equatable, Sendable {
-    public private(set) var presentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
+    public private(set) var presentation = PetPresentationState(animation: .idle, bubbleText: CodexMimoStatusSpeech.idle)
     public private(set) var visibleBubbles: [PetSpeechBubble] = [
-        PetSpeechBubble(id: "0-待機中", text: "待機中", role: .status)
+        PetSpeechBubble(id: "0-\(CodexMimoStatusSpeech.idle)", text: CodexMimoStatusSpeech.idle, role: .status)
     ]
     public private(set) var conversationLines: [CodexConversationLine] = []
 
@@ -63,7 +63,7 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         conversationBubbleActive
     }
 
-    private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: "待機中")
+    private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: CodexMimoStatusSpeech.idle)
     private var shownConversationDisplaySignatures: Set<String> = []
     private var pendingConversationLines: [CodexConversationLine] = []
     private var conversationBubbleActive = false
@@ -188,6 +188,35 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     }
 
     @discardableResult
+    public mutating func apply(showcaseScene scene: PetShowcaseScene) -> PetPresentationCoordinatorChange {
+        let previousPresentation = presentation
+        let previousVisibleBubbles = visibleBubbles
+
+        clearConversationQueue()
+        conversationLines = Array(scene.conversationLines.suffix(12))
+        focusedThreadId = scene.focusedThreadId
+        let showcasePresentation = PetPresentationState(
+            animation: scene.animation,
+            bubbleText: scene.bubbleText
+        )
+        lastCodexPresentation = showcasePresentation
+        presentation = showcasePresentation
+        visibleBubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: scene.bubbleText,
+            conversationLines: conversationLines,
+            preferredThreadId: scene.focusedThreadId,
+            primaryThreadId: scene.primaryThreadId,
+            primaryActivityKind: scene.primaryActivityKind,
+            primaryRole: scene.primaryRole
+        )
+
+        return change(
+            previousPresentation: previousPresentation,
+            previousVisibleBubbles: previousVisibleBubbles
+        )
+    }
+
+    @discardableResult
     public mutating func beginDrag(deltaX: Double) -> PetPresentationCoordinatorChange {
         beginDrag(animation: CodexPetStateMapper.dragPresentation(deltaX: deltaX).animation)
     }
@@ -196,8 +225,11 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     public mutating func beginDrag(animation: PetAnimationState) -> PetPresentationCoordinatorChange {
         let previousPresentation = presentation
         let previousVisibleBubbles = visibleBubbles
-        clearConversationQueue()
-        setPresentation(PetPresentationState(animation: animation, bubbleText: "移動中"))
+        setPresentation(PetPresentationState(
+            animation: animation,
+            bubbleText: presentation.bubbleText,
+            isOffline: presentation.isOffline
+        ))
         return change(
             previousPresentation: previousPresentation,
             previousVisibleBubbles: previousVisibleBubbles
@@ -223,7 +255,18 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     public mutating func endDrag() -> PetPresentationCoordinatorChange {
         let previousPresentation = presentation
         let previousVisibleBubbles = visibleBubbles
-        clearConversationQueue()
+        if conversationBubbleActive {
+            setPresentation(PetPresentationState(
+                animation: currentConversationAnimation ?? lastCodexPresentation.animation,
+                bubbleText: presentation.bubbleText,
+                isOffline: presentation.isOffline
+            ))
+            return change(
+                previousPresentation: previousPresentation,
+                previousVisibleBubbles: previousVisibleBubbles
+            )
+        }
+
         setPresentation(lastCodexPresentation)
         return change(
             previousPresentation: previousPresentation,

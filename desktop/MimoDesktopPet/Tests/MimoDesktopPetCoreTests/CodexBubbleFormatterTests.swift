@@ -2,6 +2,21 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class CodexBubbleFormatterTests: XCTestCase {
+    func testRawStatusTextIsRenderedAsMimoSpeech() {
+        let cases: [(String, String)] = [
+            ("作業中", CodexMimoStatusSpeech.active),
+            ("確認待ち", CodexMimoStatusSpeech.waiting),
+            ("レビュー可", CodexMimoStatusSpeech.review),
+            ("実行に失敗しました", CodexMimoStatusSpeech.failed),
+            ("Codex 接続待ち", CodexMimoStatusSpeech.connecting),
+            ("待機中", CodexMimoStatusSpeech.idle)
+        ]
+
+        for (rawStatus, expectedSpeech) in cases {
+            XCTAssertEqual(CodexBubbleFormatter.statusSpeechText(for: rawStatus), expectedSpeech)
+        }
+    }
+
     func testGeneratedMimoSpeechWinsOverDeterministicSummary() {
         let line = CodexConversationLine(
             threadId: "session-1",
@@ -19,6 +34,39 @@ final class CodexBubbleFormatterTests: XCTestCase {
             CodexBubbleFormatter.bubbleText(for: line),
             "「Mimo runtime QA」で作業を進めているよ。Codex が吹き出し文を整えて、Mimo が分かりやすく伝えます"
         )
+    }
+
+    func testGeneratedMimoSpeechDoesNotExposeBareStatusLabels() {
+        let cases: [(String, String)] = [
+            (
+                "「UI改善セッション」は作業中です。吹き出しを調整しています。",
+                "「UI改善チャット」で作業を進めているよ。吹き出しを調整しています。"
+            ),
+            (
+                "「承認セッション」は確認待ちです。",
+                "「承認チャット」は確認を待っているよ。"
+            ),
+            (
+                "「待機セッション」は待機中です。",
+                "「待機チャット」は少し待っているよ。"
+            )
+        ]
+
+        for (mimoSpeech, expected) in cases {
+            let line = CodexConversationLine(
+                threadId: "session-1",
+                threadTitle: "UI改善セッション",
+                speaker: "assistant",
+                text: "吹き出し要約を進めています",
+                isAssistant: true,
+                activityKind: .assistantMessage,
+                workSummary: "吹き出し要約の表示文言",
+                sessionState: .active,
+                mimoSpeech: mimoSpeech
+            )
+
+            XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), expected)
+        }
     }
 
     func testTargetUserSeesChatNameAndWorkInsteadOfInternalCodexStatus() {
@@ -110,8 +158,8 @@ final class CodexBubbleFormatterTests: XCTestCase {
 
         XCTAssertEqual(bubbles.map(\.text), [
             "「吹き出しUX」は吹き出し要約の表示文言をテスト中だよ",
-            "「承認チャット」Codex 連携返事待ち",
-            "「レビュー用チャット」検証ひと段落"
+            "「承認チャット」Codex 連携返事待ちだよ",
+            "「レビュー用チャット」検証ひと段落だよ"
         ])
         XCTAssertTrue(bubbles.allSatisfy { !$0.text.contains("Codex Session") })
         XCTAssertTrue(bubbles.allSatisfy { !$0.text.contains("セッション") })
@@ -132,9 +180,43 @@ final class CodexBubbleFormatterTests: XCTestCase {
 
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: line),
-            "「Mimo runtime QA」吹き出し要約テスト中"
+            "「Mimo runtime QA」吹き出し要約テストしてるよ"
         )
         XCTAssertFalse(CodexBubbleFormatter.contextText(for: line).contains("..."))
+    }
+
+    func testContextRowsDoNotRepeatOutcomeWordsAlreadyPresentInWorkSummary() {
+        let waiting = CodexConversationLine(
+            threadId: "slack",
+            threadTitle: "Slack 通知整備",
+            speaker: "thread",
+            text: "確認待ち",
+            isAssistant: true,
+            activityKind: .threadStatus,
+            workSummary: "通知設定の確認待ち"
+        )
+        let failed = CodexConversationLine(
+            threadId: "notary",
+            threadTitle: "Notarization 調査",
+            speaker: "tool",
+            text: "notarytool の検証で失敗を確認",
+            isAssistant: true,
+            activityKind: .test,
+            workSummary: "認証まわりの失敗を確認中"
+        )
+        let review = CodexConversationLine(
+            threadId: "release",
+            threadTitle: "Release DMG",
+            speaker: "codex",
+            text: "配布用 DMG の確認がひと段落",
+            isAssistant: true,
+            activityKind: .review,
+            workSummary: "配布物の確認がひと段落"
+        )
+
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「Slack 通知整備」通知設定の返事待ちだよ")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: failed), "「Notarization 調査」認証まわりのつまずきを確認してるよ")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: review), "「Release DMG」配布物の確認がひと段落だよ")
     }
 
     func testSummarizesAssistantLineAsMimoReport() {
@@ -172,9 +254,9 @@ final class CodexBubbleFormatterTests: XCTestCase {
             isAssistant: true
         )
 
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: review), "「実装」ひと段落")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: command), "「QA」実行中")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「承認」返事待ち")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: review), "「実装」ひと段落だよ")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: command), "「QA」実行してるよ")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「承認」返事待ちだよ")
     }
 
     func testSummarizesUserLineAsAcknowledgement() {
@@ -199,7 +281,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "「別チャットの確認」は確認してよさそうだよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「別チャットの確認」ひと段落")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「別チャットの確認」ひと段落だよ")
     }
 
     func testSummarizesSessionContentAsMimoWorkReport() {
@@ -218,7 +300,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: line),
-            "「Mimo runtime QA」作業内容の説明中"
+            "「Mimo runtime QA」作業内容の説明中だよ"
         )
     }
 
@@ -252,11 +334,11 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: tool), "「Mimo runtime QA」は作業内容の説明をテスト中だよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: tool), "「Mimo runtime QA」作業内容の説明テスト中")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: tool), "「Mimo runtime QA」作業内容の説明テストしてるよ")
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: waiting), "「Mimo runtime QA」はCodex 連携で確認を待っているよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「Mimo runtime QA」Codex 連携返事待ち")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: waiting), "「Mimo runtime QA」Codex 連携返事待ちだよ")
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: genericTool), "「Mimo runtime QA」は作業内容の説明をツールで確認中だよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: genericTool), "「Mimo runtime QA」作業内容の説明ツール確認")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: genericTool), "「Mimo runtime QA」作業内容の説明ツール確認してるよ")
     }
 
     func testSessionStateShapesNaturalMimoReportsWithoutRawStatusLabels() {
@@ -287,7 +369,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: active),
-            "「Mimo runtime QA」作業内容の説明テスト中"
+            "「Mimo runtime QA」作業内容の説明テストしてるよ"
         )
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: stopped),
@@ -295,7 +377,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: stopped),
-            "「Mimo runtime QA」作業内容の説明ひと段落"
+            "「Mimo runtime QA」作業内容の説明ひと段落だよ"
         )
         XCTAssertFalse(CodexBubbleFormatter.bubbleText(for: active).contains("動作中"))
         XCTAssertFalse(CodexBubbleFormatter.contextText(for: stopped).contains("停止・"))
@@ -321,7 +403,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: line),
-            "「Mimo runtime QA」吹き出し要約の表示文言考察中"
+            "「Mimo runtime QA」吹き出し要約の表示文言考えてるよ"
         )
     }
 
@@ -412,9 +494,9 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: terminal), "「端末確認」は端末入力を確認中だよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: terminal), "「端末確認」端末確認")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: terminal), "「端末確認」端末確認してるよ")
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: patch), "「差分確認」は差分を確認中だよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: patch), "「差分確認」差分確認")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: patch), "「差分確認」差分確認してるよ")
     }
 
     func testSummarizesExpandedProgressNotificationsAsMimoReports() {
@@ -429,7 +511,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .review
                 ),
                 "「承認」は承認を確認中だよ",
-                "「承認」承認確認"
+                "「承認」承認確認してるよ"
             ),
             (
                 CodexConversationLine(
@@ -441,7 +523,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .review
                 ),
                 "「承認」は承認を確認したよ",
-                "「承認」承認確認済み"
+                "「承認」承認確認済みだよ"
             ),
             (
                 CodexConversationLine(
@@ -453,7 +535,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .tool
                 ),
                 "「Hook」はフックを確認中だよ",
-                "「Hook」フック確認"
+                "「Hook」フック確認してるよ"
             ),
             (
                 CodexConversationLine(
@@ -465,7 +547,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .threadStatus
                 ),
                 "「目標」は目標を確認中だよ",
-                "「目標」目標確認"
+                "「目標」目標確認してるよ"
             ),
             (
                 CodexConversationLine(
@@ -477,7 +559,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .threadStatus
                 ),
                 "「確認」は確認を反映中だよ",
-                "「確認」確認反映"
+                "「確認」確認反映だよ"
             )
         ]
 
@@ -499,7 +581,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .contextCompaction
                 ),
                 "「整理」は文脈を整理したよ",
-                "「整理」文脈整理済み"
+                "「整理」文脈整理済みだよ"
             ),
             (
                 CodexConversationLine(
@@ -511,7 +593,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .threadStatus
                 ),
                 "「モデル」はモデルを調整中だよ",
-                "「モデル」モデル調整"
+                "「モデル」モデル調整だよ"
             ),
             (
                 CodexConversationLine(
@@ -523,7 +605,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .threadStatus
                 ),
                 "「モデル確認」はモデルを確認中だよ",
-                "「モデル確認」モデル確認"
+                "「モデル確認」モデル確認してるよ"
             ),
             (
                 CodexConversationLine(
@@ -535,7 +617,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .threadStatus
                 ),
                 "「安全」は安全を確認中だよ",
-                "「安全」安全確認"
+                "「安全」安全確認してるよ"
             ),
             (
                 CodexConversationLine(
@@ -547,7 +629,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .threadStatus
                 ),
                 "「問題」は問題を確認中だよ",
-                "「問題」問題確認"
+                "「問題」問題確認してるよ"
             ),
             (
                 CodexConversationLine(
@@ -559,7 +641,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
                     activityKind: .tool
                 ),
                 "「MCP」はMCP を確認中だよ",
-                "「MCP」MCP 確認"
+                "「MCP」MCP 確認してるよ"
             )
         ]
 
@@ -698,8 +780,8 @@ final class CodexBubbleFormatterTests: XCTestCase {
         for (line, expected) in cases {
             XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), expected)
         }
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: cases[1].0), "「ファイル確認」ファイル確認")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: cases[2].0), "「参照」参照確認")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: cases[1].0), "「ファイル確認」ファイル確認してるよ")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: cases[2].0), "「参照」参照確認してるよ")
     }
 
     func testFailedTextStillOverridesActivityKind() {
@@ -713,7 +795,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
 
         XCTAssertEqual(CodexBubbleFormatter.bubbleText(for: line), "「テスト」はつまずいたところを見つけたよ")
-        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「テスト」つまずきあり")
+        XCTAssertEqual(CodexBubbleFormatter.contextText(for: line), "「テスト」つまずきありだよ")
     }
 
     func testSummarizesActiveWorkFromProgressMessage() {
@@ -820,7 +902,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
             )
         )
 
-        XCTAssertEqual(bubble, "「このチャット」応答中")
+        XCTAssertEqual(bubble, "「このチャット」応答してるよ")
         XCTAssertFalse(bubble.contains("/Users/example"))
         XCTAssertFalse(bubble.contains(".env"))
     }

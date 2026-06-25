@@ -149,9 +149,9 @@ public enum CodexMimoDialoguePrompt {
         case .stopped:
             return "ひと段落していて確認してよさそう"
         case .failed:
-            return "失敗"
+            return "つまずいている"
         case nil:
-            return "待機中"
+            return "のんびり待っている"
         }
     }
 

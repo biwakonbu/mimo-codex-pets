@@ -10,6 +10,7 @@ final class StateMappingTests: XCTestCase {
         )
 
         XCTAssertEqual(state.animation, .running)
+        XCTAssertEqual(state.bubbleText, CodexMimoStatusSpeech.active)
     }
 
     func testWaitingFlagsMapToWaiting() {
@@ -26,6 +27,8 @@ final class StateMappingTests: XCTestCase {
 
         XCTAssertEqual(approval.animation, .waiting)
         XCTAssertEqual(input.animation, .waiting)
+        XCTAssertEqual(approval.bubbleText, CodexMimoStatusSpeech.waiting)
+        XCTAssertEqual(input.bubbleText, CodexMimoStatusSpeech.waiting)
     }
 
     func testFailedTurnAndSystemErrorMapToFailed() {
@@ -42,6 +45,8 @@ final class StateMappingTests: XCTestCase {
 
         XCTAssertEqual(failedTurn.animation, .failed)
         XCTAssertEqual(systemError.animation, .failed)
+        XCTAssertEqual(failedTurn.bubbleText, CodexMimoStatusSpeech.failed)
+        XCTAssertEqual(systemError.bubbleText, CodexMimoStatusSpeech.systemError)
     }
 
     func testCompletedAssistantFinalMapsToReview() {
@@ -52,6 +57,7 @@ final class StateMappingTests: XCTestCase {
         )
 
         XCTAssertEqual(state.animation, .review)
+        XCTAssertEqual(state.bubbleText, CodexMimoStatusSpeech.review)
     }
 
     func testMissingConnectionMapsToOfflineIdle() {
@@ -63,11 +69,13 @@ final class StateMappingTests: XCTestCase {
         )
 
         XCTAssertEqual(state.animation, .idle)
+        XCTAssertEqual(state.bubbleText, CodexMimoStatusSpeech.connecting)
         XCTAssertTrue(state.isOffline)
     }
 
     func testDragDirectionMapsToDirectionalRows() {
         XCTAssertEqual(CodexPetStateMapper.dragPresentation(deltaX: 12).animation, .runningRight)
         XCTAssertEqual(CodexPetStateMapper.dragPresentation(deltaX: -12).animation, .runningLeft)
+        XCTAssertEqual(CodexPetStateMapper.dragPresentation(deltaX: 12).bubbleText, CodexMimoStatusSpeech.moving)
     }
 }

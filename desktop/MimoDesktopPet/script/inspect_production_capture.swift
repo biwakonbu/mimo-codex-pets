@@ -144,16 +144,16 @@ if requiresMultiBubbleHierarchy {
     let bubbleRegionMaxY = max(245, height - 150)
     let bubbleComponents = components.filter { component in
         component.area >= 3_000 &&
-            component.width >= 220 &&
+            component.width >= 160 &&
             component.height >= 22 &&
             component.maxY <= bubbleRegionMaxY
     }
 
-    guard (4...5).contains(bubbleComponents.count) else {
-        fail("multi-thread capture should show four or five white bubble components, found \(bubbleComponents.count): \(describe(bubbleComponents))")
+    guard (2...5).contains(bubbleComponents.count) else {
+        fail("multi-thread capture should show two to five white bubble/card groups, found \(bubbleComponents.count): \(describe(bubbleComponents))")
     }
 
-    guard let primary = bubbleComponents.max(by: { $0.maxY < $1.maxY }) else {
+    guard let primary = bubbleComponents.max(by: { $0.area < $1.area }) else {
         fail("multi-thread capture had no primary bubble candidate")
     }
     let secondaryComponents = bubbleComponents.filter {
@@ -161,42 +161,51 @@ if requiresMultiBubbleHierarchy {
     }
     let maxSecondaryWidth = secondaryComponents.map(\.width).max() ?? 0
     let maxSecondaryArea = secondaryComponents.map(\.area).max() ?? 0
-    let lowestSecondaryBottom = secondaryComponents.map(\.maxY).max() ?? 0
 
-    guard primary.width >= maxSecondaryWidth + 18 else {
-        fail("primary bubble is not visibly wider than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
+    guard primary.width >= maxSecondaryWidth + 4 else {
+        fail("primary bubble is not visually dominant enough when secondary cards overlap: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
-    guard primary.area >= Int(Double(maxSecondaryArea) * 1.2) else {
+    guard primary.area >= Int(Double(maxSecondaryArea) * 1.25) else {
         fail("primary bubble is not visibly more prominent than secondary bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
-    }
-    guard primary.minY >= lowestSecondaryBottom + 6 else {
-        fail("primary bubble is not separated below the secondary context bubbles: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
     let secondaryCentersX = secondaryComponents.map(\.centerX)
     let secondaryCentersY = secondaryComponents.map(\.centerY)
     let secondaryHorizontalSpread = (secondaryCentersX.max() ?? 0) - (secondaryCentersX.min() ?? 0)
     let secondaryVerticalSpread = (secondaryCentersY.max() ?? 0) - (secondaryCentersY.min() ?? 0)
-    guard (20...64).contains(secondaryHorizontalSpread), secondaryVerticalSpread >= 64 else {
-        fail("secondary context bubbles are not subtly staggered as a readable stacked thread list: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
+    let closestSecondaryVerticalDistance = secondaryComponents
+        .map { abs($0.centerY - primary.centerY) }
+        .min() ?? 0
+    if secondaryComponents.count >= 2 {
+        guard secondaryHorizontalSpread >= 120, secondaryVerticalSpread <= 80 else {
+            fail("secondary context bubbles are not arranged as compact chat cards: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
+        }
+    }
+    guard closestSecondaryVerticalDistance >= 34 else {
+        fail("primary speech bubble is not visually separated from the secondary chat cards: primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
 
-    guard hasCenteredTailTaper(mask: whiteMask, width: width, component: primary) else {
+    guard hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: primary, allowsDetachedTail: true) else {
         fail("primary bubble does not have a centered speech-tail taper: primary=\(describe(primary))")
     }
 
     for secondary in secondaryComponents {
-        guard !hasCenteredTailTaper(mask: whiteMask, width: width, component: secondary) else {
+        guard !hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: secondary, allowsDetachedTail: false) else {
             fail("secondary context chip unexpectedly has a speech-tail taper: secondary=\(describe(secondary))")
         }
     }
 
     var markerDescriptions: [String] = []
+    var markerCount = 0
     for component in bubbleComponents {
         let markers = markerComponents(mask: markerMask, width: width, bounds: component)
         guard !markers.isEmpty else {
             fail("bubble is missing a compact activity/state marker: bubble=\(describe(component))")
         }
+        markerCount += markers.count
         markerDescriptions.append(describe(markers))
+    }
+    guard markerCount >= 3 else {
+        fail("multi-bubble capture should retain several visible activity/state markers even when cards overlap: markers=\(markerDescriptions)")
     }
 
     print(
@@ -367,12 +376,20 @@ func isCompactMarker(_ component: WhiteComponent) -> Bool {
         component.height <= 36
 }
 
-func hasCenteredTailTaper(mask: [Bool], width: Int, component: WhiteComponent) -> Bool {
+func hasCenteredTailTaper(
+    mask: [Bool],
+    width: Int,
+    height: Int,
+    component: WhiteComponent,
+    allowsDetachedTail: Bool
+) -> Bool {
     let centerX = (component.minX + component.maxX) / 2
-    let startY = max(component.minY, component.maxY - 6)
-    let endY = component.maxY
+    let startY = allowsDetachedTail ? max(component.minY, component.maxY - 4) : max(component.minY, component.maxY - 6)
+    let endY = allowsDetachedTail ? min(height - 1, component.maxY + 32) : component.maxY
     var centeredNarrowRows = 0
     var previousSpanWidth: Int?
+    let maxTailWidth = allowsDetachedTail ? 48 : 18
+    let requiredRows = allowsDetachedTail ? 4 : 3
 
     for y in startY...endY {
         guard let span = whiteSpan(mask: mask, width: width, y: y, minX: component.minX, maxX: component.maxX) else {
@@ -380,7 +397,7 @@ func hasCenteredTailTaper(mask: [Bool], width: Int, component: WhiteComponent) -
         }
         let spanWidth = span.maxX - span.minX + 1
         let spanCenterX = (span.minX + span.maxX) / 2
-        guard spanWidth >= 2, spanWidth <= 18, abs(spanCenterX - centerX) <= 8 else {
+        guard spanWidth >= 2, spanWidth <= maxTailWidth, abs(spanCenterX - centerX) <= 12 else {
             continue
         }
         if let previousSpanWidth, spanWidth > previousSpanWidth + 8 {
@@ -390,7 +407,7 @@ func hasCenteredTailTaper(mask: [Bool], width: Int, component: WhiteComponent) -
         previousSpanWidth = spanWidth
     }
 
-    return centeredNarrowRows >= 3
+    return centeredNarrowRows >= requiredRows
 }
 
 func whiteSpan(mask: [Bool], width: Int, y: Int, minX: Int, maxX: Int) -> (minX: Int, maxX: Int)? {

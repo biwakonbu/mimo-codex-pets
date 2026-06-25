@@ -33,7 +33,7 @@ APP_PID=$!
 
 kill -0 "$APP_PID" >/dev/null
 
-WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 440 --max-height 560)"
+WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 520 --max-height 560)"
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -63,7 +63,7 @@ while time.time() < deadline:
         bubbles = row.get("bubbleTexts", [])
         if not isinstance(bubbles, list):
             continue
-        if row.get("isOffline") is True and "Codex 接続待ち" in bubbles:
+        if row.get("isOffline") is True and "Codex につながるのを待ってるよ" in bubbles:
             print("Offline presentation observed.")
             sys.exit(0)
     if rows:
@@ -75,6 +75,7 @@ sys.exit(1)
 PY
 
 kill -0 "$APP_PID" >/dev/null
+sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
 swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
 

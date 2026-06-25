@@ -16,14 +16,17 @@ final class PetWindowController: NSObject {
     private let panel: NSPanel
     private let viewModel: PetViewModel
     private let zOrderPolicy = PetWindowZOrderPolicy.alwaysOnTopCompanion
+    private let showcaseMode = ProcessInfo.processInfo.environment["MIMO_SHOWCASE_MODE"] == "1"
     private let autonomousTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1"
     private let autonomousEnergyTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_ENERGY_TEST_MODE"] == "1"
-    private let autonomousDisabled = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_DISABLED"] == "1"
+    private let autonomousDisabled = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_DISABLED"] == "1" ||
+        ProcessInfo.processInfo.environment["MIMO_SHOWCASE_MODE"] == "1"
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
     private var movementAnimationActive = false
     private var movementAnimationWasManual = false
     private var manualDragActive = false
+    private var manualMovementTrackingStarted = false
     private var autonomousEnergy = PetWindowController.makeAutonomousEnergyController()
     private var autonomousMotion: PetAutonomousMotionTween?
     private var autonomousMotionAnimation: PetAnimationState?
@@ -95,18 +98,18 @@ final class PetWindowController: NSObject {
             accessibilityValue: { [weak viewModel] in
                 viewModel?.accessibilityValue ?? PetSpeechBubbleAccessibility.label
             },
-            onDragStarted: { [weak self] in
-                self?.manualDragActive = true
-                self?.autonomousMotion = nil
-                self?.autonomousMotionAnimation = nil
-                self?.clearMovementAnimationIfNeeded()
+            onPointerDown: { [weak self] in
+                self?.beginManualMovementTracking()
             },
-            onDragAnimationChanged: { [weak viewModel] animation in
-                viewModel?.beginDrag(animation: animation)
+            onDragStarted: { [weak self] in
+                self?.beginManualMovementTrackingIfNeeded()
+            },
+            onDragAnimationChanged: { [weak self] animation in
+                self?.beginMovementAnimation(animation, manual: true)
             },
             onDragEnded: { [weak self, weak viewModel] in
-                self?.manualDragActive = false
                 if let self {
+                    self.endManualMovementTracking()
                     self.scheduleAutonomousRest(
                         now: Date.timeIntervalSinceReferenceDate,
                         includeMoment: false
@@ -115,8 +118,10 @@ final class PetWindowController: NSObject {
                 viewModel?.endDrag()
             },
             onClicked: { [weak self, weak viewModel] in
-                self?.manualDragActive = false
                 if let self {
+                    self.endManualMovementTracking()
+                    self.autonomousMotion = nil
+                    self.autonomousMotionAnimation = nil
                     self.scheduleAutonomousRest(
                         now: Date.timeIntervalSinceReferenceDate,
                         includeMoment: false
@@ -142,7 +147,9 @@ final class PetWindowController: NSObject {
             }
             .store(in: &cancellables)
 
-        startMovementTracking()
+        if !showcaseMode {
+            startMovementTracking()
+        }
     }
 
     deinit {
@@ -200,6 +207,15 @@ final class PetWindowController: NSObject {
     }
 
     @objc private func movementTimerFired() {
+        if manualDragActive {
+            updateMovementAnimation()
+            return
+        }
+        guard !autonomousDisabled else {
+            clearMovementAnimationIfNeeded()
+            movementHandler.reset()
+            return
+        }
         if updateAutonomousMotion() {
             return
         }
@@ -232,8 +248,12 @@ final class PetWindowController: NSObject {
     }
 
     private func beginMovementAnimation(_ animation: PetAnimationState, manual: Bool) {
+        let shouldApply = !movementAnimationActive ||
+            movementAnimationWasManual != manual ||
+            viewModel.presentation.animation != animation
         movementAnimationActive = true
         movementAnimationWasManual = manual
+        guard shouldApply else { return }
         if manual {
             viewModel.beginDrag(animation: animation)
         } else {
@@ -288,6 +308,7 @@ final class PetWindowController: NSObject {
             autonomousMotion = nil
             autonomousMotionAnimation = nil
             clearMovementAnimationIfNeeded()
+            movementHandler.reset()
             scheduleAutonomousRest(now: now, includeMoment: true)
             return true
         }
@@ -297,6 +318,7 @@ final class PetWindowController: NSObject {
                 autonomousMotion = nil
                 autonomousMotionAnimation = nil
                 clearMovementAnimationIfNeeded()
+                movementHandler.reset()
                 scheduleAutonomousRest(now: now, includeMoment: true)
             } else {
                 chooseNextAutonomousMotion(now: now)
@@ -428,6 +450,31 @@ final class PetWindowController: NSObject {
     private func currentOnScreenFrame() -> PetDragFrame {
         PetDragFrame(panel.frame)
     }
+
+    private func beginManualMovementTracking() {
+        manualDragActive = true
+        manualMovementTrackingStarted = true
+        autonomousMotion = nil
+        autonomousMotionAnimation = nil
+        clearMovementAnimationIfNeeded()
+        movementHandler.begin(sample: PetMovementSample(
+            frame: currentOnScreenFrame(),
+            timestamp: Date.timeIntervalSinceReferenceDate
+        ))
+    }
+
+    private func beginManualMovementTrackingIfNeeded() {
+        manualDragActive = true
+        guard !manualMovementTrackingStarted else { return }
+        beginManualMovementTracking()
+    }
+
+    private func endManualMovementTracking() {
+        clearMovementAnimationIfNeeded()
+        manualDragActive = false
+        manualMovementTrackingStarted = false
+        movementHandler.reset()
+    }
 }
 
 private extension PetWindowController {
@@ -465,11 +512,13 @@ private final class ClearHostingView<Content: View>: NSHostingView<Content> {
 
 private final class PetInteractionView: NSView {
     private var dragHandler = PetDragEventHandler()
-    private var initialMouseLocation: NSPoint?
+    private var dragActivation = PetManualDragActivation()
+    private var initialWindowFrame: NSRect?
     private var didMoveDuringDrag = false
 
     private let isDebugOverlay: () -> Bool
     private let accessibilityValueProvider: () -> String
+    private let onPointerDown: () -> Void
     private let onDragStarted: () -> Void
     private let onDragAnimationChanged: (PetAnimationState) -> Void
     private let onDragEnded: () -> Void
@@ -479,6 +528,7 @@ private final class PetInteractionView: NSView {
         hostedView: NSView,
         isDebugOverlay: @escaping () -> Bool,
         accessibilityValue: @escaping () -> String,
+        onPointerDown: @escaping () -> Void,
         onDragStarted: @escaping () -> Void,
         onDragAnimationChanged: @escaping (PetAnimationState) -> Void,
         onDragEnded: @escaping () -> Void,
@@ -486,6 +536,7 @@ private final class PetInteractionView: NSView {
     ) {
         self.isDebugOverlay = isDebugOverlay
         self.accessibilityValueProvider = accessibilityValue
+        self.onPointerDown = onPointerDown
         self.onDragStarted = onDragStarted
         self.onDragAnimationChanged = onDragAnimationChanged
         self.onDragEnded = onDragEnded
@@ -537,10 +588,11 @@ private final class PetInteractionView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let window else { return }
-        initialMouseLocation = NSEvent.mouseLocation
+        let mouseLocation = NSEvent.mouseLocation
+        initialWindowFrame = window.frame
         didMoveDuringDrag = false
-        dragHandler.begin(frame: PetDragFrame(window.frame))
-        onDragStarted()
+        dragActivation.begin(at: PetWanderPoint(x: Double(mouseLocation.x), y: Double(mouseLocation.y)))
+        onPointerDown()
 
         let monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDragged]) { [weak self, weak window] dragEvent in
             guard let self, let window else { return dragEvent }
@@ -553,19 +605,26 @@ private final class PetInteractionView: NSView {
         if let monitor {
             NSEvent.removeMonitor(monitor)
         }
-        finishDrag()
+        finishDrag(finalFrame: window.frame)
     }
 
     private func updateDragAnimation(currentMouseLocation: NSPoint, fallbackFrame: NSRect) {
-        let initialMouseLocation = initialMouseLocation ?? currentMouseLocation
+        let activation = dragActivation.update(
+            to: PetWanderPoint(x: Double(currentMouseLocation.x), y: Double(currentMouseLocation.y))
+        )
+        guard activation.isActive else { return }
+
+        if activation.didActivate {
+            dragHandler.begin(frame: PetDragFrame(initialWindowFrame ?? fallbackFrame))
+            onDragStarted()
+        }
+
         let update = dragHandler.update(
-            screenDeltaX: currentMouseLocation.x - initialMouseLocation.x,
-            screenDeltaY: currentMouseLocation.y - initialMouseLocation.y,
+            screenDeltaX: activation.screenDeltaX,
+            screenDeltaY: activation.screenDeltaY,
             fallbackFrame: PetDragFrame(fallbackFrame)
         )
-        if abs(currentMouseLocation.x - initialMouseLocation.x) > 2 || abs(currentMouseLocation.y - initialMouseLocation.y) > 2 {
-            didMoveDuringDrag = true
-        }
+        didMoveDuringDrag = true
         if let animation = update.animation {
             onDragAnimationChanged(animation)
         }
@@ -576,10 +635,20 @@ private final class PetInteractionView: NSView {
         super.mouseExited(with: event)
     }
 
-    private func finishDrag() {
-        initialMouseLocation = nil
+    private func finishDrag(finalFrame: NSRect) {
+        let frameMoved: Bool
+        if let initialWindowFrame {
+            frameMoved = hypot(
+                finalFrame.origin.x - initialWindowFrame.origin.x,
+                finalFrame.origin.y - initialWindowFrame.origin.y
+            ) >= CGFloat(dragActivation.activationDistance)
+        } else {
+            frameMoved = false
+        }
+        initialWindowFrame = nil
+        let wasActive = dragActivation.end()
         dragHandler.end()
-        if didMoveDuringDrag {
+        if didMoveDuringDrag || wasActive || frameMoved {
             onDragEnded()
         } else {
             onClicked()

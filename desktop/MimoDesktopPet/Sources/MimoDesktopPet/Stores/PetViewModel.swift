@@ -19,7 +19,7 @@ final class PetViewModel: ObservableObject {
         )
     }
 
-    private let conversationBubbleDuration: TimeInterval
+    private let conversationBubbleDurationOverride: TimeInterval?
     private let presentationLogURL: URL?
     private var coordinator = PetPresentationCoordinator()
     private var momentToken = UUID()
@@ -29,7 +29,9 @@ final class PetViewModel: ObservableObject {
         presentation = coordinator.presentation
         visibleBubbles = coordinator.visibleBubbles
         conversationLines = coordinator.conversationLines
-        conversationBubbleDuration = ProcessInfo.processInfo.environment["MIMO_BUBBLE_TEST_MODE"] == "1" ? 1.15 : 8.0
+        conversationBubbleDurationOverride = ProcessInfo.processInfo.environment["MIMO_BUBBLE_TEST_MODE"] == "1" ?
+            PetSpeechBubbleDisplayTiming.testConversationBubbleDuration :
+            nil
         if let path = ProcessInfo.processInfo.environment["MIMO_PRESENTATION_LOG"], !path.isEmpty {
             let url = URL(fileURLWithPath: path)
             presentationLogURL = url
@@ -70,13 +72,16 @@ final class PetViewModel: ObservableObject {
         apply(change: coordinator.setConnectionAvailable(available))
     }
 
-    func beginDrag(deltaX: CGFloat) {
+    func apply(showcaseScene scene: PetShowcaseScene) {
         momentToken = UUID()
+        apply(change: coordinator.apply(showcaseScene: scene))
+    }
+
+    func beginDrag(deltaX: CGFloat) {
         apply(change: coordinator.beginDrag(deltaX: Double(deltaX)))
     }
 
     func beginDrag(animation: PetAnimationState) {
-        momentToken = UUID()
         apply(change: coordinator.beginDrag(animation: animation))
     }
 
@@ -85,7 +90,6 @@ final class PetViewModel: ObservableObject {
     }
 
     func endDrag() {
-        momentToken = UUID()
         apply(change: coordinator.endDrag())
     }
 
@@ -129,10 +133,21 @@ final class PetViewModel: ObservableObject {
         let token = UUID()
         momentToken = token
         Task { @MainActor [weak self] in
-            let duration = self?.conversationBubbleDuration ?? 8.0
+            let duration = self?.currentConversationBubbleDuration() ?? PetSpeechBubbleDisplayTiming.minimumConversationBubbleDuration
             try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
             self?.finishConversationBubble(token: token)
         }
+    }
+
+    private func currentConversationBubbleDuration() -> TimeInterval {
+        if let conversationBubbleDurationOverride {
+            return conversationBubbleDurationOverride
+        }
+        let primaryRole = visibleBubbles.first?.role ?? .focus
+        return PetSpeechBubbleDisplayTiming.conversationBubbleDuration(
+            for: presentation.bubbleText,
+            role: primaryRole
+        )
     }
 
     private func appendPresentationLog(_ state: PetPresentationState) {

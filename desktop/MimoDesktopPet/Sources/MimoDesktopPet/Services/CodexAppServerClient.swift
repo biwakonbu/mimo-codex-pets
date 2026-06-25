@@ -222,7 +222,7 @@ final class CodexAppServerClient {
             if mode == .proxy {
                 startAppServerTransport(.stdio)
             } else {
-                transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: "Codex 接続待ち")
+                transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: CodexMimoStatusSpeech.connecting)
             }
         }
     }
@@ -232,7 +232,7 @@ final class CodexAppServerClient {
         if mode == .proxy, !transportInitialized, shouldReconnect {
             fallbackToDirectStdioLocked()
         } else {
-            transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: "Codex 接続切れ")
+            transitionToOfflineLocked(terminateProxy: false, offlineBubbleText: CodexMimoStatusSpeech.disconnected)
         }
     }
 
@@ -326,7 +326,7 @@ final class CodexAppServerClient {
             if self.currentTransportMode == .proxy {
                 self.fallbackToDirectStdioLocked()
             } else {
-                self.transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続タイムアウト")
+                self.transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: CodexMimoStatusSpeech.timedOut)
             }
         }
         timer.resume()
@@ -375,7 +375,7 @@ final class CodexAppServerClient {
         for request in pendingRequests.values {
             guard !isInitializeRequest(request.kind) else { continue }
             if secondsBetween(request.sentAt, now) >= requestTimeoutSeconds {
-                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続タイムアウト")
+                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: CodexMimoStatusSpeech.timedOut)
                 return
             }
         }
@@ -473,7 +473,7 @@ final class CodexAppServerClient {
         if currentTransportMode == .proxy, !transportInitialized {
             fallbackToDirectStdioLocked()
         } else {
-            transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
+            transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: CodexMimoStatusSpeech.disconnected)
         }
     }
 
@@ -510,7 +510,7 @@ final class CodexAppServerClient {
                 handleLine(message)
             }
         } catch {
-            transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
+            transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: CodexMimoStatusSpeech.disconnected)
         }
     }
 
@@ -530,7 +530,7 @@ final class CodexAppServerClient {
         let kind = pendingRequests.removeValue(forKey: id)?.kind
         guard object["error"] == nil else {
             if !isInitializeRequest(kind) {
-                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: "Codex 接続切れ")
+                transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: CodexMimoStatusSpeech.disconnected)
             }
             return
         }
