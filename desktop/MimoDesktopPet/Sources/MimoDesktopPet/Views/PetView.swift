@@ -68,12 +68,10 @@ private struct ProductionBubbleStackView: View {
                     role: bubble.role,
                     tone: bubble.tone,
                     activityKind: bubble.activityKind,
-                    showsTail: index == 0,
                     minTextWidth: placement.minTextWidth,
                     maxTextWidth: placement.maxTextWidth,
                     fillOpacity: placement.fillOpacity,
                     fontScale: placement.fontScale,
-                    tailHorizontalOffset: placement.tailHorizontalOffset,
                     accentColor: BubbleAccentPalette.color(for: index, role: bubble.role, tone: bubble.tone),
                     accessibilityIndex: index
                 )
@@ -316,12 +314,10 @@ struct BubbleView: View {
     var role: PetSpeechBubbleRole = .status
     var tone: PetSpeechBubbleTone = .neutral
     var activityKind: CodexConversationActivityKind?
-    var showsTail = true
     var minTextWidth: Double?
     var maxTextWidth: Double?
     var fillOpacity: Double?
     var fontScale: Double = 1
-    var tailHorizontalOffset: Double = 0
     var accentColor: Color?
     var accessibilityIndex: Int?
 
@@ -330,7 +326,6 @@ struct BubbleView: View {
         let accent = accentColor ?? Color(red: 0.36, green: 0.58, blue: 0.86)
         let cornerRadius = bubbleCornerRadius
         let bubbleShape = BubbleBodyShape(cornerRadius: cornerRadius, waviness: bubbleWaviness)
-        let tailFill = Color.white
         let borderColor = role == .status && tone == .neutral
             ? Color(red: 0.54, green: 0.67, blue: 0.88).opacity(0.24)
             : accent.opacity(borderOpacity)
@@ -405,21 +400,6 @@ struct BubbleView: View {
             )
             .shadow(color: glowColor.opacity(isPrimaryBubble ? 0.14 : 0.075), radius: isPrimaryBubble ? 6 : 3.2, x: 0, y: isPrimaryBubble ? 2 : 1)
             .shadow(color: Color.black.opacity(isPrimaryBubble ? 0.065 : 0.035), radius: isPrimaryBubble ? 4 : 2.2, x: 0, y: isPrimaryBubble ? 2 : 1.0)
-
-            if showsTail {
-                BubbleTail()
-                    .fill(tailFill.opacity(resolvedFillOpacity))
-                    .overlay(
-                        BubbleTailSideBorder()
-                            .stroke(
-                                borderColor.opacity(0.78),
-                                style: StrokeStyle(lineWidth: 1, lineCap: .round, lineJoin: .round)
-                            )
-                    )
-                    .frame(width: tailWidth, height: tailHeight)
-                    .offset(x: CGFloat(tailHorizontalOffset), y: -1)
-                    .shadow(color: glowColor.opacity(0.08), radius: 2, x: 0, y: 1)
-            }
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityLabel)
@@ -637,14 +617,6 @@ struct BubbleView: View {
 
     private var isPrimaryBubble: Bool {
         role == .status || role == .focus
-    }
-
-    private var tailWidth: CGFloat {
-        isPrimaryBubble ? 40 : 26
-    }
-
-    private var tailHeight: CGFloat {
-        isPrimaryBubble ? 18 : 12
     }
 }
 
@@ -1053,49 +1025,6 @@ private enum BubbleAccentPalette {
             Color(red: 0.74, green: 0.50, blue: 0.34)
         ]
         return colors[max(0, index - 1) % colors.count]
-    }
-}
-
-private struct BubbleTail: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
-        path.addCurve(
-            to: CGPoint(x: rect.minX, y: rect.minY),
-            control1: CGPoint(x: rect.midX - rect.width * 0.12, y: rect.maxY - rect.height * 0.18),
-            control2: CGPoint(x: rect.minX + rect.width * 0.18, y: rect.minY + rect.height * 0.18)
-        )
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-        path.addCurve(
-            to: CGPoint(x: rect.midX, y: rect.maxY),
-            control1: CGPoint(x: rect.maxX - rect.width * 0.18, y: rect.minY + rect.height * 0.18),
-            control2: CGPoint(x: rect.midX + rect.width * 0.12, y: rect.maxY - rect.height * 0.18)
-        )
-        path.closeSubpath()
-        return path
-    }
-}
-
-private struct BubbleTailSideBorder: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let tip = CGPoint(x: rect.midX, y: rect.maxY - 0.5)
-        let leftRoot = CGPoint(x: rect.minX + rect.width * 0.08, y: rect.minY + 1)
-        let rightRoot = CGPoint(x: rect.maxX - rect.width * 0.08, y: rect.minY + 1)
-
-        path.move(to: leftRoot)
-        path.addCurve(
-            to: tip,
-            control1: CGPoint(x: rect.minX + rect.width * 0.2, y: rect.minY + rect.height * 0.22),
-            control2: CGPoint(x: rect.midX - rect.width * 0.12, y: rect.maxY - rect.height * 0.18)
-        )
-        path.addCurve(
-            to: rightRoot,
-            control1: CGPoint(x: rect.midX + rect.width * 0.12, y: rect.maxY - rect.height * 0.18),
-            control2: CGPoint(x: rect.maxX - rect.width * 0.2, y: rect.minY + rect.height * 0.22)
-        )
-
-        return path
     }
 }
 

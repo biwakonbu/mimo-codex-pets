@@ -181,8 +181,8 @@ Verified runtime behavior:
 - The production bubble panel keeps primary Mimo speech compact instead of
   using the full window width. The current primary column caps at 330pt, can
   render up to four lines, jitters only inside Mimo's near speech area, and
-  keeps its speech tail pulled back toward Mimo when the bubble body shifts
-  sideways. Secondary session rows can render two lines and now settle into a
+  stays visually attached to Mimo by proximity instead of using a pointer tail.
+  Secondary session rows can render two lines and now settle into a
   close "pocket pile" around the primary bubble instead of drifting to the top
   edge as thin labels. `PetSpeechBubblePaginator` splits longer Mimo speech into
   timed pages so conversation-sketch playback can continue without truncating
@@ -365,7 +365,7 @@ Conversation behavior:
 - Production can show up to five speech bubbles at once: one primary
   status/focused-thread bubble plus compact summaries from other visible
   threads. The primary bubble stays lowest, widest, and visually attached to
-  Mimo with the only speech tail. When it reports a focused conversation thread
+  Mimo by placement rather than an arrow tail. When it reports a focused conversation thread
   it uses the `focus` presentation role, a stronger accent marker, and the
   Mimo-style report for that session instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
@@ -419,8 +419,8 @@ Conversation behavior:
 - The multi-bubble production capture gate verifies more than raw bubble count:
   it requires visible white bubble components, a larger primary bubble closest
   to Mimo, a dynamic nearby bubble cloud with bounded irregular secondary
-  placement, a single primary speech tail, no secondary tails, and one compact
-  colored activity/state marker inside every bubble. This keeps the Codex
+  placement, no speech-tail tapers on any bubble, and one compact colored
+  activity/state marker inside every bubble. This keeps the Codex
   Pets-style simultaneous thread surface from regressing into a flat transcript
   list, distant scattered cards, or anonymous white cards.
 - The stacked bubble list refreshes whenever conversation context changes, even
@@ -538,9 +538,9 @@ Manual or visual checks:
   `inspect_production_capture.swift --multi-bubble-hierarchy`, which segments
   white bubble components and verifies the visual hierarchy: the primary Mimo
   report must be widest, visually largest, closest to Mimo, and not buried by
-  the secondary context bubbles. The same hierarchy check verifies that only the
-  primary Mimo report has a speech tail; secondary thread context rows must stay
-  tailless and within a nearby distance threshold. Secondary bubbles are allowed
+  the secondary context bubbles. The same hierarchy check verifies that no
+  bubble has a speech-tail taper; thread context rows must stay within a nearby
+  distance threshold. Secondary bubbles are allowed
   to overlap and vary in both axes, but they must not drift into distant cards,
   anonymous badges, or one unreadable merged white panel while still passing a
   raw bubble-count check.

@@ -11,7 +11,6 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
     public let scale: Double
     public let fontScale: Double
     public let rotationDegrees: Double
-    public let tailHorizontalOffset: Double
     public let floatingHorizontalOffset: Double
     public let floatingVerticalOffset: Double
     public let floatingDuration: Double
@@ -29,7 +28,6 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         scale: Double,
         fontScale: Double = 1,
         rotationDegrees: Double = 0,
-        tailHorizontalOffset: Double = 0,
         floatingHorizontalOffset: Double = 0,
         floatingVerticalOffset: Double = 0,
         floatingDuration: Double = 0,
@@ -46,7 +44,6 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
         self.scale = scale
         self.fontScale = fontScale
         self.rotationDegrees = rotationDegrees
-        self.tailHorizontalOffset = tailHorizontalOffset
         self.floatingHorizontalOffset = floatingHorizontalOffset
         self.floatingVerticalOffset = floatingVerticalOffset
         self.floatingDuration = floatingDuration
@@ -117,7 +114,6 @@ public enum PetSpeechBubbleLayout {
     public static let organicSecondaryOrbitMaximumAngleDegrees = 158.0
     public static let organicPrimaryRotationJitter = 2.4
     public static let organicSecondaryRotationJitter = 14.5
-    public static let organicTailMaximumHorizontalOffset = 86.0
     public static let organicPrimaryFloatingHorizontalMaximum = 5.0
     public static let organicPrimaryFloatingVerticalMaximum = 4.0
     public static let organicSecondaryFloatingHorizontalMaximum = 13.0
@@ -314,13 +310,6 @@ public enum PetSpeechBubbleLayout {
         let widthBias = (widthCenter + 1) / 2
         let fontBias = variationUnit(seed: seed, salt: "font-\(base.index)") * 0.34 + widthBias * 0.66
         let fontScale = fontScale(role: base.role, isPrimary: base.index == 0, bias: fontBias)
-        let tailHorizontalOffset = isPrimary
-            ? clamp(
-                -horizontalOffset,
-                minimum: -organicTailMaximumHorizontalOffset,
-                maximum: organicTailMaximumHorizontalOffset
-            )
-            : 0
         let floatingHorizontalOffset = floatingOffset(
             seed: seed,
             salt: "float-x-\(base.index)",
@@ -351,7 +340,6 @@ public enum PetSpeechBubbleLayout {
             scale: scale,
             fontScale: fontScale,
             rotationDegrees: rotationDegrees,
-            tailHorizontalOffset: tailHorizontalOffset,
             floatingHorizontalOffset: floatingHorizontalOffset,
             floatingVerticalOffset: floatingVerticalOffset,
             floatingDuration: floatingDuration,

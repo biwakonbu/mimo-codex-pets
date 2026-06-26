@@ -286,7 +286,6 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryOrbitMaximumAngleDegrees, 158)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryRotationJitter, 2.4)
         XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryRotationJitter, 14.5)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicTailMaximumHorizontalOffset, 86)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryFloatingHorizontalMaximum, 5)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryFloatingVerticalMaximum, 4)
         XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryFloatingHorizontalMaximum, 13)
@@ -435,33 +434,6 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.verticalOffset * 10).rounded()) }).count, 3)
     }
 
-    func testOrganicPrimaryTailPointsBackTowardMimoWhenSpeechJitters() {
-        let seeds = [
-            "Mimo runtime QA",
-            "資料整理",
-            "リリース準備",
-            "別チャットの確認",
-            "吹き出し演出",
-            "長めのチャット名でサイズ確認"
-        ]
-        let placements = seeds.map {
-            PetSpeechBubbleLayout.placement(
-                for: 0,
-                role: .focus,
-                visibleCount: PetSpeechBubbleLayout.productionVisibleLimit,
-                variationSeed: $0
-            )
-        }
-
-        XCTAssertTrue(placements.contains { abs($0.horizontalOffset) > 12 })
-        XCTAssertTrue(placements.allSatisfy {
-            abs($0.tailHorizontalOffset + $0.horizontalOffset) <= 0.0001
-        })
-        XCTAssertTrue(placements.allSatisfy {
-            abs($0.tailHorizontalOffset) <= PetSpeechBubbleLayout.organicTailMaximumHorizontalOffset
-        })
-    }
-
     func testOrganicBubbleFloatAddsSubtleUnsynchronizedMotion() {
         let seeds = [
             "Mimo runtime QA",
@@ -547,7 +519,6 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
                 abs($0.verticalOffset) + abs($0.floatingVerticalOffset)
             ) <= PetSpeechBubbleLayout.organicSecondaryMaximumDistanceFromMimo + 16
         })
-        XCTAssertTrue(placements.dropFirst().allSatisfy { $0.tailHorizontalOffset == 0 })
     }
 
     func testOrganicSecondaryBubblesStayNearMimoInsteadOfTopEdgeLabels() {

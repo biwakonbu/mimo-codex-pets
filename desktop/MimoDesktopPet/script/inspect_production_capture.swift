@@ -193,13 +193,13 @@ if requiresMultiBubbleHierarchy {
         fail("secondary context bubbles drifted too far away from Mimo's primary speech: distance=\(farthestSecondaryDistance), primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
 
-    guard hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: primary, allowsDetachedTail: true) else {
-        fail("primary bubble does not have a centered speech-tail taper: primary=\(describe(primary))")
+    guard !hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: primary, allowsDetachedTail: true) else {
+        fail("primary bubble unexpectedly has a speech-tail taper: primary=\(describe(primary))")
     }
 
     for secondary in secondaryComponents {
         guard !hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: secondary, allowsDetachedTail: false) else {
-            fail("secondary context chip unexpectedly has a speech-tail taper: secondary=\(describe(secondary))")
+            fail("secondary context bubble unexpectedly has a speech-tail taper: secondary=\(describe(secondary))")
         }
     }
 

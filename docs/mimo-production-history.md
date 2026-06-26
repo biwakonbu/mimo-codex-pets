@@ -210,8 +210,8 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - secondary thread bubbles use short context-row text such as
   `「資料整理」作業中`, omit the longer Mimo address phrase, and form a dynamic
   nearby bubble cloud so multiple Codex threads read as a playful compact
-  reporting surface rather than a centered list; only the primary Mimo report
-  keeps a speech tail
+  reporting surface rather than a centered list; no bubble uses a speech tail,
+  so hierarchy comes from size, proximity, and accent markers
 - thread bubble text is rendered as a colored thread title plus a one-line Mimo
   report, so simultaneous bubbles are scan-friendly without becoming a
   transcript or debug feed

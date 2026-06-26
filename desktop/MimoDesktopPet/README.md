@@ -157,7 +157,7 @@ model, and `MIMO_CODEX_DIALOGUE_REFRESH_SECONDS=45` to control per-session
 regeneration cadence.
 Production bubbles use compact readable columns instead of forcing the full
 panel width. The primary bubble can grow to four text lines, jitters only within
-Mimo's near speech area, and keeps its tail visually pulled back toward Mimo.
+Mimo's near speech area, and stays visually close to Mimo without an arrow tail.
 Secondary session rows keep a bounded title/summary shape but scatter as a
 nearby irregular chat cloud, so simultaneous Codex sessions feel alive instead
 of fixed to a grid. The current cute UI direction is tracked in
@@ -283,11 +283,11 @@ movement path.
 
 In production mode the panel stays transparent and shows only Mimo plus a
 stacked list of white speech bubbles. When Codex conversation context is
-available, the primary bubble sits closest to Mimo, keeps the speech tail, and
+available, the primary bubble sits closest to Mimo without a pointer tail and
 promotes the focused session into a short Mimo-style report. The visible stack is
 capped at five bubbles total: one primary Mimo report plus up to four smaller
 secondary context bubbles around it. Those secondary bubbles are compact
-session-status rows with accent markers and no tails, forming a small irregular
+session-status rows with accent markers and no arrow tails, forming a small irregular
 chat cloud near Mimo rather than a transcript panel. Session bubbles render
 `「session title」summary` as a colored title plus one-line Mimo summary, so
 multiple bubbles can be scanned quickly. They do not repeat the longer
