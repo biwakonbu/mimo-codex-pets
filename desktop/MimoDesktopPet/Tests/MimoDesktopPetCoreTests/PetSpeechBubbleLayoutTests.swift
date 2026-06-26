@@ -249,13 +249,14 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.transitionRemovalOffsetY, -86)
         XCTAssertEqual(PetSpeechBubbleLayout.transitionInsertionScale, 0.38)
         XCTAssertEqual(PetSpeechBubbleLayout.transitionRemovalScale, 0.9)
-        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationResponse, 1.08)
-        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationDampingFraction, 0.76)
-        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationStaggerDelay, 0.09)
-        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationMaxStaggerDelay, 0.3)
-        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationResponseStep, 0.05)
-        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationDampingStep, 0.035)
-        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationMinimumDampingFraction, 0.64)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationResponse, 1.36)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationDampingFraction, 0.69)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationBlendDuration, 0.24)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationStaggerDelay, 0.14)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationMaxStaggerDelay, 0.46)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationResponseStep, 0.08)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationDampingStep, 0.025)
+        XCTAssertEqual(PetSpeechBubbleLayout.stackAnimationMinimumDampingFraction, 0.6)
         XCTAssertEqual(PetSpeechBubbleLayout.birthPulseDuration, 1.35)
         XCTAssertEqual(PetSpeechBubbleLayout.birthPulseSpringResponse, 0.62)
         XCTAssertEqual(PetSpeechBubbleLayout.birthPulseSpringDampingFraction, 0.82)
@@ -295,17 +296,21 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.organicFloatingMaximumDelay, 1.2)
     }
 
-    func testBubbleStackMotionStaggersCardsSoTheyCanOverlapBeforeSettling() {
+    func testBubbleStackMotionStaggersCardsSoTheyFloatBeforeSettling() {
         let timings = (0..<PetSpeechBubbleLayout.productionVisibleLimit).map {
             PetSpeechBubbleMotionTiming.stackTiming(for: $0)
         }
 
-        XCTAssertEqual(timings.map(\.delay), [0, 0.09, 0.18, 0.27])
-        XCTAssertEqual(timings[0].response, 1.08, accuracy: 0.0001)
-        XCTAssertEqual(timings[1].response, 1.13, accuracy: 0.0001)
-        XCTAssertEqual(timings[2].response, 1.18, accuracy: 0.0001)
-        XCTAssertEqual(timings[3].response, 1.23, accuracy: 0.0001)
-        XCTAssertEqual(timings.map(\.dampingFraction), [0.76, 0.725, 0.69, 0.655])
+        zip(timings.map(\.delay), [0, 0.14, 0.28, 0.42]).forEach {
+            XCTAssertEqual($0, $1, accuracy: 0.0001)
+        }
+        XCTAssertEqual(timings[0].response, 1.36, accuracy: 0.0001)
+        XCTAssertEqual(timings[1].response, 1.44, accuracy: 0.0001)
+        XCTAssertEqual(timings[2].response, 1.52, accuracy: 0.0001)
+        XCTAssertEqual(timings[3].response, 1.6, accuracy: 0.0001)
+        zip(timings.map(\.dampingFraction), [0.69, 0.665, 0.64, 0.615]).forEach {
+            XCTAssertEqual($0, $1, accuracy: 0.0001)
+        }
         XCTAssertTrue(zip(timings, timings.dropFirst()).allSatisfy { previous, next in
             next.delay > previous.delay &&
             next.response > previous.response &&

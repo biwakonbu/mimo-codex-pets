@@ -168,7 +168,7 @@ private enum ProductionBubbleMotion {
         return Animation.spring(
             response: timing.response,
             dampingFraction: timing.dampingFraction,
-            blendDuration: 0.1
+            blendDuration: PetSpeechBubbleLayout.stackAnimationBlendDuration
         )
         .delay(timing.delay)
     }
