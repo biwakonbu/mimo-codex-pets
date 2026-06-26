@@ -108,10 +108,10 @@ public enum PetSpeechBubbleLayout {
     public static let organicPrimaryMinimumVerticalOffset = -12.0
     public static let organicPrimaryMaximumVerticalOffset = 30.0
     public static let organicSecondaryMaximumHorizontalOffset = 220.0
-    public static let organicSecondaryMinimumVerticalOffset = -156.0
-    public static let organicSecondaryMaximumVerticalOffset = -64.0
-    public static let organicSecondaryMinimumDistanceFromMimo = 78.0
-    public static let organicSecondaryMaximumDistanceFromMimo = 202.0
+    public static let organicSecondaryMinimumVerticalOffset = -132.0
+    public static let organicSecondaryMaximumVerticalOffset = -42.0
+    public static let organicSecondaryMinimumDistanceFromMimo = 58.0
+    public static let organicSecondaryMaximumDistanceFromMimo = 174.0
     public static let organicSecondaryOrbitMinimumAngleDegrees = 22.0
     public static let organicSecondaryOrbitMaximumAngleDegrees = 158.0
     public static let organicPrimaryRotationJitter = 2.4

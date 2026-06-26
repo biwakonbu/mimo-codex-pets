@@ -366,6 +366,8 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   records the follow-up convergence after video review: secondary context now
   follows the Nest Cards direction, using narrower card-like columns and up to
   two summary lines so adjacent chat summaries stop reading as long thin labels
+  while a later video pass tightened their orbit so they stay near Mimo's
+  primary speech instead of drifting toward the top edge
 - chat names are treated as primary user-facing information: formatter output
   keeps readable chat titles up to the shared title limit instead of shortening
   them before layout, and secondary chat bubbles render the title before a short

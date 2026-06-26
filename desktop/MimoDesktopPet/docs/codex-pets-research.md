@@ -207,7 +207,9 @@ Verified runtime behavior:
   bubbles could still read as long thin labels. Production follows the Nest
   Cards direction: secondary summaries are narrower compact cards, can use a
   two-line summary, and keep enough vertical padding to feel like small notes
-  tucked around the primary Mimo speech.
+  tucked around the primary Mimo speech. A follow-up video pass tightened the
+  secondary orbit so these cards stay closer to Mimo's current speech instead of
+  floating up toward the panel edge.
 - The production bubble panel treats each visible bubble identity as stable, but
   does not pin secondary summaries to a fixed row grid. Additions fade and rise
   from the primary/Mimo side, removals fade upward, stack-position changes use a
