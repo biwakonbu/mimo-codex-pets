@@ -75,10 +75,10 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(secondThread.verticalOffset, -86)
         XCTAssertEqual(firstThread.horizontalOffset, -110)
         XCTAssertEqual(secondThread.horizontalOffset, 110)
-        XCTAssertEqual(firstThread.maxTextWidth, 214)
-        XCTAssertEqual(secondThread.maxTextWidth, 214)
-        XCTAssertEqual(firstThread.minTextWidth, 190)
-        XCTAssertEqual(secondThread.minTextWidth, 190)
+        XCTAssertEqual(firstThread.maxTextWidth, 176)
+        XCTAssertEqual(secondThread.maxTextWidth, 176)
+        XCTAssertEqual(firstThread.minTextWidth, 152)
+        XCTAssertEqual(secondThread.minTextWidth, 152)
         XCTAssertEqual(firstThread.scale, 0.96)
         XCTAssertEqual(secondThread.scale, 0.96)
         XCTAssertGreaterThan(status.zIndex, firstThread.zIndex)
@@ -114,10 +114,10 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(firstThread.horizontalOffset, -110)
         XCTAssertEqual(secondThread.horizontalOffset, 110)
         XCTAssertEqual(thirdThread.horizontalOffset, 0)
-        XCTAssertEqual(firstThread.maxTextWidth, 214)
-        XCTAssertEqual(secondThread.maxTextWidth, 214)
-        XCTAssertEqual(thirdThread.maxTextWidth, 214)
-        XCTAssertTrue([firstThread, secondThread, thirdThread].allSatisfy { $0.minTextWidth == 190 })
+        XCTAssertEqual(firstThread.maxTextWidth, 176)
+        XCTAssertEqual(secondThread.maxTextWidth, 176)
+        XCTAssertEqual(thirdThread.maxTextWidth, 176)
+        XCTAssertTrue([firstThread, secondThread, thirdThread].allSatisfy { $0.minTextWidth == 152 })
         XCTAssertEqual(status.scale, 1)
         XCTAssertEqual(firstThread.scale, 0.96)
         XCTAssertEqual(secondThread.scale, 0.96)
@@ -138,10 +138,10 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(placements.map(\.horizontalOffset), [0, -110, 110, 0])
         XCTAssertEqual(placements[0].maxTextWidth, 330)
         XCTAssertEqual(placements[0].minTextWidth, 282)
-        XCTAssertEqual(placements[1].maxTextWidth, 214)
-        XCTAssertEqual(placements[3].maxTextWidth, 188)
-        XCTAssertEqual(placements[1].minTextWidth, 190)
-        XCTAssertEqual(placements[3].minTextWidth, 156)
+        XCTAssertEqual(placements[1].maxTextWidth, 176)
+        XCTAssertEqual(placements[3].maxTextWidth, 164)
+        XCTAssertEqual(placements[1].minTextWidth, 152)
+        XCTAssertEqual(placements[3].minTextWidth, 136)
         XCTAssertEqual(placements[0].scale, 1)
         XCTAssertEqual(placements[1].scale, 0.96)
         XCTAssertEqual(placements[2].scale, 0.96)
@@ -158,8 +158,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertEqual(overflow.verticalOffset, -138)
         XCTAssertEqual(overflow.horizontalOffset, 0)
-        XCTAssertEqual(overflow.maxTextWidth, 188)
-        XCTAssertEqual(overflow.minTextWidth, 156)
+        XCTAssertEqual(overflow.maxTextWidth, 164)
+        XCTAssertEqual(overflow.minTextWidth, 136)
         XCTAssertEqual(overflow.fillOpacity, 0.9)
         XCTAssertEqual(overflow.scale, 0.92)
         XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .overflow), 22)
@@ -234,7 +234,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(primary.maxTextWidth, 330)
         XCTAssertTrue(secondary.allSatisfy { $0.scale < primary.scale })
         XCTAssertTrue(secondary.allSatisfy { $0.fillOpacity < primary.fillOpacity })
-        XCTAssertTrue(secondary.allSatisfy { $0.maxTextWidth <= 214 || $0.role == .overflow })
+        XCTAssertTrue(secondary.allSatisfy { $0.maxTextWidth <= 176 || $0.role == .overflow })
         XCTAssertTrue(secondary.allSatisfy { $0.minTextWidth != nil })
     }
 
@@ -277,10 +277,10 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMinimumVerticalOffset, -12)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryMaximumVerticalOffset, 30)
         XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumHorizontalOffset, 220)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumVerticalOffset, -148)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumVerticalOffset, -46)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumDistanceFromMimo, 68)
-        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumDistanceFromMimo, 196)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumVerticalOffset, -156)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumVerticalOffset, -64)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMinimumDistanceFromMimo, 78)
+        XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryMaximumDistanceFromMimo, 202)
         XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryOrbitMinimumAngleDegrees, 22)
         XCTAssertEqual(PetSpeechBubbleLayout.organicSecondaryOrbitMaximumAngleDegrees, 158)
         XCTAssertEqual(PetSpeechBubbleLayout.organicPrimaryRotationJitter, 2.4)
@@ -325,11 +325,12 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(overflow.dampingFraction, PetSpeechBubbleLayout.stackAnimationMinimumDampingFraction)
     }
 
-    func testConversationRowsReserveWidthForReadableChatNames() {
+    func testConversationRowsUseCompactCardShapeForReadableChatNames() {
         XCTAssertEqual(PetSpeechBubbleLayout.chatTitleTextLimit, 34)
         XCTAssertEqual(PetSpeechBubbleLayout.textLimit(for: .conversation), 96)
         XCTAssertEqual(PetSpeechBubbleLayout.titleLineLimit(for: .conversation), 2)
-        XCTAssertEqual(PetSpeechBubbleLayout.summaryLineLimit(for: .conversation), 1)
+        XCTAssertEqual(PetSpeechBubbleLayout.summaryLineLimit(for: .conversation), 2)
+        XCTAssertEqual(PetSpeechBubbleLayout.lineLimit(for: .conversation), 3)
     }
 
     func testProductionBubbleWidthsUseCompactReadableColumns() {
@@ -340,8 +341,8 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
 
         XCTAssertLessThanOrEqual(status.maxTextWidth, PetSpeechBubbleLayout.productionStackWidth * 0.74)
         XCTAssertLessThanOrEqual(focus.maxTextWidth, PetSpeechBubbleLayout.productionStackWidth * 0.74)
-        XCTAssertLessThanOrEqual(conversation.maxTextWidth, PetSpeechBubbleLayout.productionStackWidth * 0.44)
-        XCTAssertLessThanOrEqual(overflow.maxTextWidth, PetSpeechBubbleLayout.productionStackWidth * 0.39)
+        XCTAssertLessThanOrEqual(conversation.maxTextWidth, PetSpeechBubbleLayout.productionStackWidth * 0.36)
+        XCTAssertLessThanOrEqual(overflow.maxTextWidth, PetSpeechBubbleLayout.productionStackWidth * 0.34)
         XCTAssertLessThanOrEqual(status.minTextWidth ?? 0, status.maxTextWidth)
         XCTAssertLessThanOrEqual(conversation.minTextWidth ?? 0, conversation.maxTextWidth)
         XCTAssertLessThanOrEqual(overflow.minTextWidth ?? 0, overflow.maxTextWidth)
@@ -386,7 +387,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.horizontalOffset * 10).rounded()) }).count, 3)
         XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.fontScale * 1_000).rounded()) }).count, 3)
         XCTAssertGreaterThanOrEqual(Set(placements.map { Int(($0.rotationDegrees * 100).rounded()) }).count, 3)
-        XCTAssertTrue(placements.contains { $0.maxTextWidth != 214 })
+        XCTAssertTrue(placements.contains { $0.maxTextWidth != 176 })
         XCTAssertTrue(placements.contains { $0.fontScale != 1 })
         XCTAssertTrue(placements.contains { $0.rotationDegrees != 0 })
     }
@@ -527,12 +528,12 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
             abs($0.rotationDegrees) <= PetSpeechBubbleLayout.organicSecondaryRotationJitter
         })
         XCTAssertGreaterThanOrEqual((horizontalOffsets.max() ?? 0) - (horizontalOffsets.min() ?? 0), 210)
-        XCTAssertGreaterThanOrEqual((verticalOffsets.max() ?? 0) - (verticalOffsets.min() ?? 0), 100)
+        XCTAssertGreaterThanOrEqual((verticalOffsets.max() ?? 0) - (verticalOffsets.min() ?? 0), 90)
         XCTAssertGreaterThanOrEqual((rotations.max() ?? 0) - (rotations.min() ?? 0), 10)
         XCTAssertTrue(placements.contains { $0.horizontalOffset <= -80 })
         XCTAssertTrue(placements.contains { $0.horizontalOffset >= 120 })
         XCTAssertTrue(placements.contains { $0.verticalOffset <= -140 })
-        XCTAssertTrue(placements.contains { $0.verticalOffset >= -50 })
+        XCTAssertTrue(placements.contains { $0.verticalOffset >= -72 })
         XCTAssertTrue(placements.contains { $0.index == 1 && $0.horizontalOffset > -40 })
         XCTAssertTrue(placements.contains { $0.index == 2 && $0.horizontalOffset < 40 })
         XCTAssertTrue(placements.allSatisfy {
@@ -566,9 +567,9 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
         XCTAssertTrue(placements.allSatisfy {
             hypot($0.horizontalOffset, $0.verticalOffset) <= PetSpeechBubbleLayout.organicSecondaryMaximumDistanceFromMimo
         })
-        XCTAssertTrue(placements.allSatisfy { $0.verticalOffset >= -148 })
-        XCTAssertTrue(placements.allSatisfy { $0.verticalOffset <= -46 })
-        XCTAssertTrue(placements.contains { $0.verticalOffset > -50 })
+        XCTAssertTrue(placements.allSatisfy { $0.verticalOffset >= -156 })
+        XCTAssertTrue(placements.allSatisfy { $0.verticalOffset <= -64 })
+        XCTAssertTrue(placements.contains { $0.verticalOffset > -72 })
         XCTAssertTrue(placements.contains { abs($0.horizontalOffset) > 100 })
     }
 
@@ -618,7 +619,7 @@ final class PetSpeechBubbleLayoutTests: XCTestCase {
                 XCTAssertLessThanOrEqual(centerX + halfWidth, PetSpeechBubbleLayout.productionStackWidth)
                 XCTAssertLessThanOrEqual(placement.minTextWidth ?? 0, placement.maxTextWidth)
                 XCTAssertLessThanOrEqual(abs(placement.rotationDegrees), maximumRotation)
-                XCTAssertGreaterThanOrEqual(placement.fontScale, index == 0 ? 0.94 : 0.86)
+                XCTAssertGreaterThanOrEqual(placement.fontScale, index == 0 ? 0.94 : 0.92)
                 XCTAssertLessThanOrEqual(placement.fontScale, index == 0 ? 1.12 : 1.14)
                 if index == 0 {
                     XCTAssertGreaterThanOrEqual(placement.scale, 0.99)

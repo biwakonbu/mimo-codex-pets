@@ -35,6 +35,8 @@ final class PetWindowController: NSObject {
     private var autonomousEnergy = PetWindowController.makeAutonomousEnergyController()
     private var autonomousMotion: PetAutonomousMotionTween?
     private var autonomousMotionAnimation: PetAnimationState?
+    private var lastAutonomousFrameAt: TimeInterval?
+    private var lastAutonomousOrigin: PetWanderPoint?
     private var autonomousHomeOrigin = PetWanderPoint(x: 0, y: 0)
     private var autonomousRestUntil = Date.timeIntervalSinceReferenceDate + PetWindowController.environmentDouble(
         "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS",
@@ -138,6 +140,8 @@ final class PetWindowController: NSObject {
                     self.endManualMovementTracking()
                     self.autonomousMotion = nil
                     self.autonomousMotionAnimation = nil
+                    self.lastAutonomousFrameAt = nil
+                    self.lastAutonomousOrigin = nil
                     self.scheduleAutonomousRest(
                         now: Date.timeIntervalSinceReferenceDate,
                         includeMoment: false
@@ -203,6 +207,7 @@ final class PetWindowController: NSObject {
         panel.hasShadow = debugOverlay
         applyWindowZOrderPolicy()
         panel.setFrame(NSRect(origin: nextOrigin, size: size), display: true, animate: false)
+        lastAutonomousOrigin = PetWanderPoint(x: Double(nextOrigin.x), y: Double(nextOrigin.y))
     }
 
     private func applyWindowZOrderPolicy() {
@@ -336,12 +341,16 @@ final class PetWindowController: NSObject {
         guard let motion = autonomousMotion else { return false }
 
         let position = motion.position(at: now)
-        panel.setFrameOrigin(NSPoint(x: position.origin.x, y: position.origin.y))
+        let limitedOrigin = limitedAutonomousOrigin(desired: position.origin, motion: motion, now: now)
+        panel.setFrameOrigin(NSPoint(x: limitedOrigin.x, y: limitedOrigin.y))
         beginMovementAnimation(autonomousMotionAnimation ?? motion.directionAnimation, manual: false)
 
-        if position.isComplete {
+        if position.isComplete,
+           hypot(limitedOrigin.x - motion.target.x, limitedOrigin.y - motion.target.y) <= 2 {
             autonomousMotion = nil
             autonomousMotionAnimation = nil
+            lastAutonomousFrameAt = nil
+            lastAutonomousOrigin = nil
             clearMovementAnimationIfNeeded()
             movementHandler.reset()
             scheduleAutonomousRest(now: now, includeMoment: true)
@@ -352,6 +361,8 @@ final class PetWindowController: NSObject {
             if shouldInterruptAutonomousMotionForRest() {
                 autonomousMotion = nil
                 autonomousMotionAnimation = nil
+                lastAutonomousFrameAt = nil
+                lastAutonomousOrigin = nil
                 clearMovementAnimationIfNeeded()
                 movementHandler.reset()
                 scheduleAutonomousRest(now: now, includeMoment: true)
@@ -439,6 +450,8 @@ final class PetWindowController: NSObject {
         )
         autonomousMotion = motion
         autonomousMotionAnimation = motion.directionAnimation
+        lastAutonomousFrameAt = nil
+        lastAutonomousOrigin = start
         nextAutonomousRetargetAt = now + retargetDelay()
     }
 
@@ -508,8 +521,40 @@ final class PetWindowController: NSObject {
     private func stopAutonomousMotion() {
         autonomousMotion = nil
         autonomousMotionAnimation = nil
+        lastAutonomousFrameAt = nil
+        lastAutonomousOrigin = nil
         clearMovementAnimationIfNeeded()
         movementHandler.reset()
+    }
+
+    private func limitedAutonomousOrigin(
+        desired: PetWanderPoint,
+        motion: PetAutonomousMotionTween,
+        now: TimeInterval
+    ) -> PetWanderPoint {
+        let current = lastAutonomousOrigin ?? PetWanderPoint(x: panel.frame.minX, y: panel.frame.minY)
+        let elapsed = lastAutonomousFrameAt.map { now - $0 } ?? (1.0 / 60.0)
+        lastAutonomousFrameAt = now
+        let limited = PetAutonomousMotionFrameLimiter.limitedOrigin(
+            current: current,
+            desired: desired,
+            maximumSpeed: maximumAutonomousFrameSpeed(for: motion),
+            elapsed: elapsed
+        )
+        lastAutonomousOrigin = limited
+        return limited
+    }
+
+    private func maximumAutonomousFrameSpeed(for motion: PetAutonomousMotionTween) -> Double {
+        if autonomousTestMode {
+            return 96
+        }
+        if autonomousEnergyTestMode {
+            return 56
+        }
+        let distance = hypot(motion.target.x - motion.start.x, motion.target.y - motion.start.y)
+        let averageSpeed = distance / max(motion.duration, 0.001)
+        return max(PetAutonomousMotionTuning.productionMaximumSpeed * 1.8, averageSpeed * 2.2, 8)
     }
 
     private func currentScreen() -> NSScreen? {
@@ -549,6 +594,8 @@ final class PetWindowController: NSObject {
         manualMovementTrackingStarted = true
         autonomousMotion = nil
         autonomousMotionAnimation = nil
+        lastAutonomousFrameAt = nil
+        lastAutonomousOrigin = nil
         clearMovementAnimationIfNeeded()
         movementHandler.begin(sample: PetMovementSample(
             frame: currentOnScreenFrame(),

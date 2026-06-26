@@ -508,7 +508,7 @@ struct BubbleView: View {
         case .status, .focus:
             return 0.9
         case .conversation:
-            return 0.82
+            return 0.88
         case .overflow:
             return 0.86
         }
@@ -521,7 +521,7 @@ struct BubbleView: View {
         case .focus:
             return 20
         case .conversation:
-            return 11
+            return 12
         case .overflow:
             return 10
         }
@@ -532,7 +532,7 @@ struct BubbleView: View {
         case .status, .focus:
             return 15
         case .conversation:
-            return 10
+            return 11
         case .overflow:
             return 9
         }
@@ -543,9 +543,9 @@ struct BubbleView: View {
         case .status, .focus:
             return 330
         case .conversation:
-            return 214
+            return 176
         case .overflow:
-            return 188
+            return 164
         }
     }
 
@@ -559,9 +559,9 @@ struct BubbleView: View {
         case .focus:
             return 282
         case .conversation:
-            return 190
+            return 152
         case .overflow:
-            return 156
+            return 136
         }
     }
 
@@ -572,7 +572,7 @@ struct BubbleView: View {
         case .status:
             return 23
         case .conversation:
-            return 16
+            return 17
         case .overflow:
             return 15
         }

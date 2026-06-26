@@ -202,6 +202,12 @@ Verified runtime behavior:
   chaotic-cute variant: secondary bubbles stay inside a bounded close radius,
   avoid edge clipping, and overlap the primary bubble only enough to feel
   playful rather than burying the current message.
+- `design/ui-proposals/mimo-generated-secondary-bubble-card-concepts-08.png`
+  records the next convergence pass after video review showed that secondary
+  bubbles could still read as long thin labels. Production follows the Nest
+  Cards direction: secondary summaries are narrower compact cards, can use a
+  two-line summary, and keep enough vertical padding to feel like small notes
+  tucked around the primary Mimo speech.
 - The production bubble panel treats each visible bubble identity as stable, but
   does not pin secondary summaries to a fixed row grid. Additions fade and rise
   from the primary/Mimo side, removals fade upward, stack-position changes use a
@@ -267,7 +273,11 @@ State behavior:
   about `8s`, then uses a calm `18-34s` cadence so Mimo feels present without
   pacing around the desktop.
 - opt-in autonomous window movement uses a 60Hz time-based tween with smooth
-  speed variation, rather than per-frame random speed changes.
+  speed variation, rather than per-frame random speed changes. The window
+  controller also rate-limits the actual frame origins it sends to AppKit, using
+  its own last-submitted origin instead of depending on `NSPanel.frame` to update
+  synchronously every timer tick. This prevents paused or queued tween updates
+  from visually catching up in one scary jump.
 - opt-in autonomous movement caps production speed at `2.4 pt/s`, limits each
   tiny hop to `4 pt`, keeps production targets inside an `8 pt` home radius, and
   intentionally inserts rest/idle moments between hops. During conversation
@@ -357,14 +367,15 @@ Conversation behavior:
   it uses the `focus` presentation role, a stronger accent marker, and the
   Mimo-style report for that session instead of a generic status such as
   `Codex が作業中`; idle/offline status keeps the simpler `status` role.
-  Secondary session bubbles are smaller bounded context rows around it: they
+  Secondary session bubbles are smaller bounded context cards around it: they
   stay white, use compact accent markers, omit the longer `ご主人、...です`
   phrase, and use seeded organic offsets from `PetSpeechBubbleLayout`, so
   concurrent session status feels like a lively dynamic nearby bubble cloud
   without becoming a transcript panel. Bubble bodies use a soft organic shape
-  rather than a strict rounded rectangle, secondary rows include tiny pastel
-  pips, and the secondary width bounds keep short and long session titles
-  readable while the placement stays intentionally irregular as Codex
+  rather than a strict rounded rectangle, secondary cards include tiny pastel
+  pips, use narrower `176pt` text columns with up to two summary lines, and keep
+  short and long session titles readable while the placement stays intentionally
+  irregular as Codex
   notifications arrive. Each organic placement also carries a tiny
   unsynchronized drift envelope, keeping the bubbles lightly in motion while the
   primary speech remains close enough to read as Mimo's own voice.
@@ -532,8 +543,9 @@ Manual or visual checks:
   anonymous badges, or one unreadable merged white panel while still passing a
   raw bubble-count check.
 - Fake app-server E2E samples the live window position during autonomous
-  movement and rejects large per-sample jumps. Dedicated stationary E2E also
-  verifies that conversation bubbles hold the panel still, while home-radius
+  movement and rejects large per-sample jumps. Dedicated frame-limiter unit
+  tests verify that stale tween time cannot catch up in one frame, stationary
+  E2E verifies that conversation bubbles hold the panel still, and home-radius
   unit tests prevent long-term autonomous drift away from the user's chosen
   position.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that

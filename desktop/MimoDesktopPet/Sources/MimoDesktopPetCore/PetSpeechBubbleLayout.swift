@@ -100,18 +100,18 @@ public enum PetSpeechBubbleLayout {
     public static let organicTopRowOverlapDrop = 100.0
     public static let organicTopRowOverlapJitter = 126.0
     public static let organicPrimaryWidthJitter = 44.0
-    public static let organicConversationWidthJitter = 58.0
-    public static let organicOverflowWidthJitter = 36.0
+    public static let organicConversationWidthJitter = 34.0
+    public static let organicOverflowWidthJitter = 28.0
     public static let organicPrimaryScaleJitter = 0.045
     public static let organicSecondaryScaleJitter = 0.07
     public static let organicPrimaryMaximumHorizontalOffset = 74.0
     public static let organicPrimaryMinimumVerticalOffset = -12.0
     public static let organicPrimaryMaximumVerticalOffset = 30.0
     public static let organicSecondaryMaximumHorizontalOffset = 220.0
-    public static let organicSecondaryMinimumVerticalOffset = -148.0
-    public static let organicSecondaryMaximumVerticalOffset = -46.0
-    public static let organicSecondaryMinimumDistanceFromMimo = 68.0
-    public static let organicSecondaryMaximumDistanceFromMimo = 196.0
+    public static let organicSecondaryMinimumVerticalOffset = -156.0
+    public static let organicSecondaryMaximumVerticalOffset = -64.0
+    public static let organicSecondaryMinimumDistanceFromMimo = 78.0
+    public static let organicSecondaryMaximumDistanceFromMimo = 202.0
     public static let organicSecondaryOrbitMinimumAngleDegrees = 22.0
     public static let organicSecondaryOrbitMaximumAngleDegrees = 158.0
     public static let organicPrimaryRotationJitter = 2.4
@@ -126,7 +126,7 @@ public enum PetSpeechBubbleLayout {
     public static let organicFloatingMaximumDelay = 1.2
     public static let organicPrimaryMinimumFontScale = 0.94
     public static let organicPrimaryMaximumFontScale = 1.12
-    public static let organicSecondaryMinimumFontScale = 0.86
+    public static let organicSecondaryMinimumFontScale = 0.92
     public static let organicSecondaryMaximumFontScale = 1.14
     public static let organicOverflowMinimumFontScale = 0.9
     public static let organicOverflowMaximumFontScale = 1.07
@@ -149,7 +149,7 @@ public enum PetSpeechBubbleLayout {
         case .status, .focus:
             return 4
         case .conversation:
-            return 2
+            return 3
         case .overflow:
             return 1
         }
@@ -168,7 +168,9 @@ public enum PetSpeechBubbleLayout {
         switch role {
         case .focus:
             return 2
-        case .conversation, .overflow:
+        case .conversation:
+            return 2
+        case .overflow:
             return 1
         case .status:
             return lineLimit(for: role)
@@ -209,9 +211,9 @@ public enum PetSpeechBubbleLayout {
         case .status, .focus:
             return 330
         case .conversation:
-            return 214
+            return 176
         case .overflow:
-            return 188
+            return 164
         }
     }
 
@@ -226,9 +228,9 @@ public enum PetSpeechBubbleLayout {
         case .focus:
             return 282
         case .conversation:
-            return 190
+            return 152
         case .overflow:
-            return 156
+            return 136
         }
     }
 

@@ -335,6 +335,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   visible-screen targets, caps production speed at `2.4 pt/s`, limits each tiny
   hop to `4 pt` inside an `8 pt` home radius, and uses a 60Hz time-based tween
   that moves smoothly without overshooting
+- autonomous window movement rate-limits the actual frame origins sent to
+  AppKit, using the controller's last-submitted origin instead of trusting
+  `NSPanel.frame` to update synchronously every 60Hz tick. This prevents a stale
+  or queued tween from catching up as a sudden high-speed jump
 - opt-in autonomous wandering also has a stamina controller: movement drains
   stamina, high stamina keeps speed near the production cap, resting quickly
   recovers to full, and below 50% stamina Mimo may stop based on mood to show a
@@ -358,10 +362,14 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   Orbit Bouquet and Soft Cascade, then refined into a chaotic-cute close pile
   that keeps secondary chat summaries near Mimo, avoids edge clipping, and
   overlaps without burying the active primary speech
+- `desktop/MimoDesktopPet/design/ui-proposals/mimo-generated-secondary-bubble-card-concepts-08.png`
+  records the follow-up convergence after video review: secondary context now
+  follows the Nest Cards direction, using narrower card-like columns and up to
+  two summary lines so adjacent chat summaries stop reading as long thin labels
 - chat names are treated as primary user-facing information: formatter output
   keeps readable chat titles up to the shared title limit instead of shortening
-  them before layout, and secondary chat bubbles render the title on its own
-  wide line before the short activity summary
+  them before layout, and secondary chat bubbles render the title before a short
+  two-line activity summary inside compact note-like cards
 - production bubble transitions use stable visual slots rather than text-derived
   view identity: new bubbles fade and rise in, removed bubbles fade upward,
   stack changes spring into place, and text-only updates cross-fade inside the
