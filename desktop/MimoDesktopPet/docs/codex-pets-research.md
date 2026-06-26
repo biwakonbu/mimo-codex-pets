@@ -549,9 +549,11 @@ Manual or visual checks:
   fake app-server, samples the CGWindow origin at 60Hz, captures the exact Mimo
   window into a temporary frame sequence, and writes an mp4, contact sheet,
   coordinate CSV, presentation log, and `review-summary.txt` under `/tmp` by
-  default. This is the preferred loop for judging animation timing, bubble
-  arrivals, and whether secondary context cards feel close enough to Mimo
-  before deciding whether another generated design pass is needed.
+  default. The summary includes movement jump metrics plus observed animation,
+  role, tone, and maximum bubble-count totals. This is the preferred loop for
+  judging animation timing, bubble arrivals, and whether secondary context
+  cards feel close enough to Mimo before deciding whether another generated
+  design pass is needed.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps. Dedicated frame-limiter unit
   tests verify that stale tween time cannot catch up in one frame, stationary

@@ -201,9 +201,11 @@ ffmpeg -hide_banner -loglevel error -y \
 python3 - "$WINDOW_SAMPLES" "$PRESENTATION_LOG" "$FRAMES_DIR" "$OUTPUT_DIR" "$MAX_STEP_LIMIT" <<'PY'
 import csv
 import glob
+import json
 import math
 import os
 import sys
+from collections import Counter
 
 samples_path, presentation_path, frames_dir, output_dir, max_step_limit_raw = sys.argv[1:]
 max_step_limit = float(max_step_limit_raw)
@@ -218,9 +220,32 @@ deltas = [
 ]
 frame_count = len(glob.glob(frames_dir + "/frame_*.png"))
 presentation_rows = 0
+animation_counts = Counter()
+bubble_role_counts = Counter()
+bubble_tone_counts = Counter()
+max_bubble_count = 0
 if os.path.exists(presentation_path):
     with open(presentation_path, encoding="utf-8") as handle:
-        presentation_rows = sum(1 for line in handle if line.strip())
+        for line in handle:
+            if not line.strip():
+                continue
+            presentation_rows += 1
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            animation = row.get("animation")
+            if isinstance(animation, str) and animation:
+                animation_counts[animation] += 1
+            bubbles = row.get("bubbleTexts")
+            if isinstance(bubbles, list):
+                max_bubble_count = max(max_bubble_count, len(bubbles))
+            roles = row.get("bubbleRoles")
+            if isinstance(roles, list):
+                bubble_role_counts.update(str(role) for role in roles)
+            tones = row.get("bubbleTones")
+            if isinstance(tones, list):
+                bubble_tone_counts.update(str(tone) for tone in tones)
 
 large_steps = sum(1 for delta in deltas if delta > max_step_limit)
 summary = (
@@ -234,6 +259,10 @@ summary = (
     f"max_step_limit={max_step_limit:.2f}px\n"
     f"large_steps={large_steps}\n"
     f"presentation_rows={presentation_rows}\n"
+    f"max_bubble_count={max_bubble_count}\n"
+    f"animation_counts={dict(sorted(animation_counts.items()))}\n"
+    f"bubble_role_counts={dict(sorted(bubble_role_counts.items()))}\n"
+    f"bubble_tone_counts={dict(sorted(bubble_tone_counts.items()))}\n"
 )
 
 with open(os.path.join(output_dir, "review-summary.txt"), "w", encoding="utf-8") as handle:
