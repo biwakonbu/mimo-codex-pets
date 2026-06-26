@@ -248,6 +248,20 @@ if os.path.exists(presentation_path):
                 bubble_tone_counts.update(str(tone) for tone in tones)
 
 large_steps = sum(1 for delta in deltas if delta > max_step_limit)
+review_warnings = []
+if max_bubble_count < 3:
+    review_warnings.append("multi-bubble sample was not observed")
+for expected_animation in ("running-right", "waiting", "review"):
+    if animation_counts[expected_animation] == 0:
+        review_warnings.append(f"animation sample missing: {expected_animation}")
+for expected_tone in ("active", "waiting", "review", "failed"):
+    if bubble_tone_counts[expected_tone] == 0:
+        review_warnings.append(f"bubble tone missing: {expected_tone}")
+if sum(1 for delta in deltas if delta > 0.05) < 24:
+    review_warnings.append("autonomous movement sample was too sparse")
+if large_steps > 0:
+    review_warnings.append("movement jump exceeded max step limit")
+design_pass_recommended = bool(review_warnings)
 summary = (
     f"capture_dir={output_dir}\n"
     f"video={output_dir}/mimo-window-content.mp4\n"
@@ -263,6 +277,8 @@ summary = (
     f"animation_counts={dict(sorted(animation_counts.items()))}\n"
     f"bubble_role_counts={dict(sorted(bubble_role_counts.items()))}\n"
     f"bubble_tone_counts={dict(sorted(bubble_tone_counts.items()))}\n"
+    f"review_warnings={review_warnings}\n"
+    f"design_pass_recommended={str(design_pass_recommended).lower()}\n"
 )
 
 with open(os.path.join(output_dir, "review-summary.txt"), "w", encoding="utf-8") as handle:

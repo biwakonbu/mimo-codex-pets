@@ -550,10 +550,12 @@ Manual or visual checks:
   window into a temporary frame sequence, and writes an mp4, contact sheet,
   coordinate CSV, presentation log, and `review-summary.txt` under `/tmp` by
   default. The summary includes movement jump metrics plus observed animation,
-  role, tone, and maximum bubble-count totals. This is the preferred loop for
-  judging animation timing, bubble arrivals, and whether secondary context
-  cards feel close enough to Mimo before deciding whether another generated
-  design pass is needed.
+  role, tone, and maximum bubble-count totals, then adds `review_warnings` and
+  `design_pass_recommended` when the sample did not cover enough motion,
+  multi-bubble, or semantic states. This is the preferred loop for judging
+  animation timing, bubble arrivals, and whether secondary context cards feel
+  close enough to Mimo before deciding whether another generated design pass is
+  needed.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps. Dedicated frame-limiter unit
   tests verify that stale tween time cannot catch up in one frame, stationary
