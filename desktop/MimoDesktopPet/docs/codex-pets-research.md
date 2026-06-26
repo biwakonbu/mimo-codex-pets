@@ -544,6 +544,14 @@ Manual or visual checks:
   to overlap and vary in both axes, but they must not drift into distant cards,
   anonymous badges, or one unreadable merged white panel while still passing a
   raw bubble-count check.
+- `script/capture_video_review.sh` is the manual video-review companion to the
+  automated capture gates. It launches the real app binary against the public
+  fake app-server, samples the CGWindow origin at 60Hz, captures the exact Mimo
+  window into a temporary frame sequence, and writes an mp4, contact sheet,
+  coordinate CSV, presentation log, and `review-summary.txt` under `/tmp` by
+  default. This is the preferred loop for judging animation timing, bubble
+  arrivals, and whether secondary context cards feel close enough to Mimo
+  before deciding whether another generated design pass is needed.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps. Dedicated frame-limiter unit
   tests verify that stale tween time cannot catch up in one frame, stationary

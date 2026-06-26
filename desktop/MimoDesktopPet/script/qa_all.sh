@@ -90,6 +90,7 @@ run_from_repo "shell syntax checks" bash -n \
   desktop/MimoDesktopPet/script/qa_all.sh \
   desktop/MimoDesktopPet/script/check_app_server_schema.sh \
   desktop/MimoDesktopPet/script/check_app_bundle_contract.sh \
+  desktop/MimoDesktopPet/script/capture_video_review.sh \
   desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh \
   desktop/MimoDesktopPet/script/test_live_app_server_smoke_retry.sh \
   desktop/MimoDesktopPet/script/test_live_app_server_smoke_transport.sh \
