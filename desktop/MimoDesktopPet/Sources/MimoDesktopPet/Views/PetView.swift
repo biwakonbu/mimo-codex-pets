@@ -252,34 +252,37 @@ private struct BubbleBirthPulseView: View {
     var body: some View {
         ZStack {
             Capsule(style: .continuous)
-                .stroke(Color.white.opacity(isVisible ? 0.68 : 0), lineWidth: 1.35)
+                .fill(Color(red: 0.78, green: 0.9, blue: 1.0).opacity(isVisible ? 0.07 : 0))
                 .frame(
-                    width: CGFloat(PetSpeechBubbleLayout.birthPulseWidth),
-                    height: CGFloat(PetSpeechBubbleLayout.birthPulseHeight)
+                    width: CGFloat(PetSpeechBubbleLayout.birthPulseWidth * 0.66 + 12),
+                    height: CGFloat(PetSpeechBubbleLayout.birthPulseHeight + 5)
                 )
                 .scaleEffect(
-                    x: isVisible ? 1.0 : 0.36,
-                    y: isVisible ? 0.9 : 0.34,
+                    x: isVisible ? 1.06 : 0.42,
+                    y: isVisible ? 0.86 : 0.3,
                     anchor: .center
                 )
+                .blur(radius: isVisible ? 3.8 : 1.4)
 
             Capsule(style: .continuous)
-                .stroke(Color(red: 0.58, green: 0.78, blue: 1.0).opacity(isVisible ? 0.42 : 0), lineWidth: 1.0)
+                .fill(Color.white.opacity(isVisible ? 0.12 : 0))
                 .frame(
-                    width: CGFloat(PetSpeechBubbleLayout.birthPulseWidth + 20),
-                    height: CGFloat(PetSpeechBubbleLayout.birthPulseHeight + 8)
+                    width: CGFloat(PetSpeechBubbleLayout.birthPulseWidth * 0.54),
+                    height: CGFloat(PetSpeechBubbleLayout.birthPulseHeight + 2)
                 )
-                .scaleEffect(isVisible ? 1.14 : 0.48, anchor: .center)
+                .scaleEffect(isVisible ? 0.94 : 0.36, anchor: .center)
+                .blur(radius: isVisible ? 1.8 : 0.8)
 
             Capsule(style: .continuous)
-                .stroke(Color(red: 0.9, green: 0.97, blue: 1.0).opacity(isVisible ? 0.24 : 0), lineWidth: 0.8)
+                .fill(Color(red: 0.47, green: 0.68, blue: 0.96).opacity(isVisible ? 0.04 : 0))
                 .frame(
-                    width: CGFloat(PetSpeechBubbleLayout.birthPulseWidth + 38),
-                    height: CGFloat(PetSpeechBubbleLayout.birthPulseHeight + 14)
+                    width: CGFloat(PetSpeechBubbleLayout.birthPulseWidth * 0.82 + 18),
+                    height: CGFloat(PetSpeechBubbleLayout.birthPulseHeight + 9)
                 )
-                .scaleEffect(isVisible ? 1.2 : 0.54, anchor: .center)
+                .scaleEffect(isVisible ? 1.22 : 0.52, anchor: .center)
+                .blur(radius: isVisible ? 6 : 2)
         }
-        .opacity(isVisible ? 1 : 0)
+        .opacity(isVisible ? 0.48 : 0)
         .blur(radius: isVisible ? 0 : 0.8)
         .animation(.easeOut(duration: PetSpeechBubbleLayout.birthPulseDuration * 0.9), value: isVisible)
     }
@@ -529,16 +532,16 @@ struct BubbleView: View {
         case .status, .focus:
             return 15
         case .conversation:
-            return 8
+            return 10
         case .overflow:
-            return 7
+            return 9
         }
     }
 
     private var defaultMaxTextWidth: Double {
         switch role {
         case .status, .focus:
-            return 360
+            return 330
         case .conversation:
             return 214
         case .overflow:
@@ -552,9 +555,9 @@ struct BubbleView: View {
         }
         switch role {
         case .status:
-            return 292
+            return 270
         case .focus:
-            return 300
+            return 282
         case .conversation:
             return 190
         case .overflow:
@@ -569,9 +572,9 @@ struct BubbleView: View {
         case .status:
             return 23
         case .conversation:
-            return 14
+            return 16
         case .overflow:
-            return 13
+            return 15
         }
     }
 

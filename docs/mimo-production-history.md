@@ -347,14 +347,17 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   `live_mimo_dialogue_smoke.py` verifies the live generation path without
   writing into user work sessions
 - production speech bubbles use compact readable columns instead of forcing the
-  nearly full 432pt panel width; primary Mimo speech can grow to four lines,
-  secondary chat rows keep a bounded three-line title/summary shape, and
-  `PetSpeechBubblePaginator` advances overlong Mimo speech as timed pages before
-  the next chat update is shown
-- secondary chat bubbles use wider seeded position variation plus a tiny
-  unsynchronized drift envelope; the primary speech stays visually attached to
-  Mimo, while surrounding chat summaries can overlap slightly and settle into an
-  irregular nearby cloud
+  full panel width; primary Mimo speech now caps at 330pt, can grow to four
+  lines, and `PetSpeechBubblePaginator` advances overlong Mimo speech as timed
+  pages before the next chat update is shown
+- generated proposal boards
+  `desktop/MimoDesktopPet/design/ui-proposals/mimo-generated-bubble-layout-concepts-06.png`
+  and
+  `desktop/MimoDesktopPet/design/ui-proposals/mimo-generated-pocket-pile-convergence-07.png`
+  drove the latest bubble layout convergence: Pocket Pile was selected over
+  Orbit Bouquet and Soft Cascade, then refined into a chaotic-cute close pile
+  that keeps secondary chat summaries near Mimo, avoids edge clipping, and
+  overlaps without burying the active primary speech
 - chat names are treated as primary user-facing information: formatter output
   keeps readable chat titles up to the shared title limit instead of shortening
   them before layout, and secondary chat bubbles render the title on its own

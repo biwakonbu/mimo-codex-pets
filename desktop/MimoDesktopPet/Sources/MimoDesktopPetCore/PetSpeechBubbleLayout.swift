@@ -93,12 +93,12 @@ public enum PetSpeechBubbleLayout {
     public static let typewriterCharactersPerSecond = 10.0
     public static let typewriterFrameInterval = 1.0 / 30.0
     public static let organicPrimaryHorizontalJitter = 68.0
-    public static let organicSecondaryHorizontalJitter = 252.0
-    public static let organicTopRowHorizontalJitter = 286.0
+    public static let organicSecondaryHorizontalJitter = 284.0
+    public static let organicTopRowHorizontalJitter = 308.0
     public static let organicPrimaryVerticalJitter = 26.0
-    public static let organicSecondaryVerticalJitter = 148.0
-    public static let organicTopRowOverlapDrop = 96.0
-    public static let organicTopRowOverlapJitter = 168.0
+    public static let organicSecondaryVerticalJitter = 110.0
+    public static let organicTopRowOverlapDrop = 100.0
+    public static let organicTopRowOverlapJitter = 126.0
     public static let organicPrimaryWidthJitter = 44.0
     public static let organicConversationWidthJitter = 58.0
     public static let organicOverflowWidthJitter = 36.0
@@ -108,12 +108,12 @@ public enum PetSpeechBubbleLayout {
     public static let organicPrimaryMinimumVerticalOffset = -12.0
     public static let organicPrimaryMaximumVerticalOffset = 30.0
     public static let organicSecondaryMaximumHorizontalOffset = 220.0
-    public static let organicSecondaryMinimumVerticalOffset = -166.0
-    public static let organicSecondaryMaximumVerticalOffset = -2.0
-    public static let organicSecondaryMinimumDistanceFromMimo = 54.0
-    public static let organicSecondaryMaximumDistanceFromMimo = 222.0
-    public static let organicSecondaryOrbitMinimumAngleDegrees = 14.0
-    public static let organicSecondaryOrbitMaximumAngleDegrees = 166.0
+    public static let organicSecondaryMinimumVerticalOffset = -148.0
+    public static let organicSecondaryMaximumVerticalOffset = -46.0
+    public static let organicSecondaryMinimumDistanceFromMimo = 68.0
+    public static let organicSecondaryMaximumDistanceFromMimo = 196.0
+    public static let organicSecondaryOrbitMinimumAngleDegrees = 22.0
+    public static let organicSecondaryOrbitMaximumAngleDegrees = 158.0
     public static let organicPrimaryRotationJitter = 2.4
     public static let organicSecondaryRotationJitter = 14.5
     public static let organicTailMaximumHorizontalOffset = 86.0
@@ -207,7 +207,7 @@ public enum PetSpeechBubbleLayout {
     private static func maxTextWidth(role: PetSpeechBubbleRole) -> Double {
         switch role {
         case .status, .focus:
-            return 360
+            return 330
         case .conversation:
             return 214
         case .overflow:
@@ -222,9 +222,9 @@ public enum PetSpeechBubbleLayout {
     ) -> Double? {
         switch role {
         case .status:
-            return 292
+            return 270
         case .focus:
-            return 300
+            return 282
         case .conversation:
             return 190
         case .overflow:
@@ -489,11 +489,11 @@ public enum PetSpeechBubbleLayout {
     private static func organicSecondaryVerticalBias(for index: Int) -> Double {
         switch index {
         case 1:
-            return 12
+            return 4
         case 2:
-            return -24
+            return -18
         case 3:
-            return -8
+            return -4
         default:
             return 0
         }
@@ -543,7 +543,7 @@ public enum PetSpeechBubbleLayout {
     }
 
     private static func maximumHorizontalOffset(maxTextWidth: Double) -> Double {
-        let inset = 8.0
+        let inset = 28.0
         return max(0, productionStackWidth / 2 - maxTextWidth / 2 - inset)
     }
 

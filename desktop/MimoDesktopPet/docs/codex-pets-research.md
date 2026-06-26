@@ -178,19 +178,30 @@ Verified runtime behavior:
   without touching user work sessions: it creates an ephemeral Mimo session,
   sends a sanitized `turn/start` request, waits for assistant-message
   notifications, and rejects unsafe or non-Mimo speech.
-- The production bubble panel intentionally uses nearly the full 432pt window
-  width for primary Mimo speech and reserves a taller stack area for text. The
-  primary bubble can render three lines, jitters only inside Mimo's near speech
-  area, and keeps its speech tail pulled back toward Mimo when the bubble body
-  shifts sideways. Secondary session rows can render two lines and scatter as a
-  bounded irregular chat cloud near Mimo, while `PetSpeechBubblePaginator`
-  splits longer Mimo speech into timed pages so conversation-sketch playback can
-  continue without truncating the whole message into one chip.
+- The production bubble panel keeps primary Mimo speech compact instead of
+  using the full window width. The current primary column caps at 330pt, can
+  render up to four lines, jitters only inside Mimo's near speech area, and
+  keeps its speech tail pulled back toward Mimo when the bubble body shifts
+  sideways. Secondary session rows can render two lines and now settle into a
+  close "pocket pile" around the primary bubble instead of drifting to the top
+  edge as thin labels. `PetSpeechBubblePaginator` splits longer Mimo speech into
+  timed pages so conversation-sketch playback can continue without truncating
+  the whole message into one chip.
 - `design/ui-proposals/mimo-perfect-cute-ui-board-05.png` records the current
   cute UI direction generated from the Mimo identity prompt: soft organic white
   bubbles, pastel activity pins, tiny decorative pips, and a barely-there
   home-radius movement feel. Production SwiftUI uses those elements without
   adding readable decorative text or a separate dashboard panel.
+- `design/ui-proposals/mimo-generated-bubble-layout-concepts-06.png` records the
+  generated divergence pass for nearby bubble placement, comparing Pocket Pile,
+  Orbit Bouquet, and Soft Cascade. The selected direction was Pocket Pile because
+  it keeps Codex chat summaries close enough to feel like Mimo is speaking them,
+  while still allowing irregular overlap.
+- `design/ui-proposals/mimo-generated-pocket-pile-convergence-07.png` records the
+  generated convergence pass for Pocket Pile. Production layout follows the
+  chaotic-cute variant: secondary bubbles stay inside a bounded close radius,
+  avoid edge clipping, and overlap the primary bubble only enough to feel
+  playful rather than burying the current message.
 - The production bubble panel treats each visible bubble identity as stable, but
   does not pin secondary summaries to a fixed row grid. Additions fade and rise
   from the primary/Mimo side, removals fade upward, stack-position changes use a
