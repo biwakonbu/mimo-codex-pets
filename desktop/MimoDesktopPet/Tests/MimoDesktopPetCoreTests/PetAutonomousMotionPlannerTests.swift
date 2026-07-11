@@ -3,22 +3,21 @@ import XCTest
 
 final class PetAutonomousMotionPlannerTests: XCTestCase {
     func testProductionAutonomousTuningKeepsWanderGentle() {
-        XCTAssertEqual(PetAutonomousMotionTuning.productionMaximumSpeed, 2.4)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionMinimumStepDistance, 1)
-        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionMaximumStepDistance, 4)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionHomeRadius, 8)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionVerticalStepScale, 0.1)
-        XCTAssertLessThanOrEqual(PetAutonomousMotionTuning.productionBeginMotionProbability, 0.004)
-        XCTAssertGreaterThanOrEqual(PetAutonomousMotionTuning.productionInitialRestSeconds, 75)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveAmplitudeRange, 0.0...0.006)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveCyclesRange, 0.08...0.2)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionRetargetDelayRange, 260.0...520.0)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionIdleMomentDelayRange, 4.0...10.0)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionRestMomentDelayRange, 45.0...120.0)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionConversationHoldSeconds, 90)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionAnchoredInitialMomentSeconds, 8)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionAnchoredIdleMomentDelayRange, 18.0...34.0)
-        XCTAssertEqual(PetAutonomousMotionTuning.productionAnchoredRestMomentDelayRange, 22.0...48.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionMaximumSpeed, 34)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionMinimumStepDistance, 90)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionMaximumStepDistance, 240)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionHomeRadius, 360)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionVerticalStepScale, 0.35)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionBeginMotionProbability, 0.72)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionInitialRestSeconds, 8)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveAmplitudeRange, 0.04...0.12)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionSpeedWaveCyclesRange, 0.7...1.5)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionRetargetDelayRange, 40.0...90.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionIdleMomentDelayRange, 3.0...8.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionRestMomentDelayRange, 4.0...10.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionAnchoredInitialMomentSeconds, 4)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionAnchoredIdleMomentDelayRange, 10.0...22.0)
+        XCTAssertEqual(PetAutonomousMotionTuning.productionAnchoredRestMomentDelayRange, 12.0...28.0)
         XCTAssertLessThan(
             PetAutonomousMotionTuning.productionAnchoredInitialMomentSeconds,
             PetAutonomousMotionTuning.productionInitialRestSeconds
@@ -40,8 +39,8 @@ final class PetAutonomousMotionPlannerTests: XCTestCase {
     }
 
     func testNearbyTargetChoosesShortWalkAroundCurrentPosition() {
-        let visible = PetDragFrame(x: 0, y: 0, width: 900, height: 700)
-        let start = PetWanderPoint(x: 220, y: 160)
+        let visible = PetDragFrame(x: 0, y: 0, width: 1_600, height: 1_000)
+        let start = PetWanderPoint(x: 600, y: 260)
         let target = PetAutonomousMotionPlanner.nearbyTarget(
             visibleFrame: visible,
             petWidth: 500,
@@ -63,8 +62,8 @@ final class PetAutonomousMotionPlannerTests: XCTestCase {
     }
 
     func testNearbyTargetEasesDistanceTowardTinyWanders() {
-        let visible = PetDragFrame(x: 0, y: 0, width: 900, height: 700)
-        let start = PetWanderPoint(x: 220, y: 160)
+        let visible = PetDragFrame(x: 0, y: 0, width: 1_600, height: 1_000)
+        let start = PetWanderPoint(x: 600, y: 260)
         let target = PetAutonomousMotionPlanner.nearbyTarget(
             visibleFrame: visible,
             petWidth: 500,
@@ -77,7 +76,9 @@ final class PetAutonomousMotionPlannerTests: XCTestCase {
             distanceUnit: 0.5
         )
 
-        XCTAssertLessThan(hypot(target.x - start.x, target.y - start.y), 2)
+        let distance = hypot(target.x - start.x, target.y - start.y)
+        XCTAssertGreaterThan(distance, PetAutonomousMotionTuning.productionMinimumStepDistance)
+        XCTAssertLessThan(distance, PetAutonomousMotionTuning.productionMaximumStepDistance)
     }
 
     func testHomeBoundedTargetStaysAroundHomeAcrossRepeatedSteps() {
@@ -254,7 +255,34 @@ final class PetAutonomousMotionPlannerTests: XCTestCase {
             speedWavePhase: 0
         )
 
-        XCTAssertEqual(tween.duration, 2, accuracy: 0.0001)
+        XCTAssertEqual(tween.duration, 3.75, accuracy: 0.0001)
+    }
+
+    func testTweenNeverExceedsConfiguredPeakSpeedAtDisplayCadence() {
+        let maximumSpeed = 36.0
+        let tween = PetAutonomousMotionTween.make(
+            start: PetWanderPoint(x: 0, y: 0),
+            target: PetWanderPoint(x: 240, y: 0),
+            startTime: 0,
+            baseSpeed: maximumSpeed,
+            maximumSpeed: maximumSpeed,
+            speedWaveAmplitude: 0.1,
+            speedWaveCycles: 1.2,
+            speedWavePhase: 0.4
+        )
+
+        var previous = tween.position(at: 0).origin
+        var peakSpeed = 0.0
+        let frameCount = Int(ceil(tween.duration * 120))
+        for frame in 1...frameCount {
+            let time = min(tween.duration, Double(frame) / 120.0)
+            let current = tween.position(at: time).origin
+            let speed = hypot(current.x - previous.x, current.y - previous.y) * 120
+            peakSpeed = max(peakSpeed, speed)
+            previous = current
+        }
+
+        XCTAssertLessThanOrEqual(peakSpeed, maximumSpeed + 0.35)
     }
 
     func testTweenDirectionAnimationFollowsHorizontalTarget() {

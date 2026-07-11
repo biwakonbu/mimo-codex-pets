@@ -123,37 +123,6 @@ blocked_ambient_patterns = (
     r"[A-Fa-f0-9]{32,}",
     r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}",
 )
-role_limits = {
-    "status": 44,
-    "focus": 48,
-    "conversation": 34,
-    "overflow": 22,
-}
-valid_activity_kinds = {
-    "none",
-    "message",
-    "userRequest",
-    "assistantMessage",
-    "plan",
-    "reasoning",
-    "command",
-    "test",
-    "fileChange",
-    "fileRead",
-    "tool",
-    "subAgent",
-    "webSearch",
-    "browser",
-    "search",
-    "image",
-    "imageGeneration",
-    "sleep",
-    "review",
-    "contextCompaction",
-    "skill",
-    "mention",
-    "threadStatus",
-}
 expected_titles = []
 if expect_thread_context:
     try:
@@ -169,12 +138,6 @@ if expect_thread_context:
 
     if not expected_titles:
         expected_titles = ["Codex"]
-
-
-def bubble_title(text):
-    match = re.search(r"「([^」]+)」", str(text))
-    return match.group(1) if match else None
-
 
 def reject_unsafe_visible_text(text):
     lowered = text.lower()
@@ -210,71 +173,55 @@ while time.time() < deadline:
     for row in rows:
         if row.get("debugOverlay") is not False:
             raise SystemExit("live app presentation unexpectedly enabled debug overlay")
-        bubbles = row.get("bubbleTexts", [])
-        roles = row.get("bubbleRoles", [])
-        tones = row.get("bubbleTones", [])
-        activity_kinds = row.get("bubbleActivityKinds", [])
-        if roles and not isinstance(roles, list):
-            raise SystemExit(f"live app bubble roles were not a list: {roles!r}")
-        if tones and not isinstance(tones, list):
-            raise SystemExit(f"live app bubble tones were not a list: {tones!r}")
-        if activity_kinds and not isinstance(activity_kinds, list):
-            raise SystemExit(f"live app bubble activity kinds were not a list: {activity_kinds!r}")
-        visible_bubbles = bubbles if isinstance(bubbles, list) else []
-        if isinstance(bubbles, list):
-            if len(bubbles) > 5:
-                raise SystemExit(f"live app presentation showed too many bubbles: {bubbles}")
-            if roles and len(roles) != len(bubbles):
-                raise SystemExit(f"live app bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
-            if tones and len(tones) != len(bubbles):
-                raise SystemExit(f"live app bubble tones did not match bubble text count: tones={tones} bubbles={bubbles}")
-            if activity_kinds and len(activity_kinds) != len(bubbles):
-                raise SystemExit(f"live app bubble activity kinds did not match bubble text count: activity_kinds={activity_kinds} bubbles={bubbles}")
-            unknown_tones = [tone for tone in tones if tone not in {"neutral", "active", "waiting", "review", "failed", "overflow"}]
-            if unknown_tones:
-                raise SystemExit(f"live app bubble tones contained unknown values: {unknown_tones}")
-            unknown_activity_kinds = [kind for kind in activity_kinds if kind not in valid_activity_kinds]
-            if unknown_activity_kinds:
-                raise SystemExit(f"live app bubble activity kinds contained unknown values: {unknown_activity_kinds}")
-            for index, bubble_text in enumerate(bubbles):
-                role = roles[index] if index < len(roles) else ("status" if index == 0 else "conversation")
-                limit = role_limits.get(role, 34)
-                if len(str(bubble_text)) > limit:
-                    raise SystemExit(
-                        f"live app bubble exceeded {role} limit {limit}: {bubble_text!r}"
-                    )
-            if roles and "focus" in roles and roles[0] != "focus":
-                raise SystemExit(f"live app focus bubble was not primary: roles={roles} bubbles={bubbles}")
-            if any(role in {"focus", "conversation", "overflow"} for role in roles):
-                thread_context_seen = True
-                for index, bubble_text in enumerate(bubbles):
-                    role = roles[index] if index < len(roles) else ("status" if index == 0 else "conversation")
-                    if role not in {"focus", "conversation"}:
-                        continue
-                    if activity_kinds and activity_kinds[index] == "none":
-                        raise SystemExit(f"live app thread context bubble lost activity kind: activity_kinds={activity_kinds} bubbles={bubbles}")
-                    title = bubble_title(bubble_text)
-                    if title in expected_titles:
-                        title_match_seen = True
-            accessibility_value = str(row.get("accessibilityValue", ""))
-            if visible_bubbles and not accessibility_value:
-                raise SystemExit("live app presentation omitted accessibilityValue")
-            if visible_bubbles and not accessibility_value.startswith("本番表示。"):
-                raise SystemExit(f"live app accessibilityValue did not mark production mode: {accessibility_value!r}")
-            if visible_bubbles and accessibility_value.startswith("デバッグ表示。"):
-                raise SystemExit(f"live app accessibilityValue exposed debug mode: {accessibility_value!r}")
-            missing_ax_bubbles = [str(bubble) for bubble in visible_bubbles if str(bubble) not in accessibility_value]
-            if missing_ax_bubbles:
+        report = str(row.get("kataribeReportText", ""))
+        charms = row.get("kataribeCharmTitles", [])
+        charm_thread_ids = row.get("kataribeCharmThreadIds", [])
+        if not isinstance(charms, list):
+            raise SystemExit(f"live app Kataribe charm titles were not a list: {charms!r}")
+        if not isinstance(charm_thread_ids, list) or len(charm_thread_ids) != len(charms):
+            raise SystemExit(
+                "live app Kataribe charm identities did not match titles: "
+                f"ids={charm_thread_ids!r} titles={charms!r}"
+            )
+        if len(charms) > 6 or len(charms) != len(set(charms)):
+            raise SystemExit(f"live app Kataribe charm rail was invalid: {charms!r}")
+        if any(title in {"Codex Thread", "Codex Session", "unknown-thread"} for title in charms):
+            raise SystemExit(f"live app exposed a generic internal chat title: {charms!r}")
+        if any("ほか" in str(title) for title in charms):
+            raise SystemExit(f"live app hid chat names behind an overflow label: {charms!r}")
+        page_number = row.get("kataribePageNumber", 1)
+        page_count = row.get("kataribePageCount", 1)
+        if not isinstance(page_number, int) or not isinstance(page_count, int) or not (1 <= page_number <= page_count):
+            raise SystemExit(f"live app Kataribe page metadata was invalid: {page_number}/{page_count}")
+        if report and len(report) > 170:
+            raise SystemExit(f"live app Kataribe report exceeded its page surface: {report!r}")
+        report_thread_id = row.get("kataribeReportThreadId")
+        if report_thread_id not in (None, "none") and charm_thread_ids:
+            if charm_thread_ids[-1] != report_thread_id:
                 raise SystemExit(
-                    "live app accessibilityValue did not mirror visible bubbles: "
-                    f"missing={missing_ax_bubbles!r} value={accessibility_value!r}"
+                    "live app did not keep the narrated chat at the bottom of the feed: "
+                    f"report={report_thread_id!r} ids={charm_thread_ids!r}"
                 )
-        else:
-            accessibility_value = str(row.get("accessibilityValue", ""))
+
+        if charms:
+            thread_context_seen = True
+            if any(title in expected_titles for title in charms) or any(title in report for title in expected_titles):
+                title_match_seen = True
+
+        accessibility_value = str(row.get("accessibilityValue", ""))
+        if (report or charms) and not accessibility_value.startswith("本番表示。"):
+            raise SystemExit(f"live app accessibilityValue did not mark production mode: {accessibility_value!r}")
+        missing_ax_titles = [str(title) for title in charms if str(title) not in accessibility_value]
+        if missing_ax_titles:
+            raise SystemExit(
+                "live app accessibilityValue omitted named chats: "
+                f"missing={missing_ax_titles!r} value={accessibility_value!r}"
+            )
+        if any(raw in accessibility_value for raw in ("running-left", "running-right", "active", "Codex Thread")):
+            raise SystemExit(f"live app accessibilityValue exposed internal state: {accessibility_value!r}")
 
         all_visible_text = " ".join(
-            [str(row.get("bubbleText", "")), accessibility_value] +
-            [str(bubble) for bubble in visible_bubbles]
+            [report, accessibility_value] + [str(title) for title in charms]
         )
         reject_unsafe_visible_text(all_visible_text)
         bubble = str(row.get("bubbleText", ""))
@@ -284,14 +231,14 @@ while time.time() < deadline:
         elif offline_seen and bubble and "接続" not in bubble and "未設定" not in bubble:
             connected_seen = True
             if not expect_thread_context or (thread_context_seen and title_match_seen):
-                suffix = " with thread context bubbles" if expect_thread_context else ""
+                suffix = " with a named Kataribe Stage" if expect_thread_context else ""
                 print(f"Live app presentation smoke passed: app reached a connected presentation state{suffix}.")
                 sys.exit(0)
 
     if connected_seen and expect_thread_context and not title_match_seen:
         last_error = f"app connected but no live thread title matched {len(expected_titles)} expected sanitized variants"
     elif connected_seen and expect_thread_context:
-        last_error = "app connected but did not show live thread-context bubbles"
+        last_error = "app connected but did not show a live named Kataribe Stage"
     elif rows:
         last_error = "app did not leave offline/connection presentation state"
     time.sleep(0.2)
@@ -303,4 +250,8 @@ PY
 kill -0 "$APP_PID" >/dev/null
 sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
-swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
+if [[ "$EXPECT_THREAD_CONTEXT" == "1" ]]; then
+  swift ./script/inspect_production_capture.swift --kataribe-stage "$SCREENSHOT_PATH"
+else
+  swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
+fi

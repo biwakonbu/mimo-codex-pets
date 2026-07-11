@@ -114,6 +114,7 @@ CODEX_BIN="$FAKE_CODEX" \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_TEST_MODE=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
+MIMO_CLICK_THROUGH=1 \
 MIMO_CODEX_DIALOGUE_ENABLED=1 \
 MIMO_PRESENTATION_LOG="$PRESENTATION_LOG" \
 MIMO_WINDOW_ORIGIN="${MIMO_VIDEO_REVIEW_WINDOW_ORIGIN:-160,160}" \
@@ -221,9 +222,14 @@ deltas = [
 frame_count = len(glob.glob(frames_dir + "/frame_*.png"))
 presentation_rows = 0
 animation_counts = Counter()
-bubble_role_counts = Counter()
-bubble_tone_counts = Counter()
-max_bubble_count = 0
+max_chat_charm_count = 0
+kataribe_report_rows = 0
+walking_report_rows = 0
+generic_title_rows = 0
+bottom_feed_report_rows = 0
+misplaced_report_rows = 0
+invalid_charm_identity_rows = 0
+non_click_through_rows = 0
 if os.path.exists(presentation_path):
     with open(presentation_path, encoding="utf-8") as handle:
         for line in handle:
@@ -237,26 +243,50 @@ if os.path.exists(presentation_path):
             animation = row.get("animation")
             if isinstance(animation, str) and animation:
                 animation_counts[animation] += 1
-            bubbles = row.get("bubbleTexts")
-            if isinstance(bubbles, list):
-                max_bubble_count = max(max_bubble_count, len(bubbles))
-            roles = row.get("bubbleRoles")
-            if isinstance(roles, list):
-                bubble_role_counts.update(str(role) for role in roles)
-            tones = row.get("bubbleTones")
-            if isinstance(tones, list):
-                bubble_tone_counts.update(str(tone) for tone in tones)
+            report = row.get("kataribeReportText")
+            if isinstance(report, str) and report:
+                kataribe_report_rows += 1
+                if row.get("isPetMoving") is True:
+                    walking_report_rows += 1
+                if any(value in report for value in ("Codex Thread", "Codex Session", "このチャット")):
+                    generic_title_rows += 1
+            charms = row.get("kataribeCharmTitles")
+            if isinstance(charms, list):
+                max_chat_charm_count = max(max_chat_charm_count, len(charms))
+            charm_thread_ids = row.get("kataribeCharmThreadIds")
+            if isinstance(charms, list) and isinstance(charm_thread_ids, list):
+                if len(charms) != len(charm_thread_ids):
+                    invalid_charm_identity_rows += 1
+                report_thread_id = row.get("kataribeReportThreadId")
+                if report_thread_id not in (None, "none") and charm_thread_ids:
+                    if charm_thread_ids[-1] == report_thread_id:
+                        bottom_feed_report_rows += 1
+                    else:
+                        misplaced_report_rows += 1
+            elif charms:
+                invalid_charm_identity_rows += 1
+            if row.get("clickThrough") is not True:
+                non_click_through_rows += 1
 
 large_steps = sum(1 for delta in deltas if delta > max_step_limit)
 review_warnings = []
-if max_bubble_count < 3:
-    review_warnings.append("multi-bubble sample was not observed")
+if max_chat_charm_count < 3:
+    review_warnings.append("three-chat Kataribe rail was not observed")
+if kataribe_report_rows == 0:
+    review_warnings.append("Kataribe report was not observed")
+if walking_report_rows == 0:
+    review_warnings.append("Kataribe report was not observed during walking")
+if generic_title_rows > 0:
+    review_warnings.append("generic internal chat title reached Kataribe narration")
+if misplaced_report_rows > 0:
+    review_warnings.append("current Kataribe report was not the bottom chat charm")
+if invalid_charm_identity_rows > 0:
+    review_warnings.append("Kataribe charm title and thread identity logs diverged")
+if non_click_through_rows > 0:
+    review_warnings.append("video review accepted live pointer input")
 for expected_animation in ("running-right", "waiting", "review"):
     if animation_counts[expected_animation] == 0:
         review_warnings.append(f"animation sample missing: {expected_animation}")
-for expected_tone in ("active", "waiting", "review", "failed"):
-    if bubble_tone_counts[expected_tone] == 0:
-        review_warnings.append(f"bubble tone missing: {expected_tone}")
 if sum(1 for delta in deltas if delta > 0.05) < 24:
     review_warnings.append("autonomous movement sample was too sparse")
 if large_steps > 0:
@@ -273,10 +303,15 @@ summary = (
     f"max_step_limit={max_step_limit:.2f}px\n"
     f"large_steps={large_steps}\n"
     f"presentation_rows={presentation_rows}\n"
-    f"max_bubble_count={max_bubble_count}\n"
+    f"max_chat_charm_count={max_chat_charm_count}\n"
+    f"kataribe_report_rows={kataribe_report_rows}\n"
+    f"walking_report_rows={walking_report_rows}\n"
+    f"generic_title_rows={generic_title_rows}\n"
+    f"bottom_feed_report_rows={bottom_feed_report_rows}\n"
+    f"misplaced_report_rows={misplaced_report_rows}\n"
+    f"invalid_charm_identity_rows={invalid_charm_identity_rows}\n"
+    f"non_click_through_rows={non_click_through_rows}\n"
     f"animation_counts={dict(sorted(animation_counts.items()))}\n"
-    f"bubble_role_counts={dict(sorted(bubble_role_counts.items()))}\n"
-    f"bubble_tone_counts={dict(sorted(bubble_tone_counts.items()))}\n"
     f"review_warnings={review_warnings}\n"
     f"design_pass_recommended={str(design_pass_recommended).lower()}\n"
 )
@@ -294,4 +329,10 @@ if presentation_rows <= 0:
     raise SystemExit("video review captured no presentation log rows")
 if large_steps > 0:
     raise SystemExit(f"video review found {large_steps} movement steps over {max_step_limit:.2f}px")
+if misplaced_report_rows > 0:
+    raise SystemExit(f"video review found {misplaced_report_rows} reports outside the bottom chat charm")
+if invalid_charm_identity_rows > 0:
+    raise SystemExit(f"video review found {invalid_charm_identity_rows} invalid charm identity rows")
+if non_click_through_rows > 0:
+    raise SystemExit(f"video review found {non_click_through_rows} rows with pointer input enabled")
 PY

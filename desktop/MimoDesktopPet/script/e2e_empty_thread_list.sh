@@ -76,7 +76,8 @@ swift ./script/inspect_accessibility_surface.swift \
   --value-contains "本番表示。" \
   --value-contains "いまはのんびり待ってるよ" \
   --child-description "Mimo" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.status=いまはのんびり待ってるよ" \
+  --node-identifier "mimo.kataribe.report" \
+  --node-description-contains "mimo.kataribe.report=Mimoの報告。チャット名: Mimoからのお話" \
   --forbid-identifier "MimoDesktopPet.productionSurface.bubble.debug.status" \
   --forbid-description-contains "Mimo speech bubble:" \
   --forbid-description-contains "Codex の会話を待っています" \

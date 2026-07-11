@@ -54,6 +54,8 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         PetSpeechBubble(id: "0-\(CodexMimoStatusSpeech.idle)", text: CodexMimoStatusSpeech.idle, role: .status)
     ]
     public private(set) var conversationLines: [CodexConversationLine] = []
+    public private(set) var kataribeConversationLines: [CodexConversationLine] = []
+    public private(set) var kataribeCharmRevisions: [String: Int] = [:]
 
     public var hasPendingConversationBubbles: Bool {
         conversationBubbleActive || !pendingConversationLines.isEmpty
@@ -61,6 +63,21 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
 
     public var hasActiveConversationBubble: Bool {
         conversationBubbleActive
+    }
+
+    public var currentConversationPageNumber: Int {
+        conversationBubbleActive ? currentConversationPageIndex + 1 : 1
+    }
+
+    public var currentConversationPageCount: Int {
+        conversationBubbleActive ? max(1, currentConversationPages.count) : 1
+    }
+
+    public var currentConversationMaximumPageTextLength: Int {
+        guard conversationBubbleActive else { return 0 }
+        return currentConversationPages
+            .map { PetSpeechBubbleTextParts.parse($0).summary.count }
+            .max() ?? 0
     }
 
     private var lastCodexPresentation = PetPresentationState(animation: .idle, bubbleText: CodexMimoStatusSpeech.idle)
@@ -73,6 +90,10 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     private var currentConversationPages: [String] = []
     private var currentConversationPageIndex = 0
     private var focusedThreadId: String?
+    private var temporaryReturnPresentation: PetPresentationState?
+    private var temporaryMomentActive = false
+    private var kataribeThreadOrder: [String] = []
+    private var latestKataribeLineByThread: [String: CodexConversationLine] = [:]
 
     public init() {}
 
@@ -98,9 +119,10 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         }
 
         lastCodexPresentation = presentationState
+        updateKataribeConversationLines(snapshot.conversationLines)
         conversationLines = Array(snapshot.conversationLines.suffix(12))
         focusedThreadId = snapshot.focusedConversationLine?.threadId
-        pruneConversationQueue(keeping: Set(conversationLines.map(\.threadId)))
+        pruneConversationQueue(keeping: Set(kataribeConversationLines.map(\.threadId)))
 
         if snapshot.connectionAvailable {
             enqueueConversationLines(
@@ -121,8 +143,9 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
             }
         } else {
             shouldScheduleConversationTimeout = false
-            refreshVisibleBubbles()
+            enrichVisibleBubblesIfNeeded()
         }
+        alignKataribeFeedWithVisibleReport()
 
         return change(
             previousPresentation: previousPresentation,
@@ -171,7 +194,10 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         }
 
         clearConversationQueue()
+        temporaryMomentActive = false
+        temporaryReturnPresentation = nil
         conversationLines.removeAll()
+        clearKataribeConversationLines()
         focusedThreadId = nil
         let offline = CodexPetStateMapper.presentation(
             threadStatus: nil,
@@ -193,7 +219,13 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         let previousVisibleBubbles = visibleBubbles
 
         clearConversationQueue()
+        temporaryMomentActive = false
+        temporaryReturnPresentation = nil
         conversationLines = Array(scene.conversationLines.suffix(12))
+        updateKataribeConversationLines(scene.conversationLines)
+        if let primaryThreadId = scene.primaryThreadId {
+            promoteKataribeThreadToBottom(primaryThreadId)
+        }
         focusedThreadId = scene.focusedThreadId
         let showcasePresentation = PetPresentationState(
             animation: scene.animation,
@@ -304,7 +336,10 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     ) -> PetPresentationCoordinatorChange {
         let previousPresentation = presentation
         let previousVisibleBubbles = visibleBubbles
-        clearConversationQueue()
+        if !temporaryMomentActive {
+            temporaryReturnPresentation = presentation
+        }
+        temporaryMomentActive = true
         setPresentation(PetPresentationState(
             animation: animation,
             bubbleText: bubbleText ?? lastCodexPresentation.bubbleText,
@@ -320,11 +355,10 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     public mutating func finishTemporaryPresentation() -> PetPresentationCoordinatorChange {
         let previousPresentation = presentation
         let previousVisibleBubbles = visibleBubbles
-        setPresentation(PetPresentationState(
-            animation: lastCodexPresentation.animation,
-            bubbleText: lastCodexPresentation.bubbleText,
-            isOffline: lastCodexPresentation.isOffline
-        ))
+        let returnPresentation = temporaryReturnPresentation ?? lastCodexPresentation
+        temporaryMomentActive = false
+        temporaryReturnPresentation = nil
+        setPresentation(returnPresentation)
         return change(
             previousPresentation: previousPresentation,
             previousVisibleBubbles: previousVisibleBubbles
@@ -368,7 +402,8 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         let line = pendingConversationLines.removeFirst()
         let pages = PetSpeechBubblePaginator.pages(
             for: CodexBubbleFormatter.bubbleText(for: line),
-            role: .focus
+            role: .focus,
+            limit: PetKataribeStageLayout.reportTextLimit
         )
         conversationBubbleActive = true
         currentConversationThreadId = line.threadId
@@ -411,6 +446,52 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
         currentConversationPageIndex = 0
     }
 
+    private mutating func updateKataribeConversationLines(_ lines: [CodexConversationLine]) {
+        var encounteredThreadIds: [String] = []
+        var latestInSnapshot: [String: CodexConversationLine] = [:]
+
+        for line in lines {
+            if latestInSnapshot[line.threadId] == nil {
+                encounteredThreadIds.append(line.threadId)
+            }
+            latestInSnapshot[line.threadId] = line
+        }
+
+        let activeThreadIds = Set(encounteredThreadIds)
+        kataribeThreadOrder.removeAll { !activeThreadIds.contains($0) }
+        latestKataribeLineByThread = latestKataribeLineByThread.filter { activeThreadIds.contains($0.key) }
+        kataribeCharmRevisions = kataribeCharmRevisions.filter { activeThreadIds.contains($0.key) }
+
+        for threadId in encounteredThreadIds where !kataribeThreadOrder.contains(threadId) {
+            kataribeThreadOrder.append(threadId)
+            kataribeCharmRevisions[threadId] = 0
+        }
+        for (threadId, line) in latestInSnapshot {
+            latestKataribeLineByThread[threadId] = line
+        }
+
+        refreshKataribeConversationLines()
+    }
+
+    private mutating func promoteKataribeThreadToBottom(_ threadId: String) {
+        guard latestKataribeLineByThread[threadId] != nil else { return }
+        kataribeThreadOrder.removeAll { $0 == threadId }
+        kataribeThreadOrder.append(threadId)
+        kataribeCharmRevisions[threadId, default: 0] += 1
+        refreshKataribeConversationLines()
+    }
+
+    private mutating func refreshKataribeConversationLines() {
+        kataribeConversationLines = kataribeThreadOrder.compactMap { latestKataribeLineByThread[$0] }
+    }
+
+    private mutating func clearKataribeConversationLines() {
+        kataribeConversationLines.removeAll()
+        kataribeCharmRevisions.removeAll()
+        kataribeThreadOrder.removeAll()
+        latestKataribeLineByThread.removeAll()
+    }
+
     private mutating func pruneConversationQueue(keeping activeThreadIds: Set<String>) {
         guard !activeThreadIds.isEmpty else {
             clearConversationQueue()
@@ -436,9 +517,63 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
     private mutating func setPresentation(_ state: PetPresentationState) {
         presentation = state
         refreshVisibleBubbles()
+        alignKataribeFeedWithVisibleReport()
     }
 
     private mutating func refreshVisibleBubbles() {
+        visibleBubbles = plannedVisibleBubbles()
+    }
+
+    private mutating func enrichVisibleBubblesIfNeeded() {
+        let planned = plannedVisibleBubbles()
+        let shouldAdoptUrgent = shouldAdoptUrgentState(from: planned)
+        guard planned.count > visibleBubbles.count ||
+            shouldAdoptOverflowSummary(from: planned) ||
+            shouldAdoptUrgent
+        else { return }
+        visibleBubbles = planned
+        alignKataribeFeedWithVisibleReport()
+    }
+
+    private mutating func alignKataribeFeedWithVisibleReport() {
+        let visibleReport = visibleBubbles.first(where: {
+            $0.threadId != nil && ($0.tone == .failed || $0.tone == .waiting)
+        }) ?? visibleBubbles.first
+        guard let threadId = visibleReport?.threadId,
+              kataribeThreadOrder.last != threadId
+        else { return }
+        promoteKataribeThreadToBottom(threadId)
+    }
+
+    private func shouldAdoptUrgentState(from planned: [PetSpeechBubble]) -> Bool {
+        planned.contains { next in
+            guard next.tone == .failed || next.tone == .waiting else { return false }
+            guard let current = visibleBubbles.first(where: { $0.id == next.id }) else { return true }
+            return current.tone != next.tone || current.text != next.text
+        }
+    }
+
+    private func shouldAdoptOverflowSummary(from planned: [PetSpeechBubble]) -> Bool {
+        guard let plannedOverflowCount = overflowHiddenCount(in: planned) else { return false }
+        guard let visibleOverflowCount = overflowHiddenCount(in: visibleBubbles) else { return true }
+        return plannedOverflowCount > visibleOverflowCount
+    }
+
+    private func overflowHiddenCount(in bubbles: [PetSpeechBubble]) -> Int? {
+        guard let text = bubbles.first(where: { $0.role == .overflow })?.text else { return nil }
+        let digits = text.drop(while: { !$0.isNumber }).prefix(while: { $0.isNumber })
+        return Int(digits)
+    }
+
+    private func plannedVisibleBubbles() -> [PetSpeechBubble] {
+        if temporaryMomentActive {
+            return CodexConversationBubblePlanner.productionBubbles(
+                primaryText: presentation.bubbleText,
+                conversationLines: conversationLines,
+                preferredThreadId: focusedThreadId,
+                primaryRole: .status
+            )
+        }
         let primaryBubble = CodexConversationBubblePlanner.primaryBubble(
             statusText: presentation.bubbleText,
             conversationLines: conversationLines,
@@ -447,12 +582,13 @@ public struct PetPresentationCoordinator: Equatable, Sendable {
             activeConversationActivityKind: conversationBubbleActive ? currentConversationActivityKind : nil,
             isOffline: presentation.isOffline
         )
-        visibleBubbles = CodexConversationBubblePlanner.productionBubbles(
+        return CodexConversationBubblePlanner.productionBubbles(
             primaryText: primaryBubble.text,
             conversationLines: conversationLines,
             preferredThreadId: focusedThreadId,
             primaryThreadId: primaryBubble.threadId,
-            primaryActivityKind: primaryBubble.activityKind
+            primaryActivityKind: primaryBubble.activityKind,
+            primaryThreadTitle: primaryBubble.threadTitle
         )
     }
 

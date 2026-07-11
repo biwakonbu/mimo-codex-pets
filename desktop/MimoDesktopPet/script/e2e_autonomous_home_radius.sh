@@ -25,6 +25,7 @@ MIMO_CODEX_EXECUTABLE="$FAKE_CODEX" \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_FORCE_BEGIN=1 \
 MIMO_AUTONOMOUS_INITIAL_REST_SECONDS=0 \
+MIMO_CLICK_THROUGH=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
 MIMO_PRESENTATION_LOG="$PRESENTATION_LOG" \
 MIMO_WINDOW_ORIGIN="220,220" \
@@ -40,6 +41,7 @@ import CoreGraphics
 import Foundation
 
 let windowNumber = CGWindowID(Int(CommandLine.arguments[1]) ?? 0)
+let productionHomeRadius = 360.0
 
 func windowOrigin() -> (Double, Double)? {
     guard
@@ -52,6 +54,9 @@ func windowOrigin() -> (Double, Double)? {
     }
     return (x, y)
 }
+
+// Let CoreGraphics replace the window-server registration origin with the panel's configured origin.
+Thread.sleep(forTimeInterval: 0.5)
 
 var samples: [(Double, Double)] = []
 for _ in 0..<540 {
@@ -68,6 +73,8 @@ guard let first = samples.first, samples.count >= 360 else {
 
 let distancesFromHome = samples.map { hypot($0.0 - first.0, $0.1 - first.1) }
 let maxDistanceFromHome = distancesFromHome.max() ?? 0
+let furthestIndex = distancesFromHome.enumerated().max(by: { $0.element < $1.element })?.offset ?? 0
+let furthest = samples[furthestIndex]
 let deltas = zip(samples.dropFirst(), samples).map { current, previous in
     hypot(current.0 - previous.0, current.1 - previous.1)
 }
@@ -79,12 +86,16 @@ guard movingSamples >= 3 else {
     exit(1)
 }
 
-guard maxDistanceFromHome <= 12 else {
-    fputs("autonomous home-radius movement drifted too far: \(maxDistanceFromHome)\n", stderr)
+guard maxDistanceFromHome <= productionHomeRadius else {
+    fputs(
+        "autonomous home-radius movement drifted too far: \(maxDistanceFromHome), " +
+        "home=(\(first.0),\(first.1)), furthest=(\(furthest.0),\(furthest.1)), sample=\(furthestIndex)\n",
+        stderr
+    )
     exit(1)
 }
 
-guard largestDelta <= 1.1 else {
+guard largestDelta <= 2.5 else {
     fputs("autonomous home-radius movement jumped too far in one sample: \(largestDelta)\n", stderr)
     exit(1)
 }
@@ -99,10 +110,12 @@ with open(sys.argv[1], "r", encoding="utf-8") as handle:
 
 if any(row.get("debugOverlay") is not False for row in rows):
     raise SystemExit("home-radius run unexpectedly enabled debug overlay")
+if any(row.get("clickThrough") is not True for row in rows):
+    raise SystemExit("home-radius run accepted live pointer input")
 
 print("Autonomous home-radius presentation stayed production-only.")
 PY
 
 kill -0 "$APP_PID" >/dev/null
 
-echo "E2E passed: forced production autonomous movement stays inside Mimo's home radius."
+echo "E2E passed: forced production autonomous movement stays inside Mimo's 360px home radius."

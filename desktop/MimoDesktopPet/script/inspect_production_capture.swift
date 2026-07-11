@@ -34,11 +34,32 @@ func fail(_ message: String) -> Never {
     exit(1)
 }
 
-let requiresMultiBubbleHierarchy = CommandLine.arguments.contains("--multi-bubble-hierarchy")
-let positionalArguments = CommandLine.arguments.dropFirst().filter { !$0.hasPrefix("--") }
+var requiresMultiBubbleHierarchy = false
+var requiresKataribeStage = false
+var minimumChatCharms = 1
+var positionalArguments: [String] = []
+var arguments = Array(CommandLine.arguments.dropFirst())
+while !arguments.isEmpty {
+    let argument = arguments.removeFirst()
+    switch argument {
+    case "--multi-bubble-hierarchy":
+        requiresMultiBubbleHierarchy = true
+    case "--kataribe-stage":
+        requiresKataribeStage = true
+    case "--minimum-chat-charms":
+        guard let rawCount = arguments.first, let count = Int(rawCount), (1...6).contains(count) else {
+            fail("--minimum-chat-charms requires a value from 1 through 6")
+        }
+        minimumChatCharms = count
+        arguments.removeFirst()
+    default:
+        guard !argument.hasPrefix("--") else { fail("unknown option: \(argument)") }
+        positionalArguments.append(argument)
+    }
+}
 
 guard positionalArguments.count == 1 else {
-    fail("usage: swift script/inspect_production_capture.swift [--multi-bubble-hierarchy] <window-capture.png>")
+    fail("usage: swift script/inspect_production_capture.swift [--kataribe-stage] [--minimum-chat-charms N] [--multi-bubble-hierarchy] <window-capture.png>")
 }
 
 let path = positionalArguments[0]
@@ -69,6 +90,8 @@ var spriteColorPixels = 0
 var darkOpaquePixels = 0
 var whiteMask = [Bool](repeating: false, count: width * height)
 var markerMask = [Bool](repeating: false, count: width * height)
+var alphaMask = [Bool](repeating: false, count: width * height)
+var spriteColorMask = [Bool](repeating: false, count: width * height)
 
 for y in 0..<height {
     for x in 0..<width {
@@ -80,6 +103,7 @@ for y in 0..<height {
 
         if alpha > 0.02 {
             alphaPixels += 1
+            alphaMask[y * width + x] = true
         }
         if alpha > 0.8 {
             opaquePixels += 1
@@ -95,6 +119,7 @@ for y in 0..<height {
            !(red > 0.88 && green > 0.88 && blue > 0.88),
            max(abs(red - green), abs(green - blue), abs(red - blue)) > 0.12 {
             spriteColorPixels += 1
+            spriteColorMask[y * width + x] = true
         }
         if alpha > 0.7, red < 0.08, green < 0.08, blue < 0.08 {
             darkOpaquePixels += 1
@@ -139,6 +164,76 @@ guard stats.darkOpaquePixels <= 1_500 else {
     fail("production capture has too much opaque dark fill for a transparent panel: \(stats.darkOpaquePixels)")
 }
 
+if requiresKataribeStage {
+    let components = whiteComponents(mask: whiteMask, width: width, height: height)
+    let reports = components.filter { component in
+            component.area >= 18_000 &&
+            component.width >= 320 &&
+            component.width <= 370 &&
+            component.height >= 75 &&
+            component.height <= 390 &&
+            component.maxX <= 365 &&
+            component.minY <= 190
+    }
+    guard reports.count == 1, let report = reports.first else {
+        fail("Kataribe capture should contain one stable paper report: \(describe(reports))")
+    }
+
+    let charmRatios = (0..<6).map { index in
+        let rowTop = 78 + index * 32
+        return maskRatio(
+            alphaMask,
+            width: width,
+            height: height,
+            minX: 358,
+            maxX: width - 1,
+            minY: rowTop,
+            maxY: min(height - 1, rowTop + 33)
+        )
+    }
+    let visibleCharmCount = charmRatios.filter { $0 >= 0.12 }.count
+    guard visibleCharmCount >= minimumChatCharms else {
+        fail("Kataribe capture showed \(visibleCharmCount) named chat charms; required \(minimumChatCharms), ratios=\(charmRatios)")
+    }
+
+    guard let reportBottom = lastDenseMaskedY(
+        whiteMask,
+        width: width,
+        height: height,
+        minX: 12,
+        maxX: 357,
+        minY: report.minY,
+        maxY: min(height - 1, report.minY + 260),
+        minimumRowRatio: 0.65
+    ) else {
+        fail("Kataribe capture did not contain a dense paper body")
+    }
+    let spriteSearchStartY = min(height - 1, reportBottom + 5)
+    let spriteTop = firstMaskedY(
+        spriteColorMask,
+        width: width,
+        height: height,
+        minX: 105,
+        maxX: 365,
+        minY: spriteSearchStartY,
+        maxY: height - 1
+    )
+    guard let spriteTop else {
+        fail("Kataribe capture did not contain Mimo below the report")
+    }
+    let reportToMimoGap = spriteTop - reportBottom
+    guard reportToMimoGap <= 42 else {
+        fail("Kataribe report is too far from Mimo: gap=\(reportToMimoGap), report=\(describe(report))")
+    }
+
+    print(
+        "Kataribe stage inspection passed: " +
+        "report=\(describe(report)), " +
+        "chatCharms=\(visibleCharmCount), " +
+        "reportToMimoGap=\(reportToMimoGap)"
+    )
+}
+
 if requiresMultiBubbleHierarchy {
     let components = whiteComponents(mask: whiteMask, width: width, height: height)
     let bubbleRegionMaxY = max(245, height - 150)
@@ -179,9 +274,10 @@ if requiresMultiBubbleHierarchy {
         .max() ?? 0
     let tallestSecondaryHeight = secondaryComponents.map(\.height).max() ?? 0
     let hasLayeredOverlapCluster = tallestSecondaryHeight >= 72
+    let hasWideTopShelf = secondaryHorizontalSpread >= 210 && secondaryVerticalSpread <= 24
     if secondaryComponents.count >= 2 {
         guard secondaryHorizontalSpread >= 112,
-              (secondaryVerticalSpread >= 24 || hasLayeredOverlapCluster),
+              (secondaryVerticalSpread >= 24 || hasLayeredOverlapCluster || hasWideTopShelf),
               secondaryVerticalSpread <= 168 else {
             fail("secondary context bubbles are not arranged as a nearby irregular chat cloud: horizontalSpread=\(secondaryHorizontalSpread), verticalSpread=\(secondaryVerticalSpread), secondary=\(describe(secondaryComponents))")
         }
@@ -193,13 +289,13 @@ if requiresMultiBubbleHierarchy {
         fail("secondary context bubbles drifted too far away from Mimo's primary speech: distance=\(farthestSecondaryDistance), primary=\(describe(primary)), secondary=\(describe(secondaryComponents))")
     }
 
-    guard !hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: primary, allowsDetachedTail: true) else {
-        fail("primary bubble unexpectedly has a speech-tail taper: primary=\(describe(primary))")
+    guard !hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: primary, allowsDetachedTail: false) else {
+        fail("primary bubble unexpectedly has a sharp speech-tail taper: primary=\(describe(primary))")
     }
 
     for secondary in secondaryComponents {
         guard !hasCenteredTailTaper(mask: whiteMask, width: width, height: height, component: secondary, allowsDetachedTail: false) else {
-            fail("secondary context bubble unexpectedly has a speech-tail taper: secondary=\(describe(secondary))")
+            fail("secondary context bubble unexpectedly has a sharp speech-tail taper: secondary=\(describe(secondary))")
         }
     }
 
@@ -233,6 +329,81 @@ print(
     "whiteBubblePixels=\(stats.whiteBubblePixels), " +
     "spriteColorPixels=\(stats.spriteColorPixels)"
 )
+
+func maskRatio(
+    _ mask: [Bool],
+    width: Int,
+    height: Int,
+    minX: Int,
+    maxX: Int,
+    minY: Int,
+    maxY: Int
+) -> Double {
+    let resolvedMinX = max(0, min(width - 1, minX))
+    let resolvedMaxX = max(resolvedMinX, min(width - 1, maxX))
+    let resolvedMinY = max(0, min(height - 1, minY))
+    let resolvedMaxY = max(resolvedMinY, min(height - 1, maxY))
+    var matched = 0
+    var total = 0
+    for y in resolvedMinY...resolvedMaxY {
+        for x in resolvedMinX...resolvedMaxX {
+            total += 1
+            if mask[y * width + x] {
+                matched += 1
+            }
+        }
+    }
+    return total == 0 ? 0 : Double(matched) / Double(total)
+}
+
+func firstMaskedY(
+    _ mask: [Bool],
+    width: Int,
+    height: Int,
+    minX: Int,
+    maxX: Int,
+    minY: Int,
+    maxY: Int
+) -> Int? {
+    let resolvedMinX = max(0, min(width - 1, minX))
+    let resolvedMaxX = max(resolvedMinX, min(width - 1, maxX))
+    let resolvedMinY = max(0, min(height - 1, minY))
+    let resolvedMaxY = max(resolvedMinY, min(height - 1, maxY))
+    for y in resolvedMinY...resolvedMaxY {
+        for x in resolvedMinX...resolvedMaxX where mask[y * width + x] {
+            return y
+        }
+    }
+    return nil
+}
+
+func lastDenseMaskedY(
+    _ mask: [Bool],
+    width: Int,
+    height: Int,
+    minX: Int,
+    maxX: Int,
+    minY: Int,
+    maxY: Int,
+    minimumRowRatio: Double
+) -> Int? {
+    let resolvedMinX = max(0, min(width - 1, minX))
+    let resolvedMaxX = max(resolvedMinX, min(width - 1, maxX))
+    let resolvedMinY = max(0, min(height - 1, minY))
+    let resolvedMaxY = max(resolvedMinY, min(height - 1, maxY))
+    let rowWidth = resolvedMaxX - resolvedMinX + 1
+    var lastMatch: Int?
+    for y in resolvedMinY...resolvedMaxY {
+        var matched = 0
+        for x in resolvedMinX...resolvedMaxX where mask[y * width + x] {
+            matched += 1
+        }
+        if Double(matched) / Double(rowWidth) >= minimumRowRatio {
+            lastMatch = y
+        }
+    }
+    return lastMatch
+}
 
 func whiteComponents(mask: [Bool], width: Int, height: Int) -> [WhiteComponent] {
     var visited = [Bool](repeating: false, count: mask.count)

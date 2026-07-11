@@ -167,7 +167,7 @@ capture_and_inspect() {
     local output=""
     for _ in {1..20}; do
       screencapture -x -o -l "$WINDOW_ID" "$path"
-      if output="$(swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$path" 2>&1)"; then
+      if output="$(swift ./script/inspect_production_capture.swift --kataribe-stage --minimum-chat-charms 4 "$path" 2>&1)"; then
         printf '%s\n' "$output"
         return 0
       fi
@@ -177,7 +177,7 @@ capture_and_inspect() {
     return 1
   else
     screencapture -x -o -l "$WINDOW_ID" "$path"
-    swift ./script/inspect_production_capture.swift "$path"
+    swift ./script/inspect_production_capture.swift --kataribe-stage "$path"
   fi
 }
 

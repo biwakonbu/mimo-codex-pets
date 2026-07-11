@@ -90,11 +90,13 @@ final class CodexAppServerClient {
     private var notificationThreadLastSeenById: [String: DispatchTime] = [:]
     private var loadedThreadIds: [String] = []
     private var listedThreadIds: [String] = []
+    private var verifiedThreadIds = Set<String>()
+    private var ephemeralThreadIds = Set<String>()
     private var suppressedThreadIds = Set<String>()
     private var threadReadIdsInRefreshCycle = Set<String>()
     private var mimoDialogueThreadId: String?
     private var mimoDialogueThreadStarting = false
-    private var mimoDialogueDisabledAfterFailure = false
+    private var mimoDialogueBackoffUntil: DispatchTime?
     private var mimoDialogueQueue: [CodexConversationLine] = []
     private var mimoDialogueSpeechByKey: [String: String] = [:]
     private var mimoDialogueLineByKey: [String: CodexConversationLine] = [:]
@@ -298,6 +300,8 @@ final class CodexAppServerClient {
         notificationThreadLastSeenById.removeAll()
         loadedThreadIds.removeAll()
         listedThreadIds.removeAll()
+        verifiedThreadIds.removeAll()
+        ephemeralThreadIds.removeAll()
         suppressedThreadIds.removeAll()
         threadReadIdsInRefreshCycle.removeAll()
         resetMimoDialogueTrackingLocked(keepSpeechCache: true)
@@ -529,6 +533,10 @@ final class CodexAppServerClient {
         guard let id = object["id"] as? Int else { return }
         let kind = pendingRequests.removeValue(forKey: id)?.kind
         guard object["error"] == nil else {
+            if isMimoDialogueRequest(kind) {
+                handleMimoDialogueRequestFailure(kind)
+                return
+            }
             if !isInitializeRequest(kind) {
                 transitionToOfflineLocked(terminateProxy: true, offlineBubbleText: CodexMimoStatusSpeech.disconnected)
             }
@@ -568,6 +576,26 @@ final class CodexAppServerClient {
         return false
     }
 
+    private func isMimoDialogueRequest(_ kind: RequestKind?) -> Bool {
+        switch kind {
+        case .mimoDialogueThreadStart, .mimoDialogueTurnStart:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func handleMimoDialogueRequestFailure(_ kind: RequestKind?) {
+        switch kind {
+        case .mimoDialogueTurnStart(let key):
+            finishMimoDialogue(key: key, speech: nil)
+        case .mimoDialogueThreadStart:
+            backoffMimoDialogueAfterFailure()
+        default:
+            break
+        }
+    }
+
     private func handleLoadedList(_ result: Any?) {
         guard
             let dict = result as? [String: Any],
@@ -579,11 +607,13 @@ final class CodexAppServerClient {
             return
         }
 
-        loadedThreadIds = Array(ids.filter { !isMimoDialogueThread($0) }.prefix(ThreadContext.requestLimit))
-        if let first = loadedThreadIds.first, selectedThreadId == nil || !currentVisibleThreadIds().contains(selectedThreadId ?? "") {
-            selectedThreadId = first
+        loadedThreadIds = Array(ids.filter {
+            !isMimoDialogueThread($0) && !ephemeralThreadIds.contains($0) && !suppressedThreadIds.contains($0)
+        }.prefix(ThreadContext.requestLimit))
+        if let selectedThreadId, !verifiedThreadIds.contains(selectedThreadId) {
+            self.selectedThreadId = nil
         }
-        rememberThreadOrder(loadedThreadIds)
+        rememberThreadOrder(loadedThreadIds.filter(verifiedThreadIds.contains))
         pruneThreadTracking(keeping: currentVisibleThreadIds())
         for id in loadedThreadIds {
             sendThreadRead(threadId: id, reason: .refresh)
@@ -605,11 +635,19 @@ final class CodexAppServerClient {
             return
         }
 
+        for thread in threads where thread["ephemeral"] as? Bool == true {
+            guard let id = thread["id"] as? String else { continue }
+            ephemeralThreadIds.insert(id)
+            removeThreadTracking(threadId: id, suppressPendingReads: true)
+        }
         let visibleThreads = Array(threads.filter { thread in
+            guard thread["ephemeral"] as? Bool != true else { return false }
             guard let id = thread["id"] as? String else { return true }
-            return !isMimoDialogueThread(id)
+            return !isMimoDialogueThread(id) && !ephemeralThreadIds.contains(id)
         }.prefix(ThreadContext.requestLimit))
         listedThreadIds = visibleThreads.compactMap { $0["id"] as? String }
+        verifiedThreadIds.formUnion(listedThreadIds)
+        suppressedThreadIds.subtract(listedThreadIds)
         rememberThreadOrder(listedThreadIds)
         pruneThreadTracking(keeping: currentVisibleThreadIds())
 
@@ -660,12 +698,21 @@ final class CodexAppServerClient {
         guard
             let dict = result as? [String: Any],
             let threadObject = dict["thread"] as? [String: Any],
-            let snapshot = decodeThreadSnapshot(from: threadObject)
+            let snapshot = decodeThreadSnapshot(from: threadObject),
+            snapshot.id == expectedThreadId
         else {
             emitSnapshot(connectionAvailable: true)
             return
         }
+        guard !snapshot.isEphemeral else {
+            ephemeralThreadIds.insert(snapshot.id)
+            removeThreadTracking(threadId: snapshot.id, suppressPendingReads: true)
+            emitSnapshot(connectionAvailable: true)
+            return
+        }
 
+        verifiedThreadIds.insert(snapshot.id)
+        suppressedThreadIds.remove(snapshot.id)
         let title = threadTitle(from: threadObject)
         threadTitlesById[snapshot.id] = title
         rememberThreadOrder([snapshot.id])
@@ -707,6 +754,14 @@ final class CodexAppServerClient {
             if let dict = params as? [String: Any],
                let threadObject = dict["thread"] as? [String: Any],
                let snapshot = decodeThreadSnapshot(from: threadObject) {
+                guard !snapshot.isEphemeral else {
+                    ephemeralThreadIds.insert(snapshot.id)
+                    removeThreadTracking(threadId: snapshot.id, suppressPendingReads: true)
+                    emitSnapshot(connectionAvailable: true)
+                    return
+                }
+                ephemeralThreadIds.remove(snapshot.id)
+                verifiedThreadIds.insert(snapshot.id)
                 suppressedThreadIds.remove(snapshot.id)
                 selectedThreadId = snapshot.id
                 rememberNotificationThread(snapshot.id)
@@ -728,7 +783,7 @@ final class CodexAppServerClient {
             }
         case .threadStatusChanged:
             if let payload = decodeNotificationParams(ThreadStatusChangedNotification.self, from: params) {
-                suppressedThreadIds.remove(payload.threadId)
+                guard shouldProcessNotification(for: payload.threadId) else { return }
                 selectedThreadId = selectedThreadId ?? payload.threadId
                 rememberNotificationThread(payload.threadId)
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
@@ -741,7 +796,7 @@ final class CodexAppServerClient {
                 }
                 updateThreadActivity(
                     threadId: payload.threadId,
-                    title: threadTitlesById[payload.threadId] ?? "Codex Thread",
+                    title: threadTitlesById[payload.threadId] ?? "名前のないチャット",
                     threadStatus: payload.status,
                     latestTurnStatus: threadTurnStatusesById[payload.threadId],
                     hasRecentAssistantFinal: threadAssistantFinalById[payload.threadId] ?? false
@@ -750,7 +805,11 @@ final class CodexAppServerClient {
             }
         case .threadNameUpdated:
             if let payload = decodeNotificationParams(ThreadNameUpdatedNotification.self, from: params) {
-                let title = CodexThreadTitleFormatter.title(from: [payload.threadName, "Codex Thread"])
+                guard shouldProcessNotification(for: payload.threadId) else { return }
+                let title = CodexThreadTitleFormatter.title(
+                    from: [payload.threadName],
+                    fallback: threadTitlesById[payload.threadId] ?? "名前のないチャット"
+                )
                 rememberNotificationThread(payload.threadId)
                 retitleThread(threadId: payload.threadId, title: title)
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
@@ -768,9 +827,7 @@ final class CodexAppServerClient {
         case .threadUnarchived:
             if let payload = decodeNotificationParams(ThreadIdNotification.self, from: params) {
                 suppressedThreadIds.remove(payload.threadId)
-                rememberNotificationThread(payload.threadId)
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
-                emitSnapshot(connectionAvailable: true)
             }
         case .threadCompacted:
             appendProgressLine(from: params, kind: "threadCompacted")
@@ -780,14 +837,14 @@ final class CodexAppServerClient {
             appendProgressLine(from: params, kind: "hookCompleted")
         case .turnStarted:
             if let payload = decodeNotificationParams(TurnNotification.self, from: params) {
-                suppressedThreadIds.remove(payload.threadId)
+                guard shouldProcessNotification(for: payload.threadId) else { return }
                 selectedThreadId = payload.threadId
                 rememberNotificationThread(payload.threadId)
                 latestTurnStatus = .inProgress
                 hasRecentAssistantFinal = false
                 updateThreadActivity(
                     threadId: payload.threadId,
-                    title: threadTitlesById[payload.threadId] ?? "Codex Thread",
+                    title: threadTitlesById[payload.threadId] ?? "名前のないチャット",
                     threadStatus: threadStatusesById[payload.threadId] ?? .active(activeFlags: []),
                     latestTurnStatus: .inProgress,
                     hasRecentAssistantFinal: false
@@ -797,14 +854,14 @@ final class CodexAppServerClient {
             }
         case .turnCompleted:
             if let payload = decodeNotificationParams(TurnNotification.self, from: params) {
-                suppressedThreadIds.remove(payload.threadId)
+                guard shouldProcessNotification(for: payload.threadId) else { return }
                 selectedThreadId = payload.threadId
                 rememberNotificationThread(payload.threadId)
                 latestTurnStatus = payload.turn.status
                 hasRecentAssistantFinal = payload.turn.status == .completed
                 updateThreadActivity(
                     threadId: payload.threadId,
-                    title: threadTitlesById[payload.threadId] ?? "Codex Thread",
+                    title: threadTitlesById[payload.threadId] ?? "名前のないチャット",
                     threadStatus: threadStatusesById[payload.threadId],
                     latestTurnStatus: payload.turn.status,
                     hasRecentAssistantFinal: payload.turn.status == .completed
@@ -821,7 +878,7 @@ final class CodexAppServerClient {
         case .itemStarted:
             if let dict = params as? [String: Any],
                let threadId = dict["threadId"] as? String {
-                suppressedThreadIds.remove(threadId)
+                guard shouldProcessNotification(for: threadId) else { return }
                 selectedThreadId = selectedThreadId ?? threadId
                 rememberNotificationThread(threadId)
                 appendConversationLine(from: dict["item"], threadId: threadId)
@@ -837,7 +894,7 @@ final class CodexAppServerClient {
         case .itemCompleted:
             if let dict = params as? [String: Any],
                let threadId = dict["threadId"] as? String {
-                suppressedThreadIds.remove(threadId)
+                guard shouldProcessNotification(for: threadId) else { return }
                 selectedThreadId = selectedThreadId ?? threadId
                 rememberNotificationThread(threadId)
                 appendConversationLine(from: dict["item"], threadId: threadId)
@@ -947,7 +1004,11 @@ final class CodexAppServerClient {
     }
 
     private func sendThreadRead(threadId: String, reason: ThreadReadReason) {
-        guard !isMimoDialogueThread(threadId) else { return }
+        guard !isMimoDialogueThread(threadId),
+              !ephemeralThreadIds.contains(threadId),
+              !suppressedThreadIds.contains(threadId),
+              !hasPendingThreadRead(threadId: threadId)
+        else { return }
         if reason == .refresh {
             guard !threadReadIdsInRefreshCycle.contains(threadId) else { return }
             threadReadIdsInRefreshCycle.insert(threadId)
@@ -957,6 +1018,27 @@ final class CodexAppServerClient {
             params: ["threadId": threadId, "includeTurns": true],
             kind: .threadRead(threadId: threadId)
         )
+    }
+
+    private func hasPendingThreadRead(threadId: String) -> Bool {
+        pendingRequests.values.contains { request in
+            if case .threadRead(let pendingThreadId) = request.kind {
+                return pendingThreadId == threadId
+            }
+            return false
+        }
+    }
+
+    private func shouldProcessNotification(for threadId: String) -> Bool {
+        guard !isMimoDialogueThread(threadId),
+              !ephemeralThreadIds.contains(threadId),
+              !suppressedThreadIds.contains(threadId)
+        else { return false }
+        guard verifiedThreadIds.contains(threadId) else {
+            sendThreadRead(threadId: threadId, reason: .notification)
+            return false
+        }
+        return true
     }
 
     private func decodeThreadSnapshot(from object: [String: Any]) -> CodexThreadSnapshot? {
@@ -1079,8 +1161,7 @@ final class CodexAppServerClient {
     }
 
     private func rememberThreadOrder(_ ids: [String]) {
-        for id in ids where !isMimoDialogueThread(id) {
-            suppressedThreadIds.remove(id)
+        for id in ids where verifiedThreadIds.contains(id) && !isMimoDialogueThread(id) && !ephemeralThreadIds.contains(id) {
             threadDisplayOrder.removeAll { $0 == id }
             threadDisplayOrder.append(id)
         }
@@ -1110,6 +1191,8 @@ final class CodexAppServerClient {
     private func currentVisibleThreadIds() -> Set<String> {
         pruneExpiredNotificationThreads()
         return Set(loadedThreadIds + listedThreadIds + Array(notificationThreadLastSeenById.keys))
+            .intersection(verifiedThreadIds)
+            .subtracting(ephemeralThreadIds)
     }
 
     private func pruneThreadTracking(keeping ids: Set<String>) {
@@ -1151,6 +1234,7 @@ final class CodexAppServerClient {
         }
         loadedThreadIds.removeAll { $0 == threadId }
         listedThreadIds.removeAll { $0 == threadId }
+        verifiedThreadIds.remove(threadId)
         threadTitlesById.removeValue(forKey: threadId)
         conversationByThread.removeValue(forKey: threadId)
         threadActivityById.removeValue(forKey: threadId)
@@ -1226,26 +1310,32 @@ final class CodexAppServerClient {
         for focusedLine: CodexConversationLine?,
         in lines: [CodexConversationLine]
     ) {
-        guard mimoDialogueEnabled, !mimoDialogueDisabledAfterFailure else { return }
+        guard mimoDialogueEnabled, mimoDialogueBackoffHasElapsed() else { return }
         guard proxyIsRunning, proxyProcess?.isRunning == true, transportInitialized else { return }
-        let candidates = CodexConversationBubblePlanner.orderedThreadUpdates(
-            from: lines,
-            preferredThreadId: selectedThreadId
+        let queuedKeys = Set(mimoDialogueQueue.map(CodexMimoDialoguePrompt.cacheKey(for:)))
+        let excludedKeys = Set(mimoDialogueSpeechByKey.keys)
+            .union(pendingMimoDialogueKeys)
+            .union(queuedKeys)
+        let now = DispatchTime.now()
+        let throttledThreadIds = Set(mimoDialogueLastGeneratedByThread.compactMap { threadId, generatedAt in
+            secondsBetween(generatedAt, now) < mimoDialogueRefreshSeconds ? threadId : nil
+        })
+        let orderedLines: [CodexConversationLine]
+        if let focusedLine {
+            orderedLines = [focusedLine] + lines.filter { $0.threadId != focusedLine.threadId }
+        } else {
+            orderedLines = lines
+        }
+        guard let line = CodexMimoDialogueScheduler.nextCandidate(
+            from: orderedLines,
+            preferredThreadId: selectedThreadId,
+            excludedKeys: excludedKeys,
+            throttledThreadIds: throttledThreadIds
         )
-        let line = focusedLine ?? candidates.first
-        guard let line, !isMimoDialogueThread(line.threadId) else { return }
+        else { return }
+        guard !isMimoDialogueThread(line.threadId) else { return }
 
         let key = CodexMimoDialoguePrompt.cacheKey(for: line)
-        guard mimoDialogueSpeechByKey[key] == nil,
-              !pendingMimoDialogueKeys.contains(key),
-              !mimoDialogueQueue.contains(where: { CodexMimoDialoguePrompt.cacheKey(for: $0) == key })
-        else { return }
-
-        if let last = mimoDialogueLastGeneratedByThread[line.threadId],
-           secondsBetween(last, .now()) < mimoDialogueRefreshSeconds {
-            return
-        }
-
         pendingMimoDialogueKeys.insert(key)
         mimoDialogueLineByKey[key] = line
         mimoDialogueQueue.append(line)
@@ -1253,7 +1343,7 @@ final class CodexAppServerClient {
     }
 
     private func pumpMimoDialogueQueue() {
-        guard mimoDialogueEnabled, !mimoDialogueDisabledAfterFailure else { return }
+        guard mimoDialogueEnabled, mimoDialogueBackoffHasElapsed() else { return }
         guard pendingMimoDialogueTurns.isEmpty, mimoDialogueAwaitingTurnKey == nil else { return }
         guard let line = mimoDialogueQueue.first else { return }
         guard let threadId = mimoDialogueThreadId else {
@@ -1285,6 +1375,7 @@ final class CodexAppServerClient {
 
     private func startMimoDialogueTurn(line: CodexConversationLine, threadId: String) {
         let key = CodexMimoDialoguePrompt.cacheKey(for: line)
+        let recentLines = combinedConversationLines().filter { $0.threadId == line.threadId }
         mimoDialogueQueue.removeAll { CodexMimoDialoguePrompt.cacheKey(for: $0) == key }
         mimoDialogueAwaitingTurnKey = key
         sendRequest(
@@ -1294,7 +1385,7 @@ final class CodexAppServerClient {
                 "input": [
                     [
                         "type": "text",
-                        "text": CodexMimoDialoguePrompt.userInput(for: line)
+                        "text": CodexMimoDialoguePrompt.userInput(for: line, recentLines: recentLines)
                     ]
                 ],
                 "model": mimoDialogueModel,
@@ -1304,7 +1395,7 @@ final class CodexAppServerClient {
                     "networkAccess": false
                 ],
                 "environments": [],
-                "effort": "low",
+                "effort": CodexMimoDialoguePrompt.defaultReasoningEffort,
                 "summary": "none"
             ],
             kind: .mimoDialogueTurnStart(key: key)
@@ -1314,7 +1405,7 @@ final class CodexAppServerClient {
     private func handleMimoDialogueThreadStart(_ result: Any?) {
         mimoDialogueThreadStarting = false
         guard let threadId = threadIdFromThreadStartResult(result) else {
-            disableMimoDialogueAfterFailure()
+            backoffMimoDialogueAfterFailure()
             return
         }
         mimoDialogueThreadId = threadId
@@ -1360,8 +1451,8 @@ final class CodexAppServerClient {
         pumpMimoDialogueQueue()
     }
 
-    private func disableMimoDialogueAfterFailure() {
-        mimoDialogueDisabledAfterFailure = true
+    private func backoffMimoDialogueAfterFailure() {
+        mimoDialogueBackoffUntil = .now() + .seconds(60)
         mimoDialogueThreadStarting = false
         mimoDialogueQueue.removeAll()
         mimoDialogueLineByKey.removeAll()
@@ -1370,14 +1461,24 @@ final class CodexAppServerClient {
         mimoDialogueAwaitingTurnKey = nil
     }
 
+    private func mimoDialogueBackoffHasElapsed() -> Bool {
+        guard let mimoDialogueBackoffUntil else { return true }
+        if DispatchTime.now() >= mimoDialogueBackoffUntil {
+            self.mimoDialogueBackoffUntil = nil
+            return true
+        }
+        return false
+    }
+
     private func isMimoDialogueThread(_ threadId: String?) -> Bool {
         guard let threadId, let mimoDialogueThreadId else { return false }
         return threadId == mimoDialogueThreadId
     }
 
     private func appendConversationLine(from item: Any?, threadId: String) {
+        guard shouldProcessNotification(for: threadId) else { return }
         guard let item = item as? [String: Any] else { return }
-        let title = threadTitlesById[threadId] ?? "Codex Thread"
+        let title = threadTitlesById[threadId] ?? "名前のないチャット"
         guard let line = CodexConversationExtractor.line(from: item, threadId: threadId, threadTitle: title) else { return }
         var lines = conversationByThread[threadId] ?? []
         lines.append(line)
@@ -1396,10 +1497,11 @@ final class CodexAppServerClient {
         guard let dict = params as? [String: Any],
               let threadId = dict["threadId"] as? String
         else { return }
+        guard shouldProcessNotification(for: threadId) else { return }
 
         selectedThreadId = selectedThreadId ?? threadId
         rememberNotificationThread(threadId)
-        let title = threadTitlesById[threadId] ?? "Codex Thread"
+        let title = threadTitlesById[threadId] ?? "名前のないチャット"
         let line = CodexConversationExtractor.progressLine(
             threadId: threadId,
             threadTitle: title,
@@ -1426,11 +1528,7 @@ final class CodexAppServerClient {
     }
 
     private func threadTitle(from threadObject: [String: Any]) -> String {
-        CodexThreadTitleFormatter.title(from: [
-            threadObject["name"],
-            threadObject["preview"],
-            "Codex Thread"
-        ])
+        CodexThreadTitleFormatter.title(fromThreadObject: threadObject)
     }
 
     private func itemLooksLikeAssistantFinal(_ item: Any?) -> Bool {
@@ -1497,7 +1595,7 @@ final class CodexAppServerClient {
     private static func mimoDialogueModel(environment: [String: String] = ProcessInfo.processInfo.environment) -> String {
         let value = environment["MIMO_CODEX_DIALOGUE_MODEL"]?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return value?.isEmpty == false ? value! : CodexMimoDialoguePrompt.defaultModel
+        return value.flatMap { $0.isEmpty ? nil : $0 } ?? CodexMimoDialoguePrompt.defaultModel
     }
 
     private static func mimoDialogueRefreshInterval(environment: [String: String] = ProcessInfo.processInfo.environment) -> TimeInterval {

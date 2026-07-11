@@ -16,13 +16,13 @@ public enum PetSpeechBubbleAccessibility {
         let ordinal = index + 1
         switch role {
         case .status:
-            return "Mimo status bubble \(ordinal)"
+            return "Mimoのひとこと \(ordinal)"
         case .focus:
-            return "Mimo primary thread bubble \(ordinal)"
+            return "Mimoが伝える主なチャット \(ordinal)"
         case .conversation:
-            return "Mimo thread summary bubble \(ordinal)"
+            return "Mimoが見ているチャット \(ordinal)"
         case .overflow:
-            return "Mimo overflow bubble \(ordinal)"
+            return "Mimoが見ているほかのチャット \(ordinal)"
         }
     }
 
@@ -41,7 +41,16 @@ public enum PetSpeechBubbleAccessibility {
         let mode = debugOverlay ? "デバッグ表示" : "本番表示"
         let bubbleSummary = bubbles
             .prefix(PetSpeechBubbleLayout.productionVisibleLimit)
-            .map(\.text)
+            .map { bubble in
+                if PetSpeechBubbleTextParts.parse(bubble.text).threadTitle != nil {
+                    return bubble.text
+                }
+                if let title = bubble.threadTitle?.trimmingCharacters(in: .whitespacesAndNewlines),
+                   !title.isEmpty {
+                    return "「\(title)」\(bubble.text)"
+                }
+                return bubble.text
+            }
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .joined(separator: " / ")
 

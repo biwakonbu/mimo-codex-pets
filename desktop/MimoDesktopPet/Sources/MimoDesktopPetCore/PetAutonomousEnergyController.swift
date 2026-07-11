@@ -1,8 +1,8 @@
 import Foundation
 
 public struct PetAutonomousEnergyController: Equatable, Sendable {
-    public static let defaultDrainPerSecond = 0.075
-    public static let defaultRecoveryPerSecond = 0.42
+    public static let defaultDrainPerSecond = 0.022
+    public static let defaultRecoveryPerSecond = 0.30
     public static let fatiguePauseThreshold = 0.5
     public static let exhaustedThreshold = 0.16
 
@@ -42,7 +42,7 @@ public struct PetAutonomousEnergyController: Equatable, Sendable {
     public func speed(maximumSpeed: Double, moodUnit: Double) -> Double {
         let maximumSpeed = max(maximumSpeed, 1)
         let moodOffset = (Self.clampUnit(moodUnit) - 0.5) * 0.08
-        let ratio = min(max(0.30 + 0.54 * stamina + moodOffset, 0.24), 0.88)
+        let ratio = min(max(0.50 + 0.48 * stamina + moodOffset, 0.32), 0.98)
         return maximumSpeed * ratio
     }
 
@@ -61,8 +61,8 @@ public struct PetAutonomousEnergyController: Equatable, Sendable {
 
     public func restDuration(moodUnit: Double) -> TimeInterval {
         let timeToFull = (1 - stamina) / recoveryPerSecond
-        let moodPadding = 6.0 + Self.clampUnit(moodUnit) * 8.0
-        return min(max(timeToFull + moodPadding, 5.0), 18.0)
+        let moodPadding = 4.0 + Self.clampUnit(moodUnit) * 4.0
+        return min(max(timeToFull + moodPadding, 4.0), 14.0)
     }
 
     private static func clampUnit(_ value: Double) -> Double {

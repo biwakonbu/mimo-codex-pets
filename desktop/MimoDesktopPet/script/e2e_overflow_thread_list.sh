@@ -27,6 +27,7 @@ CODEX_BIN="$FAKE_CODEX" \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_DISABLED=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
+MIMO_CONVERSATION_BUBBLE_DURATION_OVERRIDE=30.0 \
 MIMO_PRESENTATION_LOG="$PRESENTATION_LOG" \
 MIMO_WINDOW_ORIGIN="200,200" \
 "$APP_BINARY" &
@@ -38,13 +39,13 @@ WINDOW_ID="$(swift ./script/find_mimo_window.swift --pid "$APP_PID" --max-width 
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
-import re
 import sys
 import time
 
 log_path = sys.argv[1]
 deadline = time.time() + 10
 last_error = "presentation log did not appear"
+expected_titles = ["実装確認", "UI 調整", "テスト追加", "資料整理", "リリース準備", "主作業"]
 
 while time.time() < deadline:
     try:
@@ -55,38 +56,25 @@ while time.time() < deadline:
         continue
 
     for row in rows:
-        bubbles = [str(text) for text in row.get("bubbleTexts", [])]
-        roles = row.get("bubbleRoles", [])
-        activity_kinds = row.get("bubbleActivityKinds", [])
+        titles = row.get("kataribeCharmTitles", [])
+        report = str(row.get("kataribeReportText", ""))
         if row.get("debugOverlay") is not False:
             raise SystemExit("overflow production run unexpectedly enabled debug overlay")
         if row.get("isOffline") is not False:
-            last_error = f"latest row was offline: {bubbles!r}"
+            last_error = f"latest row was offline: {report!r}"
             continue
-        if len(bubbles) != 4:
-            last_error = f"expected four production bubbles, got {bubbles!r}"
+        if titles != expected_titles:
+            last_error = f"expected six bottom-up feed charms, got {titles!r}"
             continue
-        if roles != ["focus", "conversation", "conversation", "overflow"]:
-            last_error = f"expected overflow bubble role, got roles={roles} bubbles={bubbles}"
+        if row.get("kataribeReportThreadId") != "overflow-1":
+            last_error = f"expected primary report to target overflow-1, got {row.get('kataribeReportThreadId')!r}"
             continue
-        if not isinstance(activity_kinds, list) or len(activity_kinds) != len(bubbles):
-            last_error = f"activity kinds did not match overflow bubble count: activity_kinds={activity_kinds} bubbles={bubbles}"
+        if "主作業" not in report:
+            last_error = f"primary report did not name its chat: {report!r}"
             continue
-        if activity_kinds[:3].count("none") > 0 or activity_kinds[3] != "none":
-            last_error = f"overflow bubble stack had wrong activity-kind markers: {activity_kinds}"
-            continue
-        if "ほか3件も見てるよ" not in bubbles:
-            last_error = f"overflow note missing from {bubbles!r}"
-            continue
-        thread_titles = [
-            match.group(1)
-            for bubble in bubbles
-            for match in [re.search(r"「([^」]+)」", bubble)]
-            if match
-        ]
-        if len(thread_titles) != len(set(thread_titles)):
-            raise SystemExit(f"overflow bubble stack repeated a thread title: {bubbles}")
-        print("Overflow thread-list presentation reached compact multi-thread state.")
+        if "ほか" in report or any("ほか" in title for title in titles):
+            raise SystemExit(f"Kataribe stage hid chat names behind an overflow summary: report={report!r} titles={titles!r}")
+        print("Kataribe stage reached a complete six-chat identity rail.")
         raise SystemExit(0)
     time.sleep(0.2)
 
@@ -95,32 +83,36 @@ PY
 
 swift ./script/inspect_accessibility_surface.swift \
   --pid "$APP_PID" \
-  --value-contains "本番表示。" \
-  --value-contains "ほか3件も見てるよ" \
+  --value-contains "Mimoの報告。主作業" \
+  --value-contains "リリース準備" \
   --child-description "Mimo" \
-  --node-identifier "MimoDesktopPet.productionSurface.bubble.0.focus" \
-  --node-identifier "MimoDesktopPet.productionSurface.bubble.1.conversation" \
-  --node-identifier "MimoDesktopPet.productionSurface.bubble.2.conversation" \
-  --node-identifier "MimoDesktopPet.productionSurface.bubble.3.overflow" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.0.focus=「主作業」は作業を進めているよ" \
-  --node-description-contains "MimoDesktopPet.productionSurface.bubble.3.overflow=ほか3件も見てるよ" \
+  --node-identifier "mimo.kataribe.report" \
+  --node-identifier "mimo.kataribe.charm.0" \
+  --node-identifier "mimo.kataribe.charm.1" \
+  --node-identifier "mimo.kataribe.charm.2" \
+  --node-identifier "mimo.kataribe.charm.3" \
+  --node-identifier "mimo.kataribe.charm.4" \
+  --node-identifier "mimo.kataribe.charm.5" \
+  --node-description-contains "mimo.kataribe.report=主作業" \
+  --node-description-contains "mimo.kataribe.charm.5=主作業" \
   --forbid-identifier "MimoDesktopPet.productionSurface.bubble.debug.status" \
   --forbid-description-contains "Mimo speech bubble:" \
   --forbid-description-contains "Codex の会話を待っています" \
-  --forbid-value-contains "デバッグ表示" \
-  --ordered-identifiers "MimoDesktopPet.productionSurface.bubble.0.focus,MimoDesktopPet.productionSurface.bubble.1.conversation,MimoDesktopPet.productionSurface.bubble.2.conversation,MimoDesktopPet.productionSurface.bubble.3.overflow"
+  --forbid-value-contains "ほか" \
+  --forbid-value-contains "Codex Thread" \
+  --forbid-value-contains "デバッグ表示"
 
-sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
+sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-3.2}"
 capture_output=""
 for _ in {1..20}; do
   screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
-  if capture_output="$(swift ./script/inspect_production_capture.swift --multi-bubble-hierarchy "$SCREENSHOT_PATH" 2>&1)"; then
+  if capture_output="$(swift ./script/inspect_production_capture.swift --kataribe-stage --minimum-chat-charms 6 "$SCREENSHOT_PATH" 2>&1)"; then
     printf '%s\n' "$capture_output"
     break
   fi
   sleep 0.2
 done
-if [[ -z "$capture_output" ]] || ! grep -q "Multi-bubble stacked hierarchy inspection passed" <<<"$capture_output"; then
+if [[ -z "$capture_output" ]] || ! grep -q "Kataribe stage inspection passed" <<<"$capture_output"; then
   printf '%s\n' "$capture_output" >&2
   exit 1
 fi
@@ -189,4 +181,4 @@ if set(initial_refresh_reads) != expected:
     raise SystemExit(f"initial refresh reads did not match tracked overflow threads: {initial_refresh_reads}")
 PY
 
-echo "E2E passed: overflow Codex thread list reads beyond the visible stack and shows a compact overflow bubble."
+echo "E2E passed: six Codex chats remain named, readable, clickable, and visible in the Kataribe stage without an overflow summary."

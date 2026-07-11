@@ -13,6 +13,7 @@ public struct PetAutonomousTweenPosition: Equatable, Sendable {
 }
 
 public struct PetAutonomousMotionTween: Equatable, Sendable {
+    private static let smootherStepPeakVelocityFactor = 1.875
     public var start: PetWanderPoint
     public var target: PetWanderPoint
     public var startTime: TimeInterval
@@ -54,13 +55,14 @@ public struct PetAutonomousMotionTween: Equatable, Sendable {
         speedWavePhase: Double
     ) -> PetAutonomousMotionTween {
         let distance = hypot(target.x - start.x, target.y - start.y)
-        let effectiveSpeed = min(max(baseSpeed, 1), max(maximumSpeed, 1))
-        let duration = distance / effectiveSpeed
+        let peakSpeed = min(max(baseSpeed, 1), max(maximumSpeed, 1))
+        let averageSpeed = peakSpeed / smootherStepPeakVelocityFactor
+        let duration = distance / averageSpeed
         return PetAutonomousMotionTween(
             start: start,
             target: target,
             startTime: startTime,
-            duration: min(max(duration, 1.2), 18.0),
+            duration: min(max(duration, 1.2), 30.0),
             speedWaveAmplitude: speedWaveAmplitude,
             speedWaveCycles: speedWaveCycles,
             speedWavePhase: speedWavePhase

@@ -18,8 +18,8 @@ final class PetWindowController: NSObject {
     private let autonomousTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1"
     private let autonomousEnergyTestMode = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_ENERGY_TEST_MODE"] == "1"
     private let autonomousForceBegin = ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_FORCE_BEGIN"] == "1"
-    private let autonomousWindowMovementEnabled = PetAutonomousMotionPolicy.shouldAllowWindowMovement(
-        explicitWindowMovementEnabled: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_WINDOW_MOVEMENT"] == "1",
+    private let initialAutonomousWindowMovementEnabled = PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+        explicitWindowMovementEnabled: PetWindowController.environmentOptionalBool("MIMO_AUTONOMOUS_WINDOW_MOVEMENT"),
         autonomousTestMode: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_TEST_MODE"] == "1",
         autonomousEnergyTestMode: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_ENERGY_TEST_MODE"] == "1",
         autonomousForceBegin: ProcessInfo.processInfo.environment["MIMO_AUTONOMOUS_FORCE_BEGIN"] == "1"
@@ -28,13 +28,13 @@ final class PetWindowController: NSObject {
         ProcessInfo.processInfo.environment["MIMO_SHOWCASE_MODE"] == "1"
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
+    private var movementTimerIsActiveCadence = false
     private var movementAnimationActive = false
     private var movementAnimationWasManual = false
     private var manualDragActive = false
     private var manualMovementTrackingStarted = false
     private var autonomousEnergy = PetWindowController.makeAutonomousEnergyController()
     private var autonomousMotion: PetAutonomousMotionTween?
-    private var autonomousMotionAnimation: PetAnimationState?
     private var lastAutonomousFrameAt: TimeInterval?
     private var lastAutonomousOrigin: PetWanderPoint?
     private var autonomousHomeOrigin = PetWanderPoint(x: 0, y: 0)
@@ -47,6 +47,9 @@ final class PetWindowController: NSObject {
     private var nextIdleMomentAt = Date.timeIntervalSinceReferenceDate +
         PetAutonomousMotionTuning.productionInitialRestSeconds
     private var cancellables: Set<AnyCancellable> = []
+    private var autonomousWindowMovementEnabled: Bool {
+        viewModel.autonomousWindowMovementEnabled
+    }
 
     init(viewModel: PetViewModel) {
         self.viewModel = viewModel
@@ -67,6 +70,7 @@ final class PetWindowController: NSObject {
             defer: false
         )
         super.init()
+        viewModel.setAutonomousWindowMovementEnabled(initialAutonomousWindowMovementEnabled)
         autonomousHomeOrigin = PetWanderPoint(x: origin.x, y: origin.y)
         if !autonomousWindowMovementEnabled {
             nextIdleMomentAt = Date.timeIntervalSinceReferenceDate + PetWindowController.environmentDouble(
@@ -135,11 +139,30 @@ final class PetWindowController: NSObject {
                 }
                 viewModel?.endDrag()
             },
+            openableBubbleAt: { [weak viewModel] point, bounds in
+                viewModel?.openableBubble(
+                    at: PetWanderPoint(x: Double(point.x), y: Double(point.y)),
+                    in: PetDragFrame(bounds)
+                )
+            },
+            isInteractiveAt: { [weak viewModel] point, bounds in
+                viewModel?.containsInteractiveContent(
+                    at: PetWanderPoint(x: Double(point.x), y: Double(point.y)),
+                    in: PetDragFrame(bounds)
+                ) ?? false
+            },
+            onHoveredBubbleChanged: { [weak viewModel] bubble in
+                viewModel?.setHoveredBubble(bubble)
+            },
+            onBubbleClicked: { [weak viewModel] bubble in
+                guard bubble.threadId != nil else { return false }
+                _ = viewModel?.openThread(for: bubble)
+                return true
+            },
             onClicked: { [weak self, weak viewModel] in
                 if let self {
                     self.endManualMovementTracking()
                     self.autonomousMotion = nil
-                    self.autonomousMotionAnimation = nil
                     self.lastAutonomousFrameAt = nil
                     self.lastAutonomousOrigin = nil
                     self.scheduleAutonomousRest(
@@ -167,6 +190,25 @@ final class PetWindowController: NSObject {
             }
             .store(in: &cancellables)
 
+        viewModel.$autonomousWindowMovementEnabled
+            .removeDuplicates()
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                let now = Date.timeIntervalSinceReferenceDate
+                if enabled {
+                    self.autonomousRestUntil = now
+                    self.nextAutonomousRetargetAt = now
+                    self.nextIdleMomentAt = now + PetAutonomousMotionTuning.productionInitialRestSeconds
+                    self.scheduleMovementTimer(activeCadence: false, force: true)
+                } else {
+                    self.stopAutonomousMotion()
+                    self.scheduleAutonomousRest(now: now, includeMoment: true)
+                }
+            }
+            .store(in: &cancellables)
+
         if !showcaseMode {
             startMovementTracking()
         }
@@ -186,14 +228,21 @@ final class PetWindowController: NSObject {
     }
 
     private func startMovementTracking() {
+        scheduleMovementTimer(activeCadence: false, force: true)
+    }
+
+    private func scheduleMovementTimer(activeCadence: Bool, force: Bool = false) {
+        guard force || movementTimer == nil || movementTimerIsActiveCadence != activeCadence else { return }
         movementTimer?.invalidate()
+        movementTimerIsActiveCadence = activeCadence
         let timer = Timer(
-            timeInterval: 1.0 / 60.0,
-            target: self,
-            selector: #selector(movementTimerFired),
-            userInfo: nil,
+            timeInterval: PetAutonomousMotionCadence.interval(isActivelyMoving: activeCadence),
             repeats: true
-        )
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.movementTimerFired()
+            }
+        }
         RunLoop.main.add(timer, forMode: .common)
         movementTimer = timer
     }
@@ -227,19 +276,23 @@ final class PetWindowController: NSObject {
         panel.hidesOnDeactivate = !zOrderPolicy.staysVisibleWhenInactive
     }
 
-    @objc private func movementTimerFired() {
+    private func movementTimerFired() {
         if manualDragActive {
+            scheduleMovementTimer(activeCadence: true)
             updateMovementAnimation()
             return
         }
         guard !autonomousDisabled else {
+            scheduleMovementTimer(activeCadence: false)
             clearMovementAnimationIfNeeded()
             movementHandler.reset()
             return
         }
         if updateAutonomousMotion() {
+            scheduleMovementTimer(activeCadence: autonomousMotion != nil)
             return
         }
+        scheduleMovementTimer(activeCadence: false)
         updateMovementAnimation()
     }
 
@@ -300,11 +353,6 @@ final class PetWindowController: NSObject {
 
         guard panel.isVisible, !manualDragActive, !autonomousDisabled else { return false }
 
-        if shouldHoldPositionForConversation() {
-            holdAutonomousPositionForConversation(now: now)
-            return false
-        }
-
         autonomousEnergy.update(
             now: now,
             isMoving: autonomousMotion != nil,
@@ -343,12 +391,17 @@ final class PetWindowController: NSObject {
         let position = motion.position(at: now)
         let limitedOrigin = limitedAutonomousOrigin(desired: position.origin, motion: motion, now: now)
         panel.setFrameOrigin(NSPoint(x: limitedOrigin.x, y: limitedOrigin.y))
-        beginMovementAnimation(autonomousMotionAnimation ?? motion.directionAnimation, manual: false)
+        if let animation = PetAutonomousMotionAnimationPolicy.animation(
+            for: motion,
+            currentOrigin: limitedOrigin,
+            isAlreadyAnimating: movementAnimationActive
+        ) {
+            beginMovementAnimation(animation, manual: false)
+        }
 
         if position.isComplete,
            hypot(limitedOrigin.x - motion.target.x, limitedOrigin.y - motion.target.y) <= 2 {
             autonomousMotion = nil
-            autonomousMotionAnimation = nil
             lastAutonomousFrameAt = nil
             lastAutonomousOrigin = nil
             clearMovementAnimationIfNeeded()
@@ -360,7 +413,6 @@ final class PetWindowController: NSObject {
         if now >= nextAutonomousRetargetAt {
             if shouldInterruptAutonomousMotionForRest() {
                 autonomousMotion = nil
-                autonomousMotionAnimation = nil
                 lastAutonomousFrameAt = nil
                 lastAutonomousOrigin = nil
                 clearMovementAnimationIfNeeded()
@@ -449,10 +501,10 @@ final class PetWindowController: NSObject {
             speedWavePhase: speedWavePhase
         )
         autonomousMotion = motion
-        autonomousMotionAnimation = motion.directionAnimation
         lastAutonomousFrameAt = nil
         lastAutonomousOrigin = start
         nextAutonomousRetargetAt = now + retargetDelay()
+        scheduleMovementTimer(activeCadence: true)
     }
 
     private func shouldBeginAutonomousMotion() -> Bool {
@@ -501,30 +553,13 @@ final class PetWindowController: NSObject {
         return Double.random(in: PetAutonomousMotionTuning.productionRetargetDelayRange)
     }
 
-    private func shouldHoldPositionForConversation() -> Bool {
-        PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
-            hasPendingConversationBubbles: viewModel.hasPendingConversationBubbles,
-            autonomousTestMode: autonomousTestMode,
-            autonomousEnergyTestMode: autonomousEnergyTestMode
-        )
-    }
-
-    private func holdAutonomousPositionForConversation(now: TimeInterval) {
-        autonomousEnergy.update(now: now, isMoving: false, isResting: true)
-        stopAutonomousMotion()
-        let holdUntil = PetAutonomousMotionPolicy.conversationHoldRestUntil(now: now)
-        autonomousRestUntil = max(autonomousRestUntil, holdUntil)
-        nextAutonomousRetargetAt = max(nextAutonomousRetargetAt, holdUntil)
-        nextIdleMomentAt = max(nextIdleMomentAt, holdUntil)
-    }
-
     private func stopAutonomousMotion() {
         autonomousMotion = nil
-        autonomousMotionAnimation = nil
         lastAutonomousFrameAt = nil
         lastAutonomousOrigin = nil
         clearMovementAnimationIfNeeded()
         movementHandler.reset()
+        scheduleMovementTimer(activeCadence: false)
     }
 
     private func limitedAutonomousOrigin(
@@ -554,7 +589,8 @@ final class PetWindowController: NSObject {
         }
         let distance = hypot(motion.target.x - motion.start.x, motion.target.y - motion.start.y)
         let averageSpeed = distance / max(motion.duration, 0.001)
-        return max(PetAutonomousMotionTuning.productionMaximumSpeed * 1.8, averageSpeed * 2.2, 8)
+        _ = averageSpeed
+        return PetAutonomousMotionTuning.productionMaximumSpeed
     }
 
     private func currentScreen() -> NSScreen? {
@@ -578,7 +614,7 @@ final class PetWindowController: NSObject {
             (.waiting, nil)
         ]
         guard let option = options.randomElement() else { return }
-        viewModel.playMoment(animation: option.0, bubbleText: option.1, duration: Double.random(in: 1.4...2.4))
+        viewModel.playMoment(animation: option.0, bubbleText: option.1, duration: Double.random(in: 2.8...4.2))
     }
 
     private func currentOnScreenFrame() -> PetDragFrame {
@@ -591,9 +627,9 @@ final class PetWindowController: NSObject {
 
     private func beginManualMovementTracking() {
         manualDragActive = true
+        scheduleMovementTimer(activeCadence: true)
         manualMovementTrackingStarted = true
         autonomousMotion = nil
-        autonomousMotionAnimation = nil
         lastAutonomousFrameAt = nil
         lastAutonomousOrigin = nil
         clearMovementAnimationIfNeeded()
@@ -614,6 +650,7 @@ final class PetWindowController: NSObject {
         manualDragActive = false
         manualMovementTrackingStarted = false
         movementHandler.reset()
+        scheduleMovementTimer(activeCadence: false)
     }
 }
 
@@ -642,6 +679,20 @@ private extension PetWindowController {
         }
         return value
     }
+
+    static func environmentOptionalBool(_ key: String) -> Bool? {
+        guard let value = ProcessInfo.processInfo.environment[key]?.lowercased() else {
+            return nil
+        }
+        switch value {
+        case "1", "true", "yes", "on":
+            return true
+        case "0", "false", "no", "off":
+            return false
+        default:
+            return nil
+        }
+    }
 }
 
 private final class ClearHostingView<Content: View>: NSHostingView<Content> {
@@ -654,6 +705,7 @@ private final class PetInteractionView: NSView {
     private var dragHandler = PetDragEventHandler()
     private var dragActivation = PetManualDragActivation()
     private var initialWindowFrame: NSRect?
+    private var initialPointerPoint: NSPoint?
     private var didMoveDuringDrag = false
 
     private let isDebugOverlay: () -> Bool
@@ -662,7 +714,12 @@ private final class PetInteractionView: NSView {
     private let onDragStarted: () -> Void
     private let onDragAnimationChanged: (PetAnimationState) -> Void
     private let onDragEnded: () -> Void
+    private let openableBubbleAt: (NSPoint, NSRect) -> PetSpeechBubble?
+    private let isInteractiveAt: (NSPoint, NSRect) -> Bool
+    private let onHoveredBubbleChanged: (PetSpeechBubble?) -> Void
+    private let onBubbleClicked: (PetSpeechBubble) -> Bool
     private let onClicked: () -> Void
+    private var pointerTrackingArea: NSTrackingArea?
 
     init(
         hostedView: NSView,
@@ -672,6 +729,10 @@ private final class PetInteractionView: NSView {
         onDragStarted: @escaping () -> Void,
         onDragAnimationChanged: @escaping (PetAnimationState) -> Void,
         onDragEnded: @escaping () -> Void,
+        openableBubbleAt: @escaping (NSPoint, NSRect) -> PetSpeechBubble?,
+        isInteractiveAt: @escaping (NSPoint, NSRect) -> Bool,
+        onHoveredBubbleChanged: @escaping (PetSpeechBubble?) -> Void,
+        onBubbleClicked: @escaping (PetSpeechBubble) -> Bool,
         onClicked: @escaping () -> Void
     ) {
         self.isDebugOverlay = isDebugOverlay
@@ -680,6 +741,10 @@ private final class PetInteractionView: NSView {
         self.onDragStarted = onDragStarted
         self.onDragAnimationChanged = onDragAnimationChanged
         self.onDragEnded = onDragEnded
+        self.openableBubbleAt = openableBubbleAt
+        self.isInteractiveAt = isInteractiveAt
+        self.onHoveredBubbleChanged = onHoveredBubbleChanged
+        self.onBubbleClicked = onBubbleClicked
         self.onClicked = onClicked
         super.init(frame: .zero)
 
@@ -715,11 +780,49 @@ private final class PetInteractionView: NSView {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        PetInteractionHitRegion.contains(
-            point: PetWanderPoint(x: Double(point.x), y: Double(point.y)),
-            bounds: PetDragFrame(bounds),
-            debugOverlay: isDebugOverlay()
-        ) ? self : nil
+        if isDebugOverlay() {
+            return self
+        }
+        return isInteractiveAt(point, bounds) ? self : nil
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        window?.acceptsMouseMovedEvents = true
+        updateTrackingAreas()
+    }
+
+    override func updateTrackingAreas() {
+        if let pointerTrackingArea {
+            removeTrackingArea(pointerTrackingArea)
+        }
+        let trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.activeAlways, .inVisibleRect, .mouseMoved, .mouseEnteredAndExited],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea)
+        pointerTrackingArea = trackingArea
+        super.updateTrackingAreas()
+    }
+
+    override func mouseMoved(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        let bubble = openableBubbleAt(point, bounds)
+        onHoveredBubbleChanged(bubble)
+        if bubble != nil {
+            NSCursor.pointingHand.set()
+        } else {
+            NSCursor.arrow.set()
+        }
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        onHoveredBubbleChanged(nil)
+        NSCursor.arrow.set()
+        guard dragHandler.isDragging else { return }
+        super.mouseExited(with: event)
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
@@ -730,6 +833,7 @@ private final class PetInteractionView: NSView {
         guard let window else { return }
         let mouseLocation = NSEvent.mouseLocation
         initialWindowFrame = window.frame
+        initialPointerPoint = convert(event.locationInWindow, from: nil)
         didMoveDuringDrag = false
         dragActivation.begin(at: PetWanderPoint(x: Double(mouseLocation.x), y: Double(mouseLocation.y)))
         onPointerDown()
@@ -770,11 +874,6 @@ private final class PetInteractionView: NSView {
         }
     }
 
-    override func mouseExited(with event: NSEvent) {
-        guard dragHandler.isDragging else { return }
-        super.mouseExited(with: event)
-    }
-
     private func finishDrag(finalFrame: NSRect) {
         let frameMoved: Bool
         if let initialWindowFrame {
@@ -786,11 +885,18 @@ private final class PetInteractionView: NSView {
             frameMoved = false
         }
         initialWindowFrame = nil
+        let clickPoint = initialPointerPoint
+        initialPointerPoint = nil
         let wasActive = dragActivation.end()
         dragHandler.end()
         if didMoveDuringDrag || wasActive || frameMoved {
             onDragEnded()
         } else {
+            if let clickPoint,
+               let bubble = openableBubbleAt(clickPoint, bounds),
+               onBubbleClicked(bubble) {
+                return
+            }
             onClicked()
         }
     }

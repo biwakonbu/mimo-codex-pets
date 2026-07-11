@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$ROOT_DIR/../.." && pwd)"
 APP_BINARY="$ROOT_DIR/dist/$APP_NAME.app/Contents/MacOS/$APP_NAME"
 FAKE_CODEX="$ROOT_DIR/script/fake_empty_codex_app_server.py"
-PRESENTATION_LOG="/tmp/mimo-autonomous-default-stationary-presentation-e2e.jsonl"
+PRESENTATION_LOG="/tmp/mimo-autonomous-default-movement-presentation-e2e.jsonl"
 
 cleanup() {
   if [[ -n "${APP_PID:-}" ]] && kill -0 "$APP_PID" >/dev/null 2>&1; then
@@ -24,6 +24,8 @@ rm -f "$PRESENTATION_LOG" /tmp/mimo-empty-fake-codex.log
 MIMO_CODEX_EXECUTABLE="$FAKE_CODEX" \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_INITIAL_REST_SECONDS=0 \
+MIMO_AUTONOMOUS_FORCE_BEGIN=1 \
+MIMO_CLICK_THROUGH=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
 MIMO_PRESENTATION_LOG="$PRESENTATION_LOG" \
 MIMO_WINDOW_ORIGIN="220,220" \
@@ -52,6 +54,9 @@ func windowOrigin() -> (Double, Double)? {
     return (x, y)
 }
 
+// Let CoreGraphics replace the window-server registration origin with the panel's configured origin.
+Thread.sleep(forTimeInterval: 0.5)
+
 var samples: [(Double, Double)] = []
 for _ in 0..<300 {
     if let origin = windowOrigin() {
@@ -61,7 +66,7 @@ for _ in 0..<300 {
 }
 
 guard let first = samples.first, samples.count >= 240 else {
-    fputs("too few default-stationary samples: \(samples.count)\n", stderr)
+    fputs("too few default-movement samples: \(samples.count)\n", stderr)
     exit(1)
 }
 
@@ -72,13 +77,19 @@ let deltas = zip(samples.dropFirst(), samples).map { current, previous in
 }
 let movingSamples = deltas.filter { $0 > 0.02 }.count
 
-guard maxDistanceFromStart <= 0.75 else {
-    fputs("default production launch moved the window unexpectedly: \(maxDistanceFromStart)\n", stderr)
+guard maxDistanceFromStart >= 12 else {
+    fputs("default production launch did not wander: \(maxDistanceFromStart)\n", stderr)
     exit(1)
 }
 
-guard movingSamples == 0 else {
-    fputs("default production launch had moving samples: \(movingSamples)\n", stderr)
+guard movingSamples >= 45 else {
+    fputs("default production launch had too few moving samples: \(movingSamples)\n", stderr)
+    exit(1)
+}
+
+let largestDelta = deltas.max() ?? 0
+guard largestDelta <= 4 else {
+    fputs("default production launch exceeded the smooth frame-distance bound: \(largestDelta)\n", stderr)
     exit(1)
 }
 SWIFT
@@ -103,18 +114,16 @@ while time.time() < deadline:
         time.sleep(0.2)
         continue
     if any(row.get("debugOverlay") is not False for row in rows):
-        raise SystemExit("default stationary run unexpectedly enabled debug overlay")
+        raise SystemExit("default movement run unexpectedly enabled debug overlay")
     directional = [row for row in rows if row.get("animation") in {"running-left", "running-right"}]
-    if directional:
-        raise SystemExit(f"default stationary run unexpectedly used movement animation: {directional[-3:]}")
-    if any(row.get("isOffline") is False for row in rows):
-        print("Default stationary presentation reached connected production mode.")
+    if directional and any(row.get("isOffline") is False for row in rows):
+        print("Default movement presentation reached a directional animation in connected production mode.")
         raise SystemExit(0)
     time.sleep(0.2)
 
-raise SystemExit("default stationary run did not reach connected production presentation")
+raise SystemExit("default movement run did not reach a directional connected production presentation")
 PY
 
 kill -0 "$APP_PID" >/dev/null
 
-echo "E2E passed: default production launch keeps Mimo anchored unless autonomous window movement is explicitly enabled."
+echo "E2E passed: default production launch lets Mimo wander smoothly and uses a directional movement animation."

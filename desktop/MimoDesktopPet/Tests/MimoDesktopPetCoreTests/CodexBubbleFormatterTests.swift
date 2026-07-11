@@ -36,6 +36,25 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
     }
 
+    func testGeneratedMimoSpeechAlsoDrivesSecondaryChatCard() {
+        let line = CodexConversationLine(
+            threadId: "session-2",
+            threadTitle: "クリック導線",
+            speaker: "assistant",
+            text: "ヒット領域を確認中",
+            isAssistant: true,
+            activityKind: .test,
+            workSummary: "クリック領域の回帰テスト",
+            sessionState: .active,
+            mimoSpeech: "「クリック導線」ではカードの実座標でヒット判定を確かめているよ。空白を押して別チャットが開かないところまでテスト中です"
+        )
+
+        XCTAssertEqual(
+            CodexBubbleFormatter.contextText(for: line),
+            "「クリック導線」ではカードの実座標でヒット判定を確かめているよ。空白を押して別チャットが開かないところまでテスト中です"
+        )
+    }
+
     func testGeneratedMimoSpeechDoesNotExposeBareStatusLabels() {
         let cases: [(String, String)] = [
             (

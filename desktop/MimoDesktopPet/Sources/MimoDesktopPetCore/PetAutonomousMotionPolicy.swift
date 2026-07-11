@@ -2,15 +2,15 @@ import Foundation
 
 public enum PetAutonomousMotionPolicy {
     public static func shouldAllowWindowMovement(
-        explicitWindowMovementEnabled: Bool,
+        explicitWindowMovementEnabled: Bool?,
         autonomousTestMode: Bool,
         autonomousEnergyTestMode: Bool,
         autonomousForceBegin: Bool
     ) -> Bool {
-        explicitWindowMovementEnabled ||
-            autonomousTestMode ||
-            autonomousEnergyTestMode ||
-            autonomousForceBegin
+        if autonomousTestMode || autonomousEnergyTestMode || autonomousForceBegin {
+            return true
+        }
+        return explicitWindowMovementEnabled ?? true
     }
 
     public static func initialIdleMomentDelay(windowMovementEnabled: Bool) -> TimeInterval {
@@ -31,15 +31,4 @@ public enum PetAutonomousMotionPolicy {
             : PetAutonomousMotionTuning.productionAnchoredRestMomentDelayRange
     }
 
-    public static func shouldHoldPositionForConversation(
-        hasPendingConversationBubbles: Bool,
-        autonomousTestMode: Bool,
-        autonomousEnergyTestMode: Bool
-    ) -> Bool {
-        hasPendingConversationBubbles && !autonomousTestMode && !autonomousEnergyTestMode
-    }
-
-    public static func conversationHoldRestUntil(now: TimeInterval) -> TimeInterval {
-        now + PetAutonomousMotionTuning.productionConversationHoldSeconds
-    }
 }

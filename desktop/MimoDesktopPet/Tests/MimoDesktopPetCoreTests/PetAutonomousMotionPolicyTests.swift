@@ -2,28 +2,13 @@ import XCTest
 @testable import MimoDesktopPetCore
 
 final class PetAutonomousMotionPolicyTests: XCTestCase {
-    func testProductionHoldsPositionWhileConversationBubblesAreActive() {
-        XCTAssertTrue(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
-            hasPendingConversationBubbles: true,
+    func testProductionMovesByDefaultUnlessExplicitlyDisabled() {
+        XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
+            explicitWindowMovementEnabled: nil,
             autonomousTestMode: false,
-            autonomousEnergyTestMode: false
+            autonomousEnergyTestMode: false,
+            autonomousForceBegin: false
         ))
-    }
-
-    func testConversationHoldDoesNotBlockDeterministicMotionTestModes() {
-        XCTAssertFalse(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
-            hasPendingConversationBubbles: true,
-            autonomousTestMode: true,
-            autonomousEnergyTestMode: false
-        ))
-        XCTAssertFalse(PetAutonomousMotionPolicy.shouldHoldPositionForConversation(
-            hasPendingConversationBubbles: true,
-            autonomousTestMode: false,
-            autonomousEnergyTestMode: true
-        ))
-    }
-
-    func testProductionDoesNotMoveWindowUnlessExplicitlyEnabled() {
         XCTAssertFalse(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
             explicitWindowMovementEnabled: false,
             autonomousTestMode: false,
@@ -40,19 +25,19 @@ final class PetAutonomousMotionPolicyTests: XCTestCase {
             autonomousForceBegin: false
         ))
         XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
-            explicitWindowMovementEnabled: false,
+            explicitWindowMovementEnabled: nil,
             autonomousTestMode: true,
             autonomousEnergyTestMode: false,
             autonomousForceBegin: false
         ))
         XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
-            explicitWindowMovementEnabled: false,
+            explicitWindowMovementEnabled: nil,
             autonomousTestMode: false,
             autonomousEnergyTestMode: true,
             autonomousForceBegin: false
         ))
         XCTAssertTrue(PetAutonomousMotionPolicy.shouldAllowWindowMovement(
-            explicitWindowMovementEnabled: false,
+            explicitWindowMovementEnabled: nil,
             autonomousTestMode: false,
             autonomousEnergyTestMode: false,
             autonomousForceBegin: true
@@ -93,11 +78,4 @@ final class PetAutonomousMotionPolicyTests: XCTestCase {
         )
     }
 
-    func testConversationHoldRestUsesProductionDwell() {
-        XCTAssertEqual(
-            PetAutonomousMotionPolicy.conversationHoldRestUntil(now: 42),
-            42 + PetAutonomousMotionTuning.productionConversationHoldSeconds,
-            accuracy: 0.0001
-        )
-    }
 }

@@ -34,19 +34,25 @@ public struct PetSpeechBubble: Equatable, Identifiable, Sendable {
     public let role: PetSpeechBubbleRole
     public let tone: PetSpeechBubbleTone
     public let activityKind: CodexConversationActivityKind?
+    public let threadId: String?
+    public let threadTitle: String?
 
     public init(
         id: String,
         text: String,
         role: PetSpeechBubbleRole,
         tone: PetSpeechBubbleTone = .neutral,
-        activityKind: CodexConversationActivityKind? = nil
+        activityKind: CodexConversationActivityKind? = nil,
+        threadId: String? = nil,
+        threadTitle: String? = nil
     ) {
         self.id = id
         self.text = text
         self.role = role
         self.tone = tone
         self.activityKind = activityKind
+        self.threadId = threadId
+        self.threadTitle = threadTitle
     }
 }
 

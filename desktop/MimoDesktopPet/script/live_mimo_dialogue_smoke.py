@@ -18,7 +18,8 @@ CODEX_BIN = (
     or os.environ.get("CODEX_BIN", "").strip()
     or "codex"
 )
-DEFAULT_MODEL = os.environ.get("MIMO_CODEX_DIALOGUE_MODEL", "gpt-5.4-mini")
+DEFAULT_MODEL = os.environ.get("MIMO_CODEX_DIALOGUE_MODEL", "gpt-5.6-luna")
+DEFAULT_REASONING_EFFORT = "low"
 DEFAULT_TIMEOUT_SECONDS = float(os.environ.get("MIMO_LIVE_DIALOGUE_SMOKE_TIMEOUT", "60"))
 DAEMON_START_TIMEOUT_SECONDS = float(os.environ.get("MIMO_LIVE_SMOKE_DAEMON_START_TIMEOUT", "2"))
 PROXY_INITIALIZE_TIMEOUT_SECONDS = float(
@@ -78,7 +79,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model",
         default=DEFAULT_MODEL,
-        help="Codex model for the Mimo dialogue turn. Defaults to MIMO_CODEX_DIALOGUE_MODEL or gpt-5.4-mini.",
+        help="Codex model for the Mimo dialogue turn. Defaults to MIMO_CODEX_DIALOGUE_MODEL or gpt-5.6-luna.",
     )
     parser.add_argument(
         "--timeout",
@@ -368,7 +369,7 @@ def run_dialogue_turn(session: JsonRpcSession, model: str, timeout: float) -> tu
                 "networkAccess": False,
             },
             "environments": [],
-            "effort": "low",
+            "effort": DEFAULT_REASONING_EFFORT,
             "summary": "none",
         },
     )
@@ -465,6 +466,7 @@ def run_transport(args: argparse.Namespace, transport: str, report_transport: st
             f"transport={report_transport!r}, "
             f"userAgent={initialize_result['userAgent']!r}, "
             f"model={args.model!r}, "
+            f"effort={DEFAULT_REASONING_EFFORT!r}, "
             f"threadId={thread_id!r}, "
             f"turnId={turn_id!r}, "
             f"speech={speech!r}."

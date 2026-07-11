@@ -55,6 +55,44 @@ final class CodexThreadTitleFormatterTests: XCTestCase {
         XCTAssertEqual(title, "Codex Thread")
     }
 
+    func testThreadObjectUsesFirstUserPromptWhenNameAndPreviewAreMissing() {
+        let title = CodexThreadTitleFormatter.title(fromThreadObject: [
+            "id": "thread-1",
+            "turns": [
+                [
+                    "items": [
+                        [
+                            "type": "userMessage",
+                            "content": [
+                                ["type": "inputText", "text": "Mimo の語り面を歩行中も読みやすくする"]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        ])
+
+        XCTAssertEqual(title, "Mimo の語り面を歩行中も読みやすくする")
+    }
+
+    func testThreadObjectPrefersExplicitNameOverUserPrompt() {
+        let title = CodexThreadTitleFormatter.title(fromThreadObject: [
+            "name": "かたりべステージ実装",
+            "turns": [["input": "この文は名前に使わない"]]
+        ])
+
+        XCTAssertEqual(title, "かたりべステージ実装")
+    }
+
+    func testThreadObjectSkipsGenericPreviewAndUsesFirstUserPrompt() {
+        let title = CodexThreadTitleFormatter.title(fromThreadObject: [
+            "preview": "Codex Thread",
+            "turns": [["input": "検索画面のページ送りを検証する"]]
+        ])
+
+        XCTAssertEqual(title, "検索画面のページ送りを検証する")
+    }
+
     func testSharedSmokeTitleSanitizerFixturesMatchProductionFormatter() throws {
         for fixture in try loadSharedFixtures() {
             XCTAssertEqual(

@@ -18,60 +18,51 @@ cleanup() {
 }
 trap cleanup EXIT
 
-wait_for_presentation_patterns() {
+wait_for_kataribe_stage() {
   local timeout_seconds="${MIMO_E2E_PRESENTATION_TIMEOUT_SECONDS:-45}"
   python3 - "$PRESENTATION_LOG" "$timeout_seconds" <<'PY'
-import re
+import json
 import sys
 import time
 from pathlib import Path
 
 log_path = Path(sys.argv[1])
 timeout_seconds = float(sys.argv[2])
-patterns = [
-    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をツールで確認中だよ",
-    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をまとめているよ",
-    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)を計画中だよ",
-    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)でコマンドを実行中だよ",
-    r"「Mimo runtime QA」は吹き出し要約の(表示文言|実装)で端末入力を確認中だよ",
-    r"差分確認",
-    r"Mimo が見やすく伝える準備を進めています",
-    r"承認確認",
-    r"承認確認済み",
-    r"フック確認",
-    r"確認反映",
-    r"目標確認",
-    r"文脈整理済み",
-    r"モデル調整",
-    r"モデル確認",
-    r"安全確認",
-    r"問題確認",
-    r"警告確認",
-    r"安全警告",
-    r"MCP 確認",
-    r"Mimo runtime.*吹き出し要約.*(返事待ち|確認を待)",
-    r"「別チャットの確認」検証ひと段落",
-    r"「別チャットの確認」進めてるよ",
-    r"「更新された別チャット」進めてるよ",
-    r"ステータスだけで進捗を伝",
-    r"「資料整理」進めてるよ",
-    r"新しい実装チャット",
-]
-
 deadline = time.monotonic() + timeout_seconds
-last_missing = patterns
+last_state = "presentation log did not appear"
 while time.monotonic() < deadline:
-    text = log_path.read_text(encoding="utf-8") if log_path.exists() else ""
-    missing = [pattern for pattern in patterns if not re.search(pattern, text)]
-    if not missing:
+    if not log_path.exists():
+        time.sleep(0.25)
+        continue
+    try:
+        rows = [json.loads(line) for line in log_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    except (OSError, json.JSONDecodeError):
+        time.sleep(0.25)
+        continue
+    named_stage = any(
+        {"Mimo runtime QA", "ステータスだけで進捗を伝える検証", "資料整理"}.issubset(
+            set(row.get("kataribeCharmTitles", []))
+        )
+        for row in rows
+    )
+    generated_narration = any("Mimoもそっと見守ってるよ" in str(row.get("kataribeReportText", "")) for row in rows)
+    walking_stage = any(
+        row.get("isPetMoving") is True and row.get("animation") in {"running-left", "running-right"}
+        for row in rows
+    )
+    closed_markers = {"別チャットの確認", "更新された別チャット"}
+    closed_seen = any(closed_markers.intersection(row.get("kataribeCharmTitles", [])) for row in rows)
+    closed_removed = closed_seen and not closed_markers.intersection(rows[-1].get("kataribeCharmTitles", []))
+    started_seen = any("新しい実装チャット" in row.get("kataribeCharmTitles", []) for row in rows)
+    if named_stage and generated_narration and walking_stage and closed_removed and started_seen:
         sys.exit(0)
-    last_missing = missing
+    last_state = (
+        f"named_stage={named_stage}, generated_narration={generated_narration}, "
+        f"walking_stage={walking_stage}, closed_removed={closed_removed}, started_seen={started_seen}"
+    )
     time.sleep(0.25)
 
-print("presentation log did not contain expected Mimo speech patterns before timeout:", file=sys.stderr)
-for pattern in last_missing:
-    print(f"  missing: {pattern}", file=sys.stderr)
-sys.exit(1)
+raise SystemExit(f"Kataribe stage did not reach the expected live state before timeout: {last_state}")
 PY
 }
 
@@ -149,37 +140,14 @@ guard largestDeltaChange <= 14 else {
 }
 SWIFT
 
-wait_for_presentation_patterns
+wait_for_kataribe_stage
 kill -0 "$APP_PID" >/dev/null
 
-grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をツールで確認中だよ' "$PRESENTATION_LOG"
-grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)をまとめているよ' "$PRESENTATION_LOG"
-grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)を計画中だよ' "$PRESENTATION_LOG"
-grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)でコマンドを実行中だよ' "$PRESENTATION_LOG"
-grep -Eq '「Mimo runtime QA」は吹き出し要約の(表示文言|実装)で端末入力を確認中だよ' "$PRESENTATION_LOG"
-grep -Fq '差分確認' "$PRESENTATION_LOG"
-grep -Eq 'Mimo runtime QA.*(作業内容|吹き出し要約).*テスト|Mimo runtime QA.*Mimo が見やすく伝える準備' "$PRESENTATION_LOG"
-grep -Fq 'Mimo が見やすく伝える準備を進めています' "$PRESENTATION_LOG"
-grep -Fq '承認確認' "$PRESENTATION_LOG"
-grep -Fq '承認確認済み' "$PRESENTATION_LOG"
-grep -Fq 'フック確認' "$PRESENTATION_LOG"
-grep -Fq '確認反映' "$PRESENTATION_LOG"
-grep -Fq '目標確認' "$PRESENTATION_LOG"
-grep -Fq '文脈整理済み' "$PRESENTATION_LOG"
-grep -Fq 'モデル調整' "$PRESENTATION_LOG"
-grep -Fq 'モデル確認' "$PRESENTATION_LOG"
-grep -Fq '安全確認' "$PRESENTATION_LOG"
-grep -Fq '問題確認' "$PRESENTATION_LOG"
-grep -Fq '警告確認' "$PRESENTATION_LOG"
-grep -Fq '安全警告' "$PRESENTATION_LOG"
-grep -Fq 'MCP 確認' "$PRESENTATION_LOG"
-grep -Eq 'Mimo runtime.*吹き出し要約.*(返事待ち|確認を待)' "$PRESENTATION_LOG"
-grep -Fq '「別チャットの確認」検証ひと段落' "$PRESENTATION_LOG"
-grep -Fq '「別チャットの確認」進めてるよ' "$PRESENTATION_LOG"
-grep -Fq '「更新された別チャット」進めてるよ' "$PRESENTATION_LOG"
-grep -Fq 'ステータスだけで進捗を伝' "$PRESENTATION_LOG"
-grep -Fq '「資料整理」進めてるよ' "$PRESENTATION_LOG"
-grep -Fq '新しい実装チャット' "$PRESENTATION_LOG"
+grep -Fq 'Mimoもそっと見守ってるよ' "$PRESENTATION_LOG"
+if grep -Fq 'Mimoも追いかけてるね' "$PRESENTATION_LOG"; then
+  echo "technical tracking language leaked into Mimo narration" >&2
+  exit 1
+fi
 
 python3 - "$PRESENTATION_LOG" <<'PY'
 import json
@@ -192,6 +160,42 @@ with open(log_path, "r", encoding="utf-8") as handle:
     for line in handle:
         if line.strip():
             rows.append(json.loads(line))
+
+stage_rows = [row for row in rows if row.get("kataribeCharmTitles")]
+if not stage_rows:
+    raise SystemExit("presentation log never showed the Kataribe chat rail")
+if max(len(row.get("kataribeCharmTitles", [])) for row in stage_rows) < 4:
+    raise SystemExit("Kataribe stage never retained four named chats")
+if any(len(titles := row.get("kataribeCharmTitles", [])) != len(set(titles)) for row in stage_rows):
+    raise SystemExit("Kataribe stage repeated a chat name")
+if any(len(row.get("kataribeCharmTitles", [])) > 6 for row in stage_rows):
+    raise SystemExit("Kataribe stage exceeded the six-chat identity rail")
+if any("ほか" in title for row in stage_rows for title in row.get("kataribeCharmTitles", [])):
+    raise SystemExit("Kataribe stage hid chat names behind an overflow label")
+for row in stage_rows:
+    titles = row.get("kataribeCharmTitles", [])
+    thread_ids = row.get("kataribeCharmThreadIds", [])
+    if not isinstance(thread_ids, list) or len(thread_ids) != len(titles):
+        raise SystemExit(
+            f"Kataribe stage charm identities did not match titles: ids={thread_ids!r} titles={titles!r}"
+        )
+    report_thread_id = row.get("kataribeReportThreadId")
+    if report_thread_id not in (None, "none") and thread_ids and thread_ids[-1] != report_thread_id:
+        raise SystemExit(
+            "Kataribe stage did not keep the narrated chat at the bottom: "
+            f"report={report_thread_id!r} ids={thread_ids!r}"
+        )
+if not any(row.get("isPetMoving") is True and row.get("kataribeReportText") for row in rows):
+    raise SystemExit("Kataribe report was not retained while Mimo walked")
+if not any(row.get("kataribeReportThreadId") in {"fake-status-only", "fake-started"} for row in rows):
+    raise SystemExit("an action-required chat never interrupted the Kataribe report")
+for row in stage_rows:
+    accessibility_value = str(row.get("accessibilityValue", ""))
+    for title in row.get("kataribeCharmTitles", []):
+        if title not in accessibility_value:
+            raise SystemExit(f"accessibility value omitted named chat {title!r}: {accessibility_value!r}")
+    if any(raw in accessibility_value for raw in ("running-left", "running-right", "active", "Codex Thread")):
+        raise SystemExit(f"accessibility value exposed an internal state: {accessibility_value!r}")
 
 valid_activity_kinds = {
     "none",
@@ -228,7 +232,7 @@ for row in rows:
     activity_kinds = row.get("bubbleActivityKinds", [])
     if not isinstance(bubbles, list):
         continue
-    if len(bubbles) > 5:
+    if len(bubbles) > 4:
         raise SystemExit(f"production bubble stack showed too many bubbles: {len(bubbles)}")
     if roles and len(roles) != len(bubbles):
         raise SystemExit(f"production bubble roles did not match bubble text count: roles={roles} bubbles={bubbles}")
@@ -302,6 +306,10 @@ for row in rows:
         "OPENAI_API_KEY",
         "Ignore previous instructions",
         "developer message",
+        "Mimo internal synthesis",
+        "Mimo internal dialogue",
+        "Return done.",
+        "Observe the attached image",
     )
     for fragment in forbidden_fragments:
         if fragment in all_visible_text:
@@ -323,47 +331,38 @@ for row in rows:
 else:
     raise SystemExit("presentation log never showed three thread bubbles at once")
 
-action_required_primary_seen = False
-for row in rows:
-    bubbles = row.get("bubbleTexts", [])
-    roles = row.get("bubbleRoles", [])
-    tones = row.get("bubbleTones", [])
-    if not bubbles or not roles or not tones:
-        continue
-    if (
-        roles[0] == "focus"
-        and tones[0] in {"waiting", "review", "failed"}
-        and any(
-            marker in str(bubbles[0])
-            for marker in ("ステータスだけで進捗を伝", "別チャットの確認", "新しい実装チャット")
-        )
-        and any("Mimo runtime" in str(text) for text in bubbles[1:])
-    ):
-        action_required_primary_seen = True
-        break
-
-if not action_required_primary_seen:
-    raise SystemExit("action-required secondary thread was never promoted into the primary Mimo report")
+if not any(
+    row.get("kataribeReportThreadId") in {"fake-status-only", "fake-started"}
+    and any(marker in str(row.get("kataribeReportText", "")) for marker in ("返事を待", "確認を待", "つまず"))
+    for row in rows
+):
+    raise SystemExit("action-required secondary chat was never promoted into the Kataribe report")
 
 closed_thread_markers = ("別チャットの確認", "更新された別チャット")
-tail_rows = rows[-5:]
+tail_rows = rows[-1:]
 if any(
     any(marker in str(text) for marker in closed_thread_markers)
     for row in tail_rows
-    for text in row.get("bubbleTexts", [])
+    for text in row.get("kataribeCharmTitles", [])
 ):
-    raise SystemExit("closed secondary thread remained in recent production bubbles")
+    raise SystemExit("closed secondary chat remained in the recent Kataribe rail")
 
 if not any(
-    any("新しい実装チャット" in str(text) for text in row.get("bubbleTexts", []))
-    for row in tail_rows
+    "新しい実装チャット" in row.get("kataribeCharmTitles", [])
+    for row in rows
 ):
-    raise SystemExit("notification-only started thread was not retained across later production bubble refreshes")
+    raise SystemExit("notification-only started chat was never retained in the Kataribe rail")
 PY
+
+grep -Fq '"threadId":"fake-internal-ephemeral"' "$FAKE_LOG"
+if grep -Eq 'Return done\.|Observe the attached image|Mimo internal' "$PRESENTATION_LOG"; then
+  echo "ephemeral internal chat leaked into the visible presentation log" >&2
+  exit 1
+fi
 
 sleep "${MIMO_CAPTURE_SETTLE_SECONDS:-1.8}"
 screencapture -x -o -l "$WINDOW_ID" "$SCREENSHOT_PATH"
-swift ./script/inspect_production_capture.swift "$SCREENSHOT_PATH"
+swift ./script/inspect_production_capture.swift --kataribe-stage "$SCREENSHOT_PATH"
 
 grep -Fq 'argv ["app-server", "daemon", "start"]' "$FAKE_LOG"
 grep -Fq 'argv ["app-server", "proxy"]' "$FAKE_LOG"
@@ -408,6 +407,32 @@ with open(log_path, "r", encoding="utf-8") as handle:
         except json.JSONDecodeError:
             continue
         events.append((direction, message))
+
+dialogue_thread_starts = [
+    message
+    for direction, message in events
+    if direction == "in"
+    and message.get("method") == "thread/start"
+    and message.get("params", {}).get("serviceName") == "mimo_desktop_pet"
+]
+if not dialogue_thread_starts:
+    raise SystemExit("Mimo dialogue thread/start was not observed")
+if any(message.get("params", {}).get("model") != "gpt-5.6-luna" for message in dialogue_thread_starts):
+    raise SystemExit(f"Mimo dialogue did not use gpt-5.6-luna: {dialogue_thread_starts!r}")
+
+dialogue_turn_starts = [
+    message
+    for direction, message in events
+    if direction == "in"
+    and message.get("method") == "turn/start"
+    and message.get("params", {}).get("threadId") == "mimo-dialogue-thread"
+]
+if not dialogue_turn_starts:
+    raise SystemExit("Mimo dialogue turn/start was not observed")
+if any(message.get("params", {}).get("model") != "gpt-5.6-luna" for message in dialogue_turn_starts):
+    raise SystemExit(f"Mimo dialogue turn did not use gpt-5.6-luna: {dialogue_turn_starts!r}")
+if any(message.get("params", {}).get("effort") != "low" for message in dialogue_turn_starts):
+    raise SystemExit(f"Mimo dialogue turn did not use low effort: {dialogue_turn_starts!r}")
 
 notification_index = next(
     (
@@ -510,4 +535,4 @@ if status_only_index is None:
     raise SystemExit("status-only thread notification was not emitted")
 PY
 
-echo "E2E passed: fake Codex app-server, notification-driven multi-thread Mimo summary bubbles, smooth autonomous movement, always-on-top production window, transparent corners, and thread reads verified."
+echo "E2E passed: fake Codex app-server, notification-driven Kataribe narration, named chat rail, walking readability, transparent always-on-top window, and thread reads verified."

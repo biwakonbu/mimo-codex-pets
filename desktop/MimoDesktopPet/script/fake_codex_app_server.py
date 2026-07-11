@@ -65,6 +65,7 @@ STARTED_THREAD_TURNS = [
 ]
 MIMO_DIALOGUE_THREAD_ID = "mimo-dialogue-thread"
 MIMO_DIALOGUE_TURN_COUNTER = 0
+INTERNAL_EPHEMERAL_THREAD_ID = "fake-internal-ephemeral"
 
 
 def log(message):
@@ -193,8 +194,32 @@ def mimo_dialogue_thread_snapshot():
         "id": MIMO_DIALOGUE_THREAD_ID,
         "name": "Mimo dialogue",
         "preview": "Mimo internal dialogue synthesis",
+        "ephemeral": True,
         "status": {"type": "idle"},
         "turns": [],
+    }
+
+
+def internal_ephemeral_thread_snapshot():
+    return {
+        "id": INTERNAL_EPHEMERAL_THREAD_ID,
+        "name": "Return done.",
+        "preview": "Observe the attached image without exposing this internal task",
+        "ephemeral": True,
+        "status": {"type": "active", "activeFlags": []},
+        "turns": [
+            {
+                "id": "internal-turn",
+                "status": "inProgress",
+                "items": [
+                    {
+                        "id": "internal-agent",
+                        "type": "agentMessage",
+                        "content": [{"type": "outputText", "text": "Mimo internal synthesis should stay hidden"}],
+                    }
+                ],
+            }
+        ],
     }
 
 
@@ -206,6 +231,8 @@ def dialogue_text_from_input(params):
     chat_name = "このチャット"
     chat_state = "作業を進めている"
     safe_work_topic = "作業内容の説明"
+    activity_kind = "進捗確認"
+    recent_progress = "現在の進み具合"
     for line in text.splitlines():
         key, sep, value = line.partition(":")
         if not sep:
@@ -217,7 +244,21 @@ def dialogue_text_from_input(params):
             chat_state = value
         elif key.strip() == "safe_work_topic" and value:
             safe_work_topic = value
-    return f"「{chat_name}」は{chat_state}よ。Codex が{safe_work_topic}を整理して、Mimo が見やすく伝える準備を進めています"
+        elif key.strip() == "activity_kind" and value:
+            activity_kind = value
+        elif key.strip().startswith("recent_progress_") and value:
+            recent_progress = value
+
+    if "返事" in chat_state or "待って" in chat_state:
+        state_sentence = f"「{chat_name}」では{safe_work_topic}について返事を待っているよ。"
+    elif "つまず" in chat_state:
+        state_sentence = f"「{chat_name}」では{safe_work_topic}の途中でつまずきを確かめているよ。"
+    elif "ひと段落" in chat_state:
+        state_sentence = f"「{chat_name}」の{safe_work_topic}はひと段落したよ。"
+    else:
+        state_sentence = f"「{chat_name}」では{safe_work_topic}を進めているよ。"
+    recent_detail = recent_progress.split(":", 1)[-1].strip()
+    return f"{state_sentence}いまは{recent_detail}まで進んだところを、Mimoもそっと見守ってるよ"
 
 
 def write_dialogue_turn_sequence(turn_id, text):
@@ -720,7 +761,7 @@ def run_stdio_server():
             with STATE_LOCK:
                 closed = SECOND_THREAD_CLOSED
                 started_visible = STARTED_THREAD_VISIBLE
-            ids = ["fake-thread"]
+            ids = [INTERNAL_EPHEMERAL_THREAD_ID, "fake-thread"]
             if not closed:
                 ids.append("fake-review")
             ids.extend(["fake-status-only", "fake-docs"])
@@ -730,6 +771,15 @@ def run_stdio_server():
                 {
                     "id": request_id,
                     "result": {"data": ids, "nextCursor": None},
+                }
+            )
+            write_message(
+                {
+                    "method": "turn/started",
+                    "params": {
+                        "threadId": INTERNAL_EPHEMERAL_THREAD_ID,
+                        "turn": {"id": "internal-turn", "status": "inProgress"},
+                    },
                 }
             )
         elif method == "thread/list":
@@ -743,6 +793,7 @@ def run_stdio_server():
                 started_visible = STARTED_THREAD_VISIBLE
                 started_thread = started_thread_snapshot()
             threads = [
+                internal_ephemeral_thread_snapshot(),
                 {
                     "id": "fake-thread",
                     "name": "Mimo runtime QA",
@@ -768,7 +819,10 @@ def run_stdio_server():
             )
         elif method == "thread/read":
             thread_id = request.get("params", {}).get("threadId", "fake-thread")
-            if thread_id == MIMO_DIALOGUE_THREAD_ID:
+            if thread_id == INTERNAL_EPHEMERAL_THREAD_ID:
+                with STATE_LOCK:
+                    thread = internal_ephemeral_thread_snapshot()
+            elif thread_id == MIMO_DIALOGUE_THREAD_ID:
                 with STATE_LOCK:
                     thread = mimo_dialogue_thread_snapshot()
             elif thread_id == "fake-review":
@@ -809,7 +863,7 @@ def run_stdio_server():
                     "id": request_id,
                     "result": {
                         "thread": mimo_dialogue_thread_snapshot(),
-                        "model": request.get("params", {}).get("model", "gpt-5.4-mini"),
+                        "model": request.get("params", {}).get("model", "gpt-5.6-luna"),
                         "modelProvider": "openai",
                         "approvalPolicy": "never",
                         "approvalsReviewer": "user",

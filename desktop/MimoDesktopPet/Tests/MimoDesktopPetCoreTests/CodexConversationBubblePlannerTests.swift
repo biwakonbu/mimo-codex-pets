@@ -149,6 +149,33 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertTrue(bubbles.dropFirst().allSatisfy { $0.text.hasPrefix("「") })
     }
 
+    func testProductionBubblesPreserveThreadTargetMetadataForClickableCards() {
+        let current = line(threadId: "current", speaker: "tool", text: "コマンドを実行中", isAssistant: true)
+        let lines = [
+            current,
+            line(threadId: "docs", speaker: "codex", text: "資料作業を進めています", isAssistant: true)
+        ]
+        let primary = CodexConversationBubblePlanner.primaryBubble(
+            statusText: CodexMimoStatusSpeech.active,
+            conversationLines: lines,
+            preferredThreadId: "current"
+        )
+
+        let bubbles = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: primary.text,
+            conversationLines: lines,
+            preferredThreadId: "current",
+            primaryThreadId: primary.threadId,
+            primaryActivityKind: primary.activityKind,
+            primaryThreadTitle: primary.threadTitle,
+            limit: 4
+        )
+
+        XCTAssertEqual(bubbles.map(\.threadId), ["current", "docs"])
+        XCTAssertEqual(bubbles.map(\.threadTitle), ["current", "docs"])
+        XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation])
+    }
+
     func testProductionBubblesCarrySemanticTonesForThreadState() {
         let lines = [
             line(threadId: "failed", speaker: "codex", text: "実行に失敗しました。確認が必要です", isAssistant: true),
@@ -224,9 +251,9 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
         XCTAssertEqual(primary.activityKind, .test)
         XCTAssertEqual(bubbles.map(\.role), [.focus, .conversation, .conversation, .overflow])
         XCTAssertEqual(bubbles.map(\.activityKind), [.test, .fileRead, .plan, nil])
-        XCTAssertTrue(bubbles[0].id.contains("test"))
-        XCTAssertTrue(bubbles[1].id.contains("fileRead"))
-        XCTAssertTrue(bubbles[2].id.contains("plan"))
+        XCTAssertEqual(bubbles[0].id, "thread:current")
+        XCTAssertEqual(bubbles[1].id, "thread:files")
+        XCTAssertEqual(bubbles[2].id, "thread:plan")
     }
 
     func testProductionBubbleIdsAreStableAcrossVisibleLimitChangesForPushAnimation() {
@@ -260,6 +287,39 @@ final class CodexConversationBubblePlannerTests: XCTestCase {
 
         XCTAssertEqual(compact.map(\.id), Array(expanded.prefix(compact.count)).map(\.id))
         XCTAssertTrue(expanded.allSatisfy { !$0.id.hasPrefix("0-") && !$0.id.hasPrefix("1-") })
+    }
+
+    func testProductionBubbleIdStaysStableWhenSameThreadTextAndToneChange() {
+        let active = line(
+            threadId: "current",
+            speaker: "codex",
+            text: "実装を進めています",
+            isAssistant: true
+        )
+        let failed = line(
+            threadId: "current",
+            speaker: "codex",
+            text: "実装に失敗しました",
+            isAssistant: true
+        )
+
+        let activeBubble = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: CodexBubbleFormatter.bubbleText(for: active),
+            conversationLines: [active],
+            preferredThreadId: "current",
+            primaryThreadId: "current"
+        )[0]
+        let failedBubble = CodexConversationBubblePlanner.productionBubbles(
+            primaryText: CodexBubbleFormatter.bubbleText(for: failed),
+            conversationLines: [failed],
+            preferredThreadId: "current",
+            primaryThreadId: "current"
+        )[0]
+
+        XCTAssertEqual(activeBubble.id, "thread:current")
+        XCTAssertEqual(failedBubble.id, activeBubble.id)
+        XCTAssertNotEqual(failedBubble.text, activeBubble.text)
+        XCTAssertNotEqual(failedBubble.tone, activeBubble.tone)
     }
 
     func testProductionBubblesUseOverflowToneWhenMoreThreadsAreHidden() {

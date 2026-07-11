@@ -12,6 +12,7 @@ final class StatusItemController: NSObject {
     private let onQuit: () -> Void
     private let menuLogURL: URL?
     private var clickThroughItem: NSMenuItem?
+    private var autonomousMovementItem: NSMenuItem?
     private var debugOverlayItem: NSMenuItem?
     private var cancellables: Set<AnyCancellable> = []
 
@@ -41,6 +42,13 @@ final class StatusItemController: NSObject {
             }
             .store(in: &cancellables)
 
+        viewModel.$autonomousWindowMovementEnabled
+            .receive(on: RunLoop.main)
+            .sink { [weak self] enabled in
+                self?.autonomousMovementItem?.state = enabled ? .on : .off
+            }
+            .store(in: &cancellables)
+
         viewModel.$debugOverlay
             .receive(on: RunLoop.main)
             .sink { [weak self] debugOverlay in
@@ -52,37 +60,47 @@ final class StatusItemController: NSObject {
     private func configureMenu() {
         let menu = NSMenu()
 
-        let showItem = NSMenuItem(title: "Show Mimo", action: #selector(showMimo), keyEquivalent: "")
+        let showItem = NSMenuItem(title: "Mimoを表示", action: #selector(showMimo), keyEquivalent: "")
         showItem.target = self
         menu.addItem(showItem)
 
-        let hideItem = NSMenuItem(title: "Hide Mimo", action: #selector(hideMimo), keyEquivalent: "")
+        let hideItem = NSMenuItem(title: "Mimoを隠す", action: #selector(hideMimo), keyEquivalent: "")
         hideItem.target = self
         menu.addItem(hideItem)
 
         menu.addItem(.separator())
 
-        let clickItem = NSMenuItem(title: "Click Through", action: #selector(toggleClickThrough), keyEquivalent: "")
+        let clickItem = NSMenuItem(title: "クリックを背面へ通す", action: #selector(toggleClickThrough), keyEquivalent: "")
         clickItem.target = self
         clickItem.state = viewModel.clickThrough ? .on : .off
         clickThroughItem = clickItem
         menu.addItem(clickItem)
 
+        let movementItem = NSMenuItem(
+            title: "デスクトップを歩く",
+            action: #selector(toggleAutonomousMovement),
+            keyEquivalent: ""
+        )
+        movementItem.target = self
+        movementItem.state = viewModel.autonomousWindowMovementEnabled ? .on : .off
+        autonomousMovementItem = movementItem
+        menu.addItem(movementItem)
+
         if PetDebugOverlayPolicy.isMenuVisible() {
-            let debugItem = NSMenuItem(title: "Debug Overlay", action: #selector(toggleDebugOverlay), keyEquivalent: "")
+            let debugItem = NSMenuItem(title: "デバッグ表示", action: #selector(toggleDebugOverlay), keyEquivalent: "")
             debugItem.target = self
             debugItem.state = viewModel.debugOverlay ? .on : .off
             debugOverlayItem = debugItem
             menu.addItem(debugItem)
         }
 
-        let reconnectItem = NSMenuItem(title: "Reconnect Codex", action: #selector(reconnectCodex), keyEquivalent: "")
+        let reconnectItem = NSMenuItem(title: "Codexに再接続", action: #selector(reconnectCodex), keyEquivalent: "")
         reconnectItem.target = self
         menu.addItem(reconnectItem)
 
         menu.addItem(.separator())
 
-        let quitItem = NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Mimoを終了", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -100,6 +118,10 @@ final class StatusItemController: NSObject {
 
     @objc private func toggleClickThrough() {
         viewModel.toggleClickThrough()
+    }
+
+    @objc private func toggleAutonomousMovement() {
+        viewModel.toggleAutonomousWindowMovement()
     }
 
     @objc private func toggleDebugOverlay() {
@@ -140,8 +162,9 @@ final class StatusItemController: NSObject {
             "menuTitles": itemTitles,
             "itemStates": itemStates,
             "clickThroughEnabled": clickThroughItem?.state == .on,
+            "autonomousMovementEnabled": autonomousMovementItem?.state == .on,
             "debugOverlayEnabled": debugOverlayItem?.state == .on,
-            "debugMenuVisible": itemTitles.contains("Debug Overlay")
+            "debugMenuVisible": itemTitles.contains("デバッグ表示")
         ]
         guard
             let data = try? JSONSerialization.data(withJSONObject: object),

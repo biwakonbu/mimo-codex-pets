@@ -204,14 +204,15 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   rather than copied into bubbles
 - the production bubble queue rotates the latest short report from each visible
   thread, deduplicating by thread, speaker, and sanitized text
-- the production surface can stack up to five speech bubbles at once: one
-  primary Mimo report plus up to four compact context bubbles, while the app
+- the production surface can stack up to four speech bubbles at once: one
+  primary Mimo report plus up to three compact context bubbles, while the app
   tracks up to six Codex thread contexts internally for overflow reporting
 - secondary thread bubbles use short context-row text such as
   `「資料整理」作業中`, omit the longer Mimo address phrase, and form a dynamic
   nearby bubble cloud so multiple Codex threads read as a playful compact
-  reporting surface rather than a centered list; no bubble uses a speech tail,
-  so hierarchy comes from size, proximity, and accent markers
+  reporting surface rather than a centered list; secondary bubbles do not use
+  speech tails, while the primary report uses a soft rounded connector so
+  hierarchy comes from size, proximity, and accent markers
 - thread bubble text is rendered as a colored thread title plus a one-line Mimo
   report, so simultaneous bubbles are scan-friendly without becoming a
   transcript or debug feed
@@ -325,35 +326,34 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   later healthy proxy or stdio session can restore connected thread-summary
   bubbles
   without restarting Mimo
-- default production keeps the desktop panel anchored; Mimo's ambient life comes
-  from in-place rest/idle moments and bubble-cloud motion unless
-  `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1` or a deterministic QA mode enables window
-  movement. Anchored mode uses an about `8s` first in-place moment and a calm
-  `18-34s` follow-up cadence so Mimo feels present without pacing around the
-  desktop
-- opt-in autonomous wandering uses a test-covered planner that chooses
-  visible-screen targets, caps production speed at `2.4 pt/s`, limits each tiny
-  hop to `4 pt` inside an `8 pt` home radius, and uses a 60Hz time-based tween
-  that moves smoothly without overshooting
+- autonomous wandering is enabled by default; `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=0`
+  remains the explicit anchored override for users who need a fixed position
+- the test-covered planner chooses visible-screen targets `90-240 pt` away,
+  caps production speed at `34 pt/s` inside a `360 pt` home radius, and uses a
+  60Hz time-based tween that moves smoothly without overshooting
 - autonomous window movement rate-limits the actual frame origins sent to
   AppKit, using the controller's last-submitted origin instead of trusting
   `NSPanel.frame` to update synchronously every 60Hz tick. This prevents a stale
   or queued tween from catching up as a sudden high-speed jump
-- opt-in autonomous wandering also has a stamina controller: movement drains
+- autonomous wandering also has a stamina controller: movement drains
   stamina, high stamina keeps speed near the production cap, resting quickly
   recovers to full, and below 50% stamina Mimo may stop based on mood to show a
-  resting action before running again; `e2e_autonomous_default_stationary.sh`
-  verifies the default anchored path, and `e2e_autonomous_energy.sh` verifies the
-  move-then-rest production path with a deterministic fast-drain environment
+  resting action before running again; directional animation starts after `8 pt`
+  of real displacement and then loops at `0.36s` per frame without sample-driven
+  restarts. `e2e_autonomous_default_movement.sh` verifies the default-enabled
+  path, and `e2e_autonomous_energy.sh` verifies the move-then-rest production
+  path with a deterministic fast-drain environment
 - Codex-backed Mimo speech uses a separate ephemeral app-server session created
   by `thread/start` and driven with sanitized `turn/start` prompts; the app
   filters that internal session out of visible bubbles, while
   `live_mimo_dialogue_smoke.py` verifies the live generation path without
-  writing into user work sessions
-- production speech bubbles use compact readable columns instead of forcing the
-  full panel width; primary Mimo speech now caps at 330pt, can grow to four
-  lines, and `PetSpeechBubblePaginator` advances overlong Mimo speech as timed
-  pages before the next chat update is shown
+  writing into user work sessions. The rewrite default is now `gpt-5.6-luna`
+  with `effort=low`, while `MIMO_CODEX_DIALOGUE_MODEL` remains an explicit
+  override for diagnostics
+- production speech bubbles use a large primary report plus smaller nearby
+  context notes instead of forcing the full panel width; primary Mimo speech now
+  caps at 398pt, can grow to four lines, and `PetSpeechBubblePaginator` advances
+  overlong Mimo speech as timed pages before the next chat update is shown
 - generated proposal boards
   `desktop/MimoDesktopPet/design/ui-proposals/mimo-generated-bubble-layout-concepts-06.png`
   and
@@ -368,6 +368,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   two summary lines so adjacent chat summaries stop reading as long thin labels
   while a later video pass tightened their orbit so they stay near Mimo's
   primary speech instead of drifting toward the top edge
+- `desktop/MimoDesktopPet/design/ui-proposals/mimo-pocket-pop-motion-board-09.png`
+  records the current pocket-pop motion direction: the primary report is larger
+  and connected softly to Mimo, while new note cards grow upward from Mimo's side
+  and push older cards into a nearby irregular pile
 - chat names are treated as primary user-facing information: formatter output
   keeps readable chat titles up to the shared title limit instead of shortening
   them before layout, and secondary chat bubbles render the title before a short
@@ -402,8 +406,49 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   `desktop/MimoDesktopPet/script/build_release_slack_payload.py`, and setup is
   documented in `desktop/MimoDesktopPet/docs/release-slack-notification.md`
 
-Local desktop captures from companion QA must stay out of the repository. Use `/tmp` for runtime screenshots. The local E2E smoke test is `desktop/MimoDesktopPet/script/e2e_fake_app_server.sh`; it verifies the fake app-server flow, app-server proxy startup, safe chat-derived `workSummary` propagation, notification-driven and streaming-delta per-thread Mimo-style production bubble summaries, simultaneous multi-thread speech bubbles, secondary-thread notification refresh, semantic `bubbleTones`, typed `bubbleActivityKinds`, production window size, screen-saver window layer, smooth movement, transparent screenshot corners, and thread read calls. `desktop/MimoDesktopPet/script/e2e_autonomous_energy.sh` verifies that the stamina model can drain during autonomous movement, pause Mimo for a rest action, and keep the production surface transparent. `desktop/MimoDesktopPet/script/e2e_hanging_daemon_start.sh` verifies that a stuck daemon-start helper is timed out and does not prevent the companion from reaching stdio thread-context bubbles. `desktop/MimoDesktopPet/script/e2e_proxy_fallback_app_server.sh` verifies that a failed app-server proxy falls back to direct stdio while the production surface stays transparent. `desktop/MimoDesktopPet/script/e2e_empty_thread_list.sh` verifies that a connected empty thread list reaches the production idle bubble and exposes the same `MimoDesktopPet.productionSurface` accessibility box observed by Computer Use. `desktop/MimoDesktopPet/script/e2e_overflow_thread_list.sh` verifies that six tracked Codex threads still render as a bounded five-bubble stack with concrete activity kinds on visible thread bubbles, no activity kind on the compact overflow note, a multi-bubble visual hierarchy, and matching accessibility elements with stable per-bubble identifiers. `desktop/MimoDesktopPet/script/e2e_thread_read_timeout.sh` verifies that a hanging `thread/read` request leaves connected state and becomes a transparent timeout bubble instead of waiting forever. `desktop/MimoDesktopPet/script/e2e_reconnect_app_server.sh` verifies that a disconnected app-server can be reconnected and return to connected thread-summary bubbles without restarting the companion. `desktop/MimoDesktopPet/script/e2e_single_instance.sh` verifies that a duplicate launch exits without creating another desktop pet process/window while the first instance stays alive. `desktop/MimoDesktopPet/script/e2e_status_menu.sh` verifies that the production status menu keeps the debug overlay hidden unless debug mode is explicitly enabled and that Click Through / Debug Overlay menu checked states match the launch mode. `desktop/MimoDesktopPet/script/check_app_bundle_contract.sh` verifies that the staged `.app` is an `LSUIElement` menu-bar companion and contains executable Mimo assets before QA accepts the build. The live read-only app-server smoke test is `desktop/MimoDesktopPet/script/live_app_server_smoke.py`, which requests the same six-thread `thread/list` limit used by production and reads each returned candidate thread; `desktop/MimoDesktopPet/script/test_live_app_server_smoke_retry.sh` proves that transient response timeouts are retried against a fresh selected app-server transport, and `desktop/MimoDesktopPet/script/test_live_app_server_smoke_transport.sh` proves that the smoke helper uses proxy first and direct stdio fallback before initialize. The live Mimo dialogue smoke test is `desktop/MimoDesktopPet/script/live_mimo_dialogue_smoke.py`; it verifies that Codex-backed speech generation mentions the chat name and rejects thread/session vocabulary. The live app presentation smoke test is `desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh`; it launches the real app with a temporary `/tmp` presentation log, verifies that the visible presentation leaves the offline/connection state after a real app-server connection, and when readable live threads exist, requires a production thread-context bubble with a sanitized title match and activity kind before capturing the window.
-For iterative visual review, `desktop/MimoDesktopPet/script/capture_video_review.sh` launches the real app binary against the public fake app-server and writes a temporary mp4, contact sheet, 60Hz coordinate samples, presentation log, and movement/animation/bubble summary under `/tmp`. Use it for animation/readability judgment, but keep the generated review bundle out of the public repository.
+## 2026-07-11: Kataribe Stage Redesign
+
+- The production message surface was redesigned from the historical Pocket Pile
+  bubble cloud into the selected Kataribe Stage. One content-sized paper report
+  stays close to Mimo; one to six named pastel chat charms remain visible in a
+  separate identity rail.
+- `desktop/MimoDesktopPet/design/message-blank-slate-workshop.md` records the
+  blank-slate comparison and BDD contract. The selected visual reference is
+  `desktop/MimoDesktopPet/design/ui-proposals/mimo-message-blank-slate-12-kataribe-stage.png`.
+- Every report and charm opens its exact Codex chat. Safe titles fall back to the
+  first user request from `thread/read(includeTurns: true)`, so generic internal
+  names do not reach production UI.
+- Reports paginate at 64 characters in tight 128pt/184pt paper tiers and keep
+  the chat name visible. The charm rail is bottom-anchored: each narrated chat
+  is inserted below, pushes older charms upward, and never swaps in both
+  directions. Visible charms now fill compact 29pt rows with 3pt separation;
+  removing the former transparent 44pt placement slot eliminates the apparent
+  dead space between messages. Ordinary
+  narration changes wait until Mimo rests for 0.8 seconds, while action-required
+  chats may interrupt. The complete stage remains visible while Mimo walks.
+- Mimo speech sanitization removes technical tracking language such as
+  `チャット状態` and exposes no raw animation state through accessibility.
+- `e2e_conversation_movement.sh`, `e2e_overflow_thread_list.sh`, and the new
+  `inspect_production_capture.swift --kataribe-stage` mode lock walking
+  readability, six visible names, transparent corners, report proximity, and
+  bottom-up flow and stable accessibility targets.
+
+Local desktop captures from companion QA must stay out of the repository. Use
+`/tmp` for runtime screenshots. The local fake E2E verifies app-server startup,
+safe `workSummary` propagation, notification-driven Mimo narration, named charm
+retention, action-required promotion, walking readability, transparent corners,
+and thread reads. The six-chat E2E verifies one report plus six named
+bottom-up charm slots with no overflow counter. Other E2Es continue to cover stamina,
+daemon timeout, proxy fallback, empty/offline state, read timeout, reconnect,
+single-instance behavior, and the production status menu.
+
+The live read-only smoke is `desktop/MimoDesktopPet/script/live_app_server_smoke.py`;
+the live dialogue smoke verifies generated speech; and
+`desktop/MimoDesktopPet/script/live_app_presentation_smoke.sh` launches the real
+app against the real app-server before capturing the production window.
+For iterative visual review, `desktop/MimoDesktopPet/script/capture_video_review.sh`
+writes a temporary mp4, contact sheet, 60Hz coordinate samples, and presentation
+log under `/tmp`. Keep the generated review bundle out of the public repository.
 
 ## Public Repository Decision
 

@@ -114,13 +114,7 @@ public struct CodexConversationLine: Equatable, Sendable {
 public enum CodexConversationExtractor {
     public static func lines(from threadObject: [String: Any], maxLines: Int = 6) -> [CodexConversationLine] {
         let threadId = threadObject["id"] as? String ?? "unknown-thread"
-        let threadTitle = CodexThreadTitleFormatter.title(
-            from: [
-                threadObject["name"],
-                threadObject["preview"],
-                "Codex Thread"
-            ]
-        )
+        let threadTitle = CodexThreadTitleFormatter.title(fromThreadObject: threadObject)
 
         var extracted: [CodexConversationLine] = []
         if let turns = threadObject["turns"] as? [[String: Any]] {

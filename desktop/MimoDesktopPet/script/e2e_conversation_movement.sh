@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$ROOT_DIR/../.." && pwd)"
 APP_BINARY="$ROOT_DIR/dist/$APP_NAME.app/Contents/MacOS/$APP_NAME"
 FAKE_CODEX="$ROOT_DIR/script/fake_codex_app_server.py"
-PRESENTATION_LOG="/tmp/mimo-conversation-stationary-presentation-e2e.jsonl"
+PRESENTATION_LOG="/tmp/mimo-conversation-movement-presentation-e2e.jsonl"
 
 cleanup() {
   if [[ -n "${APP_PID:-}" ]] && kill -0 "$APP_PID" >/dev/null 2>&1; then
@@ -26,6 +26,7 @@ MIMO_FAKE_CODEX_STATE_DELAY_MULTIPLIER=3 \
 MIMO_PET_PACKAGE_DIR="$REPO_ROOT/pets/mimo" \
 MIMO_AUTONOMOUS_FORCE_BEGIN=1 \
 MIMO_AUTONOMOUS_INITIAL_REST_SECONDS=0 \
+MIMO_CLICK_THROUGH=1 \
 MIMO_BUBBLE_TEST_MODE=1 \
 MIMO_PRESENTATION_LOG="$PRESENTATION_LOG" \
 MIMO_WINDOW_ORIGIN="220,220" \
@@ -98,7 +99,7 @@ for _ in 0..<240 {
 }
 
 guard let first = samples.first, samples.count >= 180 else {
-    fputs("too few stationary samples: \(samples.count)\n", stderr)
+    fputs("too few conversation-movement samples: \(samples.count)\n", stderr)
     exit(1)
 }
 
@@ -109,17 +110,40 @@ let deltas = zip(samples.dropFirst(), samples).map { current, previous in
 }
 let movingSamples = deltas.filter { $0 > 0.05 }.count
 
-guard maxDistanceFromFirst <= 1.0 else {
-    fputs("conversation window drifted while Mimo was talking: \(maxDistanceFromFirst)\n", stderr)
+guard maxDistanceFromFirst >= 12 else {
+    fputs("Mimo did not walk while the Kataribe report was visible: \(maxDistanceFromFirst)\n", stderr)
     exit(1)
 }
 
-guard movingSamples <= 2 else {
-    fputs("conversation window had too many moving samples: \(movingSamples)\n", stderr)
+guard movingSamples >= 30 else {
+    fputs("conversation window had too few moving samples: \(movingSamples)\n", stderr)
+    exit(1)
+}
+
+let largestDelta = deltas.max() ?? 0
+guard largestDelta <= 4 else {
+    fputs("conversation movement exceeded the smooth frame-distance bound: \(largestDelta)\n", stderr)
     exit(1)
 }
 SWIFT
 
+python3 - "$PRESENTATION_LOG" <<'PY'
+import json
+import sys
+
+rows = [json.loads(line) for line in open(sys.argv[1], encoding="utf-8") if line.strip()]
+walking_reports = [
+    row for row in rows
+    if row.get("isPetMoving") is True
+    and row.get("animation") in {"running-left", "running-right"}
+    and row.get("kataribeReportText")
+]
+if not walking_reports:
+    raise SystemExit("no named Kataribe report remained visible during directional walking")
+if not any("Mimo runtime QA" in row.get("kataribeCharmTitles", []) for row in walking_reports):
+    raise SystemExit("the active Codex chat disappeared from the rail while Mimo walked")
+PY
+
 kill -0 "$APP_PID" >/dev/null
 
-echo "E2E passed: Mimo holds position while conversation bubbles are active, even when autonomous movement is force-enabled."
+echo "E2E passed: Mimo keeps a named Kataribe report visible while walking smoothly, and chat switching remains rest-paced."

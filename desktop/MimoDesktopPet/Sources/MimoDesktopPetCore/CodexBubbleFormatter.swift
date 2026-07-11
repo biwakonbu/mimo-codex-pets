@@ -17,6 +17,16 @@ public enum CodexBubbleFormatter {
 
     public static func contextText(for line: CodexConversationLine, limit: Int = PetSpeechBubbleLayout.conversationTextLimit) -> String {
         let title = compactTitle(line.threadTitle, limit: PetSpeechBubbleLayout.chatTitleTextLimit)
+        if let speech = line.mimoSpeech,
+           !speech.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           !CodexAmbientTextSafety.isUnsafeForAmbientDisplay(speech) {
+            let displaySpeech = displaySpeechVocabulary(speech)
+            let parts = PetSpeechBubbleTextParts.parse(displaySpeech)
+            let summary = parts.threadTitle == nil ? displaySpeech : parts.summary
+            if !summary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                return compact("「\(title)」\(summary)", limit: limit)
+            }
+        }
         let summary = compactSummary(for: mimoSummary(for: line), topic: reportTopic(for: line, title: title))
         return compact("「\(title)」\(contextDisplaySummary(summary))", limit: limit)
     }
@@ -94,6 +104,16 @@ public enum CodexBubbleFormatter {
 
     private static func displaySpeechVocabulary(_ speech: String) -> String {
         displayStatusVocabulary(displayTitleVocabulary(speech))
+            .replacingOccurrences(
+                of: #"チャット状態:\s*"#,
+                with: "",
+                options: .regularExpression
+            )
+            .replacingOccurrences(
+                of: #"Codex の[^。！？]{1,30}をMimoも追いかけてるね"#,
+                with: "Mimoもそっと見守ってるよ",
+                options: .regularExpression
+            )
             .replacingOccurrences(
                 of: #"^ご主人[、,]\s*"#,
                 with: "",

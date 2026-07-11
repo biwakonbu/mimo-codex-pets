@@ -76,11 +76,13 @@ public struct CodexTurnSnapshot: Decodable, Equatable, Sendable {
 
 public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
     public let id: String
+    public let isEphemeral: Bool
     public let status: CodexThreadStatus
     public let turns: [CodexTurnSnapshot]
 
     private enum CodingKeys: String, CodingKey {
         case id
+        case ephemeral
         case status
         case turns
     }
@@ -88,6 +90,7 @@ public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
+        isEphemeral = try container.decodeIfPresent(Bool.self, forKey: .ephemeral) ?? false
         status = try container.decodeIfPresent(CodexThreadStatus.self, forKey: .status) ?? .idle
         turns = try container.decodeIfPresent([CodexTurnSnapshot].self, forKey: .turns) ?? []
     }
@@ -146,7 +149,9 @@ public enum CodexIgnoredNotificationMethod: String, CaseIterable, Equatable, Sen
     case accountRateLimitsUpdated = "account/rateLimits/updated"
     case appListUpdated = "app/list/updated"
     case remoteControlStatusChanged = "remoteControl/status/changed"
+    case externalAgentConfigImportProgress = "externalAgentConfig/import/progress"
     case externalAgentConfigImportCompleted = "externalAgentConfig/import/completed"
+    case modelSafetyBufferingUpdated = "model/safetyBuffering/updated"
     case fsChanged = "fs/changed"
     case deprecationNotice = "deprecationNotice"
     case configWarning = "configWarning"

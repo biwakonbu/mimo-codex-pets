@@ -9,7 +9,7 @@ final class PetWindowPlacementTests: XCTestCase {
             petHeight: PetSpeechBubbleLayout.productionWindowHeight
         )
 
-        XCTAssertEqual(origin, PetWanderPoint(x: 468, y: 280))
+        XCTAssertEqual(origin, PetWanderPoint(x: 448, y: 280))
     }
 
     func testOriginOverrideParsesAndClampsToVisibleFrame() {
@@ -20,7 +20,7 @@ final class PetWindowPlacementTests: XCTestCase {
             override: "40,1200"
         )
 
-        XCTAssertEqual(origin, PetWanderPoint(x: 100, y: 400))
+        XCTAssertEqual(origin, PetWanderPoint(x: 100, y: 380))
     }
 
     func testInvalidOriginOverrideFallsBackToDefault() {

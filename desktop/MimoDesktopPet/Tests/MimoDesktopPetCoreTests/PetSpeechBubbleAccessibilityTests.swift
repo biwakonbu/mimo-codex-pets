@@ -30,6 +30,26 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
         )
     }
 
+    func testAccessibilityValueDoesNotRepeatExplicitThreadTitle() {
+        let value = PetSpeechBubbleAccessibility.value(
+            presentation: PetPresentationState(animation: .running, bubbleText: "作業中"),
+            bubbles: [
+                PetSpeechBubble(
+                    id: "primary",
+                    text: "「主作業」は作業を進めているよ",
+                    role: .focus,
+                    tone: .active,
+                    activityKind: .assistantMessage,
+                    threadId: "main",
+                    threadTitle: "主作業"
+                )
+            ],
+            debugOverlay: false
+        )
+
+        XCTAssertEqual(value, "本番表示。running。「主作業」は作業を進めているよ")
+    }
+
     func testDebugAccessibilityValueMarksDebugMode() {
         let value = PetSpeechBubbleAccessibility.value(
             presentation: PetPresentationState(animation: .idle, bubbleText: CodexMimoStatusSpeech.idle),
@@ -73,11 +93,11 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
         )
         XCTAssertEqual(
             PetSpeechBubbleAccessibility.bubbleLabel(index: 0, role: .focus),
-            "Mimo primary thread bubble 1"
+            "Mimoが伝える主なチャット 1"
         )
         XCTAssertEqual(
             PetSpeechBubbleAccessibility.bubbleLabel(index: 4, role: .overflow),
-            "Mimo overflow bubble 5"
+            "Mimoが見ているほかのチャット 5"
         )
         XCTAssertEqual(
             PetSpeechBubbleAccessibility.bubbleElementLabel(
@@ -85,7 +105,7 @@ final class PetSpeechBubbleAccessibilityTests: XCTestCase {
                 role: .focus,
                 text: "「実装」は作業中だよ"
             ),
-            "Mimo primary thread bubble 1: 「実装」は作業中だよ"
+            "Mimoが伝える主なチャット 1: 「実装」は作業中だよ"
         )
         XCTAssertGreaterThan(
             PetSpeechBubbleAccessibility.bubbleSortPriority(index: 0),

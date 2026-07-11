@@ -58,7 +58,9 @@ final class CodexNotificationTests: XCTestCase {
             "account/rateLimits/updated",
             "app/list/updated",
             "remoteControl/status/changed",
+            "externalAgentConfig/import/progress",
             "externalAgentConfig/import/completed",
+            "model/safetyBuffering/updated",
             "fs/changed",
             "deprecationNotice",
             "configWarning",
@@ -229,6 +231,22 @@ final class CodexNotificationTests: XCTestCase {
 
         XCTAssertEqual(snapshot.status, .idle)
         XCTAssertEqual(snapshot.turns.map(\.status), [.inProgress, .inProgress])
+        XCTAssertFalse(snapshot.isEphemeral)
+    }
+
+    func testThreadSnapshotDecodesEphemeralThreadsForDisplayFiltering() throws {
+        let data = Data("""
+        {
+          "id": "internal-mimo-dialogue",
+          "ephemeral": true,
+          "status": { "type": "active", "activeFlags": [] },
+          "turns": []
+        }
+        """.utf8)
+
+        let snapshot = try JSONDecoder().decode(CodexThreadSnapshot.self, from: data)
+
+        XCTAssertTrue(snapshot.isEphemeral)
     }
 
     func testItemLifecycleNotificationDecodes() throws {

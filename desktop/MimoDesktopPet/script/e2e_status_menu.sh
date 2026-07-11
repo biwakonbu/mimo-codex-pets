@@ -66,7 +66,7 @@ while time.time() < deadline:
     for row in rows:
         titles = row.get("menuTitles", [])
         debug_visible = bool(row.get("debugMenuVisible", False))
-        required = ["Show Mimo", "Hide Mimo", "Click Through", "Reconnect Codex", "Quit"]
+        required = ["Mimoを表示", "Mimoを隠す", "クリックを背面へ通す", "デスクトップを歩く", "Codexに再接続", "Mimoを終了"]
         missing = [title for title in required if title not in titles]
         if missing:
             raise SystemExit(f"{label}: required menu items missing: {missing}; titles={titles}")
@@ -74,15 +74,19 @@ while time.time() < deadline:
             raise SystemExit(
                 f"{label}: debug menu visibility was {debug_visible}, expected {expected}; titles={titles}"
             )
-        if ("Debug Overlay" in titles) != expected:
-            raise SystemExit(f"{label}: Debug Overlay title mismatch; titles={titles}")
+        if ("デバッグ表示" in titles) != expected:
+            raise SystemExit(f"{label}: debug title mismatch; titles={titles}")
         states = row.get("itemStates", {})
         if bool(row.get("clickThroughEnabled", True)):
-            raise SystemExit(f"{label}: Click Through should start disabled; row={row}")
-        if bool(states.get("Click Through", True)):
-            raise SystemExit(f"{label}: Click Through menu state should start off; states={states}")
+            raise SystemExit(f"{label}: click-through should start disabled; row={row}")
+        if bool(states.get("クリックを背面へ通す", True)):
+            raise SystemExit(f"{label}: click-through menu state should start off; states={states}")
+        if not bool(row.get("autonomousMovementEnabled", False)):
+            raise SystemExit(f"{label}: autonomous movement should start enabled; row={row}")
+        if not bool(states.get("デスクトップを歩く", False)):
+            raise SystemExit(f"{label}: autonomous movement menu state should start on; states={states}")
         debug_enabled = bool(row.get("debugOverlayEnabled", False))
-        debug_state = bool(states.get("Debug Overlay", False))
+        debug_state = bool(states.get("デバッグ表示", False))
         if label == "debug-overlay-opt-in":
             if not debug_enabled or not debug_state:
                 raise SystemExit(f"{label}: Debug Overlay should start enabled; row={row}")

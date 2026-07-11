@@ -23,7 +23,10 @@ DIALOGUE_PROMPT = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexMimoDialog
 SUMMARIZER = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "CodexSessionSummarizer.swift"
 ENERGY = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "PetAutonomousEnergyController.swift"
 ENERGY_TESTS = ROOT_DIR / "Tests" / "MimoDesktopPetCoreTests" / "PetAutonomousEnergyControllerTests.swift"
-PERFECT_CUTE_UI_BOARD = ROOT_DIR / "design" / "ui-proposals" / "mimo-perfect-cute-ui-board-05.png"
+KATARIBE_STAGE = ROOT_DIR / "Sources" / "MimoDesktopPetCore" / "PetKataribeStage.swift"
+KATARIBE_STAGE_BOARD = ROOT_DIR / "design" / "ui-proposals" / "mimo-message-blank-slate-12-kataribe-stage.png"
+KATARIBE_WORKSHOP = ROOT_DIR / "design" / "message-blank-slate-workshop.md"
+POCKET_POP_MOTION_BOARD = ROOT_DIR / "design" / "ui-proposals" / "mimo-pocket-pop-motion-board-09.png"
 
 
 def fail(message: str) -> None:
@@ -78,6 +81,8 @@ def require_app_server_contract() -> None:
         "thread/read",
         "thread/start",
         "turn/start",
+        "gpt-5.6-luna",
+        "effort=low",
         "includeTurns",
         "thread/status/changed",
         "turn/started",
@@ -126,7 +131,8 @@ def require_app_server_contract() -> None:
             '"sandbox": "read-only"',
             '"sandboxPolicy"',
             '"networkAccess": False',
-            "gpt-5.4-mini",
+            "gpt-5.6-luna",
+            'DEFAULT_REASONING_EFFORT = "low"',
         ],
         label="live Mimo dialogue smoke protocol contract",
     )
@@ -167,10 +173,10 @@ def require_mimicry_contract() -> None:
         "Codex Pets",
         "Mimo-style report",
         "multi-thread",
-        "stacked",
-        "speech bubbles",
-        "dynamic nearby bubble cloud",
-        "unsynchronized drift",
+        "Kataribe Stage",
+        "named chat charms",
+        "one narration surface",
+        "unsynchronized breathing",
         "workSummary",
         "CodexSessionSummarizer",
         "raw",
@@ -183,17 +189,40 @@ def require_mimicry_contract() -> None:
     require_text(README, mimicry_terms, label="README mimicry contract")
     require_text(
         README,
-        ["design/ui-proposals/mimo-perfect-cute-ui-board-05.png"],
-        label="README cute UI proposal contract",
+        [
+            "design/ui-proposals/mimo-message-blank-slate-12-kataribe-stage.png",
+            "design/message-blank-slate-workshop.md",
+            "design/ui-proposals/mimo-pocket-pop-motion-board-09.png",
+        ],
+        label="README Kataribe UI proposal contract",
     )
     require_text(
         RESEARCH,
-        ["design/ui-proposals/mimo-perfect-cute-ui-board-05.png"],
-        label="research cute UI proposal contract",
+        [
+            "design/ui-proposals/mimo-message-blank-slate-12-kataribe-stage.png",
+            "design/message-blank-slate-workshop.md",
+            "design/ui-proposals/mimo-pocket-pop-motion-board-09.png",
+        ],
+        label="research Kataribe UI proposal contract",
     )
-    if not PERFECT_CUTE_UI_BOARD.is_file():
-        fail("cute UI proposal board is missing: design/ui-proposals/mimo-perfect-cute-ui-board-05.png")
+    if not KATARIBE_STAGE_BOARD.is_file():
+        fail("Kataribe proposal board is missing: design/ui-proposals/mimo-message-blank-slate-12-kataribe-stage.png")
+    if not KATARIBE_WORKSHOP.is_file():
+        fail("Kataribe workshop is missing: design/message-blank-slate-workshop.md")
+    if not POCKET_POP_MOTION_BOARD.is_file():
+        fail("pocket-pop motion board is missing: design/ui-proposals/mimo-pocket-pop-motion-board-09.png")
     require_text(RESEARCH, mimicry_terms, label="research mimicry contract")
+    require_text(
+        KATARIBE_STAGE,
+        [
+            "PetKataribeStagePresentation",
+            "PetKataribeChatCharm",
+            "maximumCharmCount = 6",
+            "urgentReport",
+            "名前のないチャット",
+        ],
+        label="Kataribe presentation contract",
+    )
     require_text(
         FORMATTER,
         [
@@ -213,7 +242,8 @@ def require_mimicry_contract() -> None:
         DIALOGUE_PROMPT,
         [
             "CodexMimoDialoguePrompt",
-            "gpt-5.4-mini",
+            "gpt-5.6-luna",
+            'defaultReasoningEffort = "low"',
             "Mimo speech request",
             "chat_state",
             "safe_work_topic",
@@ -241,28 +271,28 @@ def require_mimicry_contract() -> None:
 
 def require_stamina_contract() -> None:
     stamina_terms = [
-        "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1",
-        "8s",
-        "18-34s",
-        "2.4 pt/s",
-        "8 pt",
+        "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=0",
+        "90-240 pt",
+        "34 pt/s",
+        "360 pt",
+        "0.36s",
         "stamina",
         "below 50%",
         "MIMO_AUTONOMOUS_DISABLED=1",
-        "e2e_autonomous_default_stationary.sh",
+        "e2e_autonomous_default_movement.sh",
         "e2e_autonomous_energy.sh",
     ]
     require_text(README, stamina_terms, label="README stamina contract")
     require_text(
         RESEARCH,
         [
-            "default production keeps the desktop panel anchored",
-            "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1",
-            "8s",
-            "18-34s",
-            "2.4 pt/s",
-            "8 pt",
-            "holds position",
+            "default production enables autonomous window movement",
+            "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=0",
+            "90-240 pt",
+            "34 pt/s",
+            "360 pt",
+            "0.36s",
+            "keeps the complete stage visible while walking",
             "rest/idle moments",
             "Fake app-server E2E samples the live window position during autonomous",
         ],
@@ -281,15 +311,16 @@ def require_stamina_contract() -> None:
         label="stamina controller contract",
     )
     require_text(
-        SCRIPT_DIR / "e2e_autonomous_default_stationary.sh",
+        SCRIPT_DIR / "e2e_autonomous_default_movement.sh",
         [
             "MIMO_AUTONOMOUS_INITIAL_REST_SECONDS=0",
-            "default production launch moved the window unexpectedly",
-            "default production launch had moving samples",
-            "default stationary run unexpectedly used movement animation",
-            "keeps Mimo anchored unless autonomous window movement is explicitly enabled",
+            "MIMO_AUTONOMOUS_FORCE_BEGIN=1",
+            "default production launch did not wander",
+            "default production launch had too few moving samples",
+            "directional movement animation",
+            "lets Mimo wander smoothly",
         ],
-        label="default stationary E2E contract",
+        label="default movement E2E contract",
     )
     require_text(
         ENERGY_TESTS,
@@ -323,6 +354,7 @@ def require_qa_contract() -> None:
             "desktop/MimoDesktopPet/script/check_docs_contract.py",
             './script/check_docs_contract.py',
             './script/e2e_autonomous_energy.sh',
+            './script/e2e_conversation_movement.sh',
             './script/check_app_server_schema.sh',
             './script/live_app_server_smoke.py',
             "desktop/MimoDesktopPet/script/live_mimo_dialogue_smoke.py",

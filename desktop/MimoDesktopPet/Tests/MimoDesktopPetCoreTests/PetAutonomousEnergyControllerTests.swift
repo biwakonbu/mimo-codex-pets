@@ -7,19 +7,19 @@ final class PetAutonomousEnergyControllerTests: XCTestCase {
 
         XCTAssertGreaterThan(
             controller.speed(maximumSpeed: 52, moodUnit: 0.5),
-            42
+            50
         )
         XCTAssertLessThan(
             controller.speed(maximumSpeed: 52, moodUnit: 0.5),
-            46
+            52
         )
         XCTAssertGreaterThan(
             controller.speed(maximumSpeed: 52, moodUnit: 0),
-            40
+            48
         )
         XCTAssertLessThanOrEqual(
             controller.speed(maximumSpeed: 52, moodUnit: 1),
-            52 * 0.88
+            52 * 0.98
         )
     }
 
@@ -33,7 +33,7 @@ final class PetAutonomousEnergyControllerTests: XCTestCase {
         )
         XCTAssertLessThan(
             tired.speed(maximumSpeed: 52, moodUnit: 0.5),
-            28
+            36
         )
     }
 
@@ -77,7 +77,7 @@ final class PetAutonomousEnergyControllerTests: XCTestCase {
             controller.restDuration(moodUnit: 0) * 0.5,
             1 - controller.stamina
         )
-        XCTAssertGreaterThanOrEqual(controller.restDuration(moodUnit: 0), 7)
-        XCTAssertLessThanOrEqual(controller.restDuration(moodUnit: 1), 18)
+        XCTAssertGreaterThanOrEqual(controller.restDuration(moodUnit: 0), 5.5)
+        XCTAssertLessThanOrEqual(controller.restDuration(moodUnit: 1), 14)
     }
 }

@@ -29,6 +29,20 @@ public enum PetInteractionHitRegion {
 
         return bubbleRect.contains(point) || spriteRect.contains(point)
     }
+
+    public static func containsSprite(point: PetWanderPoint, bounds: PetDragFrame) -> Bool {
+        guard point.x >= 0, point.y >= 0, point.x <= bounds.width, point.y <= bounds.height else {
+            return false
+        }
+        let bubbleHeight = min(PetSpeechBubbleLayout.productionStackHeight + 12.0, bounds.height)
+        let spriteRect = HitRect(
+            x: max(0, (bounds.width - (PetSpeechBubbleLayout.productionSpriteWidth + 38.0)) / 2),
+            y: 18,
+            width: min(PetSpeechBubbleLayout.productionSpriteWidth + 38.0, bounds.width),
+            height: min(226, max(0, bounds.height - bubbleHeight + 18))
+        )
+        return spriteRect.contains(point)
+    }
 }
 
 private struct HitRect {

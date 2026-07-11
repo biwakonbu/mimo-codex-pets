@@ -172,44 +172,28 @@ Verified runtime behavior:
   safe `workSummary`, and deterministic fallback text. It uses
   `approvalPolicy=never`, read-only sandbox policy, and empty environments so
   Codex is used as a text rewriter rather than as an agent that can inspect the
-  workspace. The internal Mimo session is filtered out of visible thread lists,
-  notification tracking, and production bubbles.
+  workspace. The rewrite session defaults to `gpt-5.6-luna`; each `turn/start`
+  uses `effort=low` because the sanitized one-bubble rewrite is short and
+  latency-sensitive. The internal Mimo session is filtered out of visible
+  thread lists, notification tracking, and production bubbles.
 - `script/live_mimo_dialogue_smoke.py` exercises that same live app-server path
   without touching user work sessions: it creates an ephemeral Mimo session,
   sends a sanitized `turn/start` request, waits for assistant-message
   notifications, and rejects unsafe or non-Mimo speech.
-- The production bubble panel keeps primary Mimo speech compact instead of
-  using the full window width. The current primary column caps at 330pt, can
-  render up to four lines, jitters only inside Mimo's near speech area, and
-  stays visually attached to Mimo by proximity instead of using a pointer tail.
-  Secondary session rows can render two lines and now settle into a
-  close "pocket pile" around the primary bubble instead of drifting to the top
-  edge as thin labels. `PetSpeechBubblePaginator` splits longer Mimo speech into
-  timed pages so conversation-sketch playback can continue without truncating
-  the whole message into one chip.
-- `design/ui-proposals/mimo-perfect-cute-ui-board-05.png` records the current
-  cute UI direction generated from the Mimo identity prompt: soft organic white
-  bubbles, pastel activity pins, tiny decorative pips, and a barely-there
-  home-radius movement feel. Production SwiftUI uses those elements without
-  adding readable decorative text or a separate dashboard panel.
-- `design/ui-proposals/mimo-generated-bubble-layout-concepts-06.png` records the
-  generated divergence pass for nearby bubble placement, comparing Pocket Pile,
-  Orbit Bouquet, and Soft Cascade. The selected direction was Pocket Pile because
-  it keeps Codex chat summaries close enough to feel like Mimo is speaking them,
-  while still allowing irregular overlap.
-- `design/ui-proposals/mimo-generated-pocket-pile-convergence-07.png` records the
-  generated convergence pass for Pocket Pile. Production layout follows the
-  chaotic-cute variant: secondary bubbles stay inside a bounded close radius,
-  avoid edge clipping, and overlap the primary bubble only enough to feel
-  playful rather than burying the current message.
-- `design/ui-proposals/mimo-generated-secondary-bubble-card-concepts-08.png`
-  records the next convergence pass after video review showed that secondary
-  bubbles could still read as long thin labels. Production follows the Nest
-  Cards direction: secondary summaries are narrower compact cards, can use a
-  two-line summary, and keep enough vertical padding to feel like small notes
-  tucked around the primary Mimo speech. A follow-up video pass tightened the
-  secondary orbit so these cards stay closer to Mimo's current speech instead of
-  floating up toward the panel edge.
+- `design/message-blank-slate-workshop.md` records the blank-slate information
+  architecture review. Production selects Kataribe Stage with Firefly Charms:
+  one complete narration surface near Mimo and one stable named identity charm
+  for every monitored chat.
+- `design/ui-proposals/mimo-message-blank-slate-12-kataribe-stage.png` is the
+  selected visual reference. Earlier Pocket Pile, Nest Card, and bubble-cloud
+  boards remain design-history evidence, not the current production structure.
+- `PetSpeechBubblePaginator` splits longer Mimo speech into timed `118`-character
+  pages while keeping the chat name fixed. Shorter paper surfaces use content
+  height tiers, so one-line reports do not leave a large unused panel.
+- `design/ui-proposals/mimo-pocket-pop-motion-board-09.png` remains the motion
+  history reference: new notes grow upward from Mimo's side, push the
+  existing notes into a nearby pocket pile, and settle with soft springy offsets
+  rather than a synchronized row shift.
 - The production bubble panel treats each visible bubble identity as stable, but
   does not pin secondary summaries to a fixed row grid. Additions fade and rise
   from the primary/Mimo side, removals fade upward, stack-position changes use a
@@ -268,23 +252,21 @@ State behavior:
 - no known active state uses `idle`.
 - manual movement uses directional `running-right` / `running-left` based on
   observed movement direction.
-- default production keeps the desktop panel anchored unless
-  `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=1` or a deterministic autonomous QA mode is
-  set; Mimo's ambient life comes from in-place rest/idle moments and the dynamic
-  nearby bubble cloud. Anchored mode schedules the first in-place moment after
-  about `8s`, then uses a calm `18-34s` cadence so Mimo feels present without
-  pacing around the desktop.
-- opt-in autonomous window movement uses a 60Hz time-based tween with smooth
+- default production enables autonomous window movement; setting
+  `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=0` keeps the panel anchored when the user
+  needs a fixed companion position.
+- autonomous window movement uses a 60Hz time-based tween with smooth
   speed variation, rather than per-frame random speed changes. The window
   controller also rate-limits the actual frame origins it sends to AppKit, using
   its own last-submitted origin instead of depending on `NSPanel.frame` to update
   synchronously every timer tick. This prevents paused or queued tween updates
   from visually catching up in one scary jump.
-- opt-in autonomous movement caps production speed at `2.4 pt/s`, limits each
-  tiny hop to `4 pt`, keeps production targets inside an `8 pt` home radius, and
-  intentionally inserts rest/idle moments between hops. During conversation
-  bubbles, Mimo holds position and uses in-place animation instead of moving the
-  panel.
+- autonomous movement caps production speed at `34 pt/s`, chooses each trip
+  `90-240 pt` away, keeps targets inside a `360 pt` home radius, and intentionally
+  inserts rest/idle moments between trips. Directional animation begins only
+  after `8 pt` of real displacement, then loops at a fixed `0.36s` per frame.
+  During Kataribe narration, Mimo keeps the complete stage visible while walking.
+  Ordinary narration changes wait for a rest beat instead of stopping the panel.
 - Deterministic QA can pin the initial panel origin with
   `MIMO_WINDOW_ORIGIN=x,y`. Visual inspection runs may set
   `MIMO_AUTONOMOUS_DISABLED=1` to disable autonomous timers without changing the
@@ -334,7 +316,9 @@ Conversation behavior:
   raw commands, paths, deltas, or model output.
 - When Codex-backed Mimo speech is enabled, `CodexMimoDialoguePrompt` asks the
   ephemeral Mimo session to rewrite only those safe fields into a warmer
-  one-sentence bubble. The generated `mimoSpeech` is safety-checked again before
+  one-sentence bubble. The default model is `gpt-5.6-luna` with `effort=low`;
+  `MIMO_CODEX_DIALOGUE_MODEL` remains available for explicit overrides. The
+  generated `mimoSpeech` is safety-checked again before
   display and then cached by session title, state, activity kind, safe topic,
   and safe text. Regeneration is throttled per session so bubbles update at a
   human-readable cadence rather than streaming every raw Codex event.
@@ -344,14 +328,11 @@ Conversation behavior:
   production formatter for safe, sensitive, instruction-looking,
   machine-payload, and stdout/env-marker titles, so live-smoke expectations do
   not drift from production bubble behavior.
-- The production bubble queue deduplicates by thread and final Mimo report text,
-  so multiple raw Codex events that summarize to the same short bubble do not
-  make Mimo repeat itself. It then rotates the latest short report from each
-  visible thread instead of pinning only one focused thread forever.
-- The simultaneous production stack prioritizes thread coverage: secondary
-  bubbles show at most one summary per thread, and if the primary bubble is
-  already speaking for a conversation thread, that same thread is skipped in
-  the secondary bubbles.
+- The production narration queue deduplicates by thread and final Mimo report
+  text, so multiple raw Codex events that summarize to the same report do not
+  make Mimo repeat herself. Ordinary narration and page changes are held while
+  Mimo walks, then resume `0.8s` after rest. A failure or user-action request can
+  still interrupt immediately.
 - The app-server client combines recent conversation lines with synthesized
   thread-status lines through `CodexConversationLineCombiner` before planner
   selection. When the internal line cap is hit, the combiner keeps at least one
@@ -359,73 +340,46 @@ Conversation behavior:
   line budget on focused-thread and recent-thread details. This keeps
   multi-thread bubbles from silently collapsing to only the most recently read
   sessions when `thread/read` returns several items per thread.
-- When multiple threads compete for the stack, action-required states are
-  promoted before ordinary work chatter: failure first, then confirmation
-  waiting, then review-ready, then the existing preferred-thread/recency order.
-- Production can show up to five speech bubbles at once: one primary
-  status/focused-thread bubble plus compact summaries from other visible
-  threads. The primary bubble stays lowest, widest, and visually attached to
-  Mimo by placement rather than an arrow tail. When it reports a focused conversation thread
-  it uses the `focus` presentation role, a stronger accent marker, and the
-  Mimo-style report for that session instead of a generic status such as
-  `Codex が作業中`; idle/offline status keeps the simpler `status` role.
-  Secondary session bubbles are smaller bounded context cards around it: they
-  stay white, use compact accent markers, omit the longer `ご主人、...です`
-  phrase, and use seeded organic offsets from `PetSpeechBubbleLayout`, so
-  concurrent session status feels like a lively dynamic nearby bubble cloud
-  without becoming a transcript panel. Bubble bodies use a soft organic shape
-  rather than a strict rounded rectangle, secondary cards include tiny pastel
-  pips, use narrower `176pt` text columns with up to two summary lines, and keep
-  short and long session titles readable while the placement stays intentionally
-  irregular as Codex
-  notifications arrive. Each organic placement also carries a tiny
-  unsynchronized drift envelope, keeping the bubbles lightly in motion while the
-  primary speech remains close enough to read as Mimo's own voice.
-  This keeps Codex Pets-like multi-thread awareness in the production surface
-  without rendering a console, transcript feed, or debug panel.
-- Status bubbles are capped at 44 characters, focused-thread primary bubbles at
-  48 characters, secondary thread rows at 34 characters, and overflow bubbles
-  at 22 characters. Secondary bubbles render as one-line compact summaries such
-  as `「資料整理」作業中` or `「承認」確認待ち`, so a five-bubble stack can show the
-  primary Mimo report, three concrete thread rows, and one overflow counter
-  without crowding or clipping Mimo. SwiftUI splits those thread bubble strings
-  into a colored title segment and one-line Mimo summary at render time,
-  preserving compact app-server logs while making simultaneous thread bubbles
-  easier to scan visually. If more thread summaries are available than the remaining
-  compact slots can show, Mimo keeps up to six thread contexts internally and
-  reserves the final compact slot for a smaller overflow counter bubble such as
-  `ほか2件も見ています` rather than silently dropping that extra context. If hidden
-  contexts include attention states, the overflow bubble keeps the strongest
-  hidden tone and switches to short wording such as `ほか3件に確認待ち`,
-  `ほか3件に失敗あり`, or `ほか3件レビューあり`, so a compact stack does not
-  flatten urgent hidden work into a neutral counter. The focus and overflow
-  bubbles have their own `bubbleRoles` in presentation logs so E2E can
-  distinguish a primary thread report from generic status and a concrete thread
-  summary.
-- Each production bubble also carries a semantic `bubbleTone` in presentation
-  logs: `active`, `waiting`, `review`, `failed`, `overflow`, or `neutral`.
-  SwiftUI uses the tone for compact state markers and accent color, while tests
-  use it to verify that multiple thread bubbles are not just a flat text list.
-- Production bubble logs also include `bubbleActivityKinds`, and SwiftUI uses
-  those kinds for ordinary activity marker symbols when the tone is not a
-  higher-priority failed/waiting/review/overflow state. This lets simultaneous
-  thread bubbles distinguish plan, command/test, file, browser, image, skill,
-  mention, and status work without showing raw commands or payload arguments.
-- The same visible bubble text is exposed through the
-  `MimoDesktopPet.productionSurface` interaction view's accessibility value
-  when macOS accessibility tooling can attach to the panel. This makes
-  screen-reader and Computer Use-visible text match the product bubble surface
-  instead of introducing a second transcript channel.
-- The multi-bubble production capture gate verifies more than raw bubble count:
-  it requires visible white bubble components, a larger primary bubble closest
-  to Mimo, a dynamic nearby bubble cloud with bounded irregular secondary
-  placement, no speech-tail tapers on any bubble, and one compact colored
-  activity/state marker inside every bubble. This keeps the Codex
-  Pets-style simultaneous thread surface from regressing into a flat transcript
-  list, distant scattered cards, or anonymous white cards.
-- The stacked bubble list refreshes whenever conversation context changes, even
-  if the primary bubble text is still showing a timed moment or an older queue
-  item.
+- When multiple chats compete for narration, action-required states are
+  promoted before ordinary work: failure first, then confirmation waiting, then
+  the existing preferred-chat and recency order.
+- Production uses the selected **Kataribe Stage** from
+  `design/message-blank-slate-workshop.md` and
+  `design/ui-proposals/mimo-message-blank-slate-12-kataribe-stage.png`. The
+  result keeps one narration surface for the complete Mimo-style report; a separate bottom-up stream of one to six
+  named chat charms is the identity layer. New narration enters at the bottom and can only push older charms upward.
+  Distinct accents and unsynchronized breathing
+  keep the rail alive without moving readable text more than `3pt`. This preserves Codex Pets-like
+  multi-thread awareness without competing speech bubbles, an overflow counter,
+  a transcript, or dashboard chrome.
+- The report is width-stable and bottom-anchored near Mimo. Its height uses only
+  tight `128pt` and `184pt` tiers according to body length. Long reports
+  paginate at `64` characters, keep the chat name fixed, and show an
+  explicit page count. The report has no speech-tail arrow.
+- Every tracked chat name is shown directly. A narrated chat receives a new
+  revision identity at the rail bottom, while displaced cards retain their
+  identities and move only upward. Each visible charm fills a compact `29pt`
+  row with `3pt` separation, without an oversized transparent placement slot.
+  Charms use distinct pastel accents and
+  independent breathing below `3pt`; ambient charm motion pauses while walking
+  or hovering. The selected charm and paper report
+  share an accent, but no raw active/waiting/review label is rendered.
+- `CodexThreadTitleFormatter.title(fromThreadObject:)` prefers `name`, `title`,
+  and `preview`, then falls back to the first safe user request from
+  `thread/read(includeTurns: true)`. Generic internal names such as
+  `Codex Thread`, `Codex Session`, and `unknown-thread` never reach the paper
+  title or charm rail.
+- Presentation logs retain the lower-level `bubbleTones` and
+  `bubbleActivityKinds` for protocol diagnosis, while the production UI consumes
+  `kataribeReportText`, `kataribeReportThreadId`, `kataribeCharmTitles`, page
+  numbers, and `isPetMoving`. This keeps diagnostic state out of visible UI.
+- `MimoDesktopPet.productionSurface` exposes the complete narration and all six
+  names through accessibility, without raw animation values. The report uses
+  `mimo.kataribe.report`; charms use `mimo.kataribe.charm.0` through `.5`.
+- The Kataribe capture gate checks one paper report, the required number of chat
+  charms, transparent corners, Mimo sprite pixels, and a report-to-Mimo gap no
+  greater than `42pt`. This prevents regression into anonymous tags, hidden chat
+  counts, a distant report, or an opaque dashboard.
 - `item/started` enqueues sanitized progress immediately, especially for tool
   and command activity.
 - Delta notifications enqueue generic Mimo reports such as response drafting,
@@ -484,8 +438,8 @@ app-server integration changes.
 `script/check_docs_contract.py` keeps this research note from becoming stale
 documentation. It requires the README, this document, Swift app-server client,
 Swift notification enums, live smoke helper, stamina controller/tests, and
-canonical QA gate to keep the same public app-server transport, multi-bubble
-mimicry, raw-payload safety, Computer Use limitation, production accessibility
+  canonical QA gate to keep the same public app-server transport, Kataribe Stage
+  mimicry, raw-payload safety, Computer Use limitation, production accessibility
 surface, and autonomous stamina contract.
 
 The full gate expands to:
@@ -534,52 +488,41 @@ Manual or visual checks:
   production window is neither blank nor a debug-style opaque panel: it must
   contain transparent background, white speech-bubble pixels, and Mimo sprite
   color pixels.
-- Multi-thread state captures additionally run
-  `inspect_production_capture.swift --multi-bubble-hierarchy`, which segments
-  white bubble components and verifies the visual hierarchy: the primary Mimo
-  report must be widest, visually largest, closest to Mimo, and not buried by
-  the secondary context bubbles. The same hierarchy check verifies that no
-  bubble has a speech-tail taper; thread context rows must stay within a nearby
-  distance threshold. Secondary bubbles are allowed
-  to overlap and vary in both axes, but they must not drift into distant cards,
-  anonymous badges, or one unreadable merged white panel while still passing a
-  raw bubble-count check.
+- Multi-chat captures additionally run
+  `inspect_production_capture.swift --kataribe-stage`. The six-chat E2E adds
+  `--minimum-chat-charms 6`. The inspector verifies one paper report, each
+  required charm region, and a bounded report-to-Mimo gap instead of treating a
+  scattered card count as visual quality.
 - `script/capture_video_review.sh` is the manual video-review companion to the
   automated capture gates. It launches the real app binary against the public
   fake app-server, samples the CGWindow origin at 60Hz, captures the exact Mimo
   window into a temporary frame sequence, and writes an mp4, contact sheet,
   coordinate CSV, presentation log, and `review-summary.txt` under `/tmp` by
-  default. The summary includes movement jump metrics plus observed animation,
-  role, tone, and maximum bubble-count totals, then adds `review_warnings` and
-  `design_pass_recommended` when the sample did not cover enough motion,
-  multi-bubble, or semantic states. This is the preferred loop for judging
-  animation timing, bubble arrivals, and whether secondary context cards feel
-  close enough to Mimo before deciding whether another generated design pass is
-  needed.
+  default. The summary includes movement jump metrics, observed animation, the
+  Kataribe report, and maximum named-charm totals, then adds `review_warnings`
+  and `design_pass_recommended` when the sample did not cover enough motion or
+  narration states. This is the preferred loop for judging animation timing,
+  report readability, and Mimo-to-paper proximity.
 - Fake app-server E2E samples the live window position during autonomous
   movement and rejects large per-sample jumps. Dedicated frame-limiter unit
-  tests verify that stale tween time cannot catch up in one frame, stationary
-  E2E verifies that conversation bubbles hold the panel still, and home-radius
-  unit tests prevent long-term autonomous drift away from the user's chosen
-  position.
+  tests verify that stale tween time cannot catch up in one frame,
+  conversation-movement E2E verifies that a named report remains visible while
+  the panel moves, and home-radius unit tests prevent long-term autonomous drift
+  away from the user's chosen position.
 - Fake app-server E2E enables `MIMO_PRESENTATION_LOG` and verifies that
   production bubble text is a Mimo-style summary of the active session title,
   safe session-derived `workSummary`, and latest progress/tool activity,
-  including notification-driven tool activity and streaming delta activity, plus
-  simultaneous stacked bubbles for a second visible session and a later
-  secondary-session update discovered immediately from notification-triggered
-  thread reads. The fake session specifically requires concrete topic-aware
-  output such as `動作中で、吹き出し要約の表示文言をまとめています`,
-  `動作中で、吹き出し要約の表示文言を計画中`, `動作中で、作業内容の説明をテスト中`, and
-  `停止中で、作業内容の説明をレビューできます` so regression tests cover Mimo
-  explaining what Codex is working on and whether the session is moving or
-  stopped, not only generic state labels.
+  including notification-driven tool activity and streaming delta activity. It
+  requires concrete topic-aware Mimo narration, a named multi-chat charm rail,
+  and a report that remains present during directional walking. Technical phrases
+  such as `チャット状態` and `Mimoも追いかけてるね` are rejected in favor of
+  natural narration such as `Mimoもそっと見守ってるよ`.
   The same fake E2E emits
   `thread/started` for a new session and verifies that Mimo reports the new
   session title and sends `thread/read` before the next polling cycle. The fake
   also keeps that started session out of subsequent list responses and verifies
-  that Mimo retains the notification-discovered session in later production
-  bubble refreshes instead of pruning it while list state catches up.
+  that Mimo retains the notification-discovered chat in the charm rail instead
+  of pruning it while list state catches up.
 - Unit tests verify that extracted `CodexConversationLine` values retain typed
   activity kinds and that bubble summaries prefer those kinds over brittle raw
   text guesses, while failure text still overrides the kind.
@@ -593,29 +536,27 @@ Manual or visual checks:
   reroute reasons, verification payloads, moderation metadata, warning/error
   text, MCP server names, and local `.env` paths, then rejects any production
   bubble log that leaks those fragments.
-- `MIMO_PRESENTATION_LOG` includes `bubbleText`, `bubbleTexts`, `bubbleRoles`,
-  `bubbleTones`, `bubbleActivityKinds`, and `accessibilityValue`; stacked
-  bubble-only updates should be logged for deterministic E2E evidence. Fake
-  production E2E also enforces the five-bubble visible limit, the
-  primary/secondary/overflow text-length caps, activity-kind marker propagation,
-  accessibility value production-mode labeling, and a three-thread simultaneous
-  bubble case with one focused primary bubble plus three conversation bubbles.
+- `MIMO_PRESENTATION_LOG` includes the lower-level `bubbleText`, `bubbleTexts`,
+  `bubbleTones`, and `bubbleActivityKinds` for protocol diagnosis, plus the
+  user-facing `kataribeReportText`, `kataribeReportThreadId`,
+  `kataribeCharmTitles`, page numbers, `isPetMoving`, and `accessibilityValue`.
+  Fake production E2E enforces the one-report/six-name contract, walking
+  readability, production-mode accessibility, and raw-text leak gates.
   Live app presentation smoke applies the same accessibility channel checks to
   real Codex app-server data: the value must mark production mode, mirror every
-  visible bubble, and pass the same raw/sensitive-fragment leak gate as the
-  rendered bubble text. The live gate also rejects generic ambient-unsafe
+  visible narration and names, and pass the same raw/sensitive-fragment leak gate
+  as the rendered report. The live gate also rejects generic ambient-unsafe
   shapes such as URLs, local paths, credential markers, long token-like
   strings, and email addresses, so the real app-server path is not weaker than
   fake leak scenarios.
-  Overflow E2E separately verifies one focused primary bubble, three concrete
-  conversation bubbles, and one overflow counter bubble with no activity kind
-  on the counter.
-- Primary bubble selection is not a transcript cursor. Mimo normally favors the
+- Six-chat E2E separately verifies one focused report and six readable,
+  accessible, clickable chat names with no hidden-count label.
+- Primary narration selection is not a transcript cursor. Mimo normally favors the
   focused Codex thread, but a failure, confirmation-waiting thread, or
   review-ready thread can take the primary report ahead of a merely active
-  focused thread. The active focused thread remains as a secondary context row,
+  focused thread. The active focused thread remains named in the charm rail,
   which better matches the multi-thread companion role: Mimo reports the state
-  that most needs the user's attention first.
+  that most needs the user's attention first without hiding the other chats.
 - The same log includes `debugOverlay`; production E2E must keep it `false` so
   the transcript/feed panel remains opt-in debug UI. Production menu builds
   should not expose the debug toggle unless `MIMO_DEBUG_MENU=1` or
@@ -665,9 +606,10 @@ Manual or visual checks:
   `MIMO_SINGLE_INSTANCE_LOCK_PATH` so the lock is isolated from any normal user
   launch.
 - Status-menu E2E launches the real app process and reads the assembled menu
-  via `MIMO_STATUS_MENU_LOG`. Production must expose Show/Hide, Click Through,
-  Reconnect Codex, and Quit, must report Click Through as initially off, and
-  must not expose `Debug Overlay`. Separate opt-in runs verify that
+  via `MIMO_STATUS_MENU_LOG`. Production must expose `Mimoを表示`, `Mimoを隠す`,
+  `クリックを背面へ通す`, `デスクトップを歩く`, `Codexに再接続`, and `Mimoを終了`;
+  click-through starts off and autonomous movement starts on. Production must
+  not expose `デバッグ表示`. Separate opt-in runs verify that
   `MIMO_DEBUG_MENU=1` and `MIMO_DEBUG_OVERLAY=1` both expose the debug item for
   development, and that `MIMO_DEBUG_OVERLAY=1` reports the debug item as
   checked.

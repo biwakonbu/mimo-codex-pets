@@ -6,29 +6,39 @@ public enum CodexConversationBubblePlanner {
         let role: PetSpeechBubbleRole
         let tone: PetSpeechBubbleTone
         let activityKind: CodexConversationActivityKind?
+        let threadId: String?
+        let threadTitle: String?
 
         var stableId: String {
-            [
-                role.rawValue,
-                tone.rawValue,
-                activityKind?.rawValue ?? "none",
-                text
-            ].joined(separator: "|")
+            if let threadId {
+                return "thread:\(threadId)"
+            }
+            switch role {
+            case .status, .focus:
+                return "status:primary"
+            case .overflow:
+                return "overflow:summary"
+            case .conversation:
+                return "conversation:\(threadTitle ?? "untitled")"
+            }
         }
     }
 
     public struct PrimaryBubble: Equatable, Sendable {
         public let text: String
         public let threadId: String?
+        public let threadTitle: String?
         public let activityKind: CodexConversationActivityKind?
 
         public init(
             text: String,
             threadId: String?,
+            threadTitle: String? = nil,
             activityKind: CodexConversationActivityKind? = nil
         ) {
             self.text = text
             self.threadId = threadId
+            self.threadTitle = threadTitle
             self.activityKind = activityKind
         }
     }
@@ -146,9 +156,14 @@ public enum CodexConversationBubblePlanner {
         isOffline: Bool = false
     ) -> PrimaryBubble {
         if let activeConversationThreadId {
+            let activeThreadTitle = latestTitle(
+                for: activeConversationThreadId,
+                in: conversationLines
+            )
             return PrimaryBubble(
                 text: statusText,
                 threadId: activeConversationThreadId,
+                threadTitle: activeThreadTitle,
                 activityKind: activeConversationActivityKind
             )
         }
@@ -161,6 +176,7 @@ public enum CodexConversationBubblePlanner {
             return PrimaryBubble(
                 text: CodexBubbleFormatter.bubbleText(for: focusedLine),
                 threadId: focusedLine.threadId,
+                threadTitle: focusedLine.threadTitle,
                 activityKind: focusedLine.activityKind
             )
         }
@@ -174,6 +190,7 @@ public enum CodexConversationBubblePlanner {
         preferredThreadId: String?,
         primaryThreadId: String? = nil,
         primaryActivityKind: CodexConversationActivityKind? = nil,
+        primaryThreadTitle: String? = nil,
         primaryRole: PetSpeechBubbleRole? = nil,
         limit: Int = PetSpeechBubbleLayout.productionVisibleLimit
     ) -> [PetSpeechBubble] {
@@ -193,7 +210,9 @@ public enum CodexConversationBubblePlanner {
                 text: primary,
                 role: resolvedPrimaryRole,
                 tone: tone(forStatusText: primary),
-                activityKind: primaryActivityKind
+                activityKind: primaryActivityKind,
+                threadId: primaryThreadId,
+                threadTitle: primaryThreadTitle ?? title(from: primary)
             ))
         }
         if let primaryThreadId {
@@ -221,7 +240,9 @@ public enum CodexConversationBubblePlanner {
                 text: compacted,
                 role: .conversation,
                 tone: tone(for: line),
-                activityKind: line.activityKind
+                activityKind: line.activityKind,
+                threadId: line.threadId,
+                threadTitle: line.threadTitle
             ))
             usedThreadIds.insert(line.threadId)
         }
@@ -233,7 +254,14 @@ public enum CodexConversationBubblePlanner {
         )
 
         if bubbles.isEmpty {
-            bubbles.append(BubbleCandidate(text: CodexMimoStatusSpeech.idle, role: .status, tone: .neutral, activityKind: nil))
+            bubbles.append(BubbleCandidate(
+                text: CodexMimoStatusSpeech.idle,
+                role: .status,
+                tone: .neutral,
+                activityKind: nil,
+                threadId: nil,
+                threadTitle: nil
+            ))
         }
 
         return bubbles.prefix(visibleLimit).map { bubble in
@@ -242,7 +270,9 @@ public enum CodexConversationBubblePlanner {
                 text: bubble.text,
                 role: bubble.role,
                 tone: bubble.tone,
-                activityKind: bubble.activityKind
+                activityKind: bubble.activityKind,
+                threadId: bubble.threadId,
+                threadTitle: bubble.threadTitle
             )
         }
     }
@@ -327,8 +357,18 @@ public enum CodexConversationBubblePlanner {
             text: overflowText,
             role: .overflow,
             tone: tone,
-            activityKind: nil
+            activityKind: nil,
+            threadId: nil,
+            threadTitle: nil
         )
+    }
+
+    private static func latestTitle(for threadId: String, in lines: [CodexConversationLine]) -> String? {
+        lines.reversed().first { $0.threadId == threadId }?.threadTitle
+    }
+
+    private static func title(from text: String) -> String? {
+        PetSpeechBubbleTextParts.parse(text).threadTitle
     }
 
     private static func highestPriorityOverflowTone(in candidates: [BubbleCandidate]) -> PetSpeechBubbleTone {

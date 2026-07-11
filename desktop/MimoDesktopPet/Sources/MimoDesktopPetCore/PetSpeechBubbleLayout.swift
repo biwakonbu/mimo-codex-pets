@@ -53,13 +53,15 @@ public struct PetSpeechBubblePlacement: Equatable, Sendable {
 }
 
 public enum PetSpeechBubbleLayout {
-    public static let productionWindowWidth = 500.0
-    public static let productionWindowHeight = 500.0
-    public static let productionStackWidth = 492.0
-    public static let productionStackHeight = 292.0
+    public static let productionWindowWidth = 520.0
+    public static let productionWindowHeight = 520.0
+    public static let productionStackWidth = 512.0
+    public static let productionStackHeight = 312.0
     public static let productionTopPadding = 0.0
+    public static let productionStackVisualOffsetY = -20.0
     public static let productionSpriteWidth = 192.0
     public static let productionSpriteHeight = 208.0
+    public static let productionSpriteVisualOffsetY = -16.0
     public static let productionVisibleLimit = 4
     public static let productionRowSpacing = 8.0
     public static let statusTextLimit = 156
@@ -68,58 +70,58 @@ public enum PetSpeechBubbleLayout {
     public static let overflowTextLimit = 22
     public static let chatTitleTextLimit = 34
 
-    public static let transitionInsertionOffsetY = 118.0
-    public static let transitionRemovalOffsetY = -86.0
-    public static let transitionInsertionScale = 0.38
+    public static let transitionInsertionOffsetY = 62.0
+    public static let transitionRemovalOffsetY = -46.0
+    public static let transitionInsertionScale = 0.74
     public static let transitionRemovalScale = 0.9
-    public static let stackAnimationResponse = 1.36
-    public static let stackAnimationDampingFraction = 0.69
-    public static let stackAnimationBlendDuration = 0.24
-    public static let stackAnimationStaggerDelay = 0.14
-    public static let stackAnimationMaxStaggerDelay = 0.46
-    public static let stackAnimationResponseStep = 0.08
-    public static let stackAnimationDampingStep = 0.025
-    public static let stackAnimationMinimumDampingFraction = 0.6
+    public static let stackAnimationResponse = 0.92
+    public static let stackAnimationDampingFraction = 0.78
+    public static let stackAnimationBlendDuration = 0.18
+    public static let stackAnimationStaggerDelay = 0.1
+    public static let stackAnimationMaxStaggerDelay = 0.28
+    public static let stackAnimationResponseStep = 0.06
+    public static let stackAnimationDampingStep = 0.018
+    public static let stackAnimationMinimumDampingFraction = 0.68
     public static let birthPulseDuration = 1.35
     public static let birthPulseSpringResponse = 0.62
     public static let birthPulseSpringDampingFraction = 0.82
     public static let birthPulseFadeOutDuration = 0.5
-    public static let birthPulseOffsetY = 10.0
-    public static let birthPulseWidth = 82.0
-    public static let birthPulseHeight = 8.0
-    public static let contentAnimationDuration = 0.46
+    public static let birthPulseOffsetY = 16.0
+    public static let birthPulseWidth = 112.0
+    public static let birthPulseHeight = 10.0
+    public static let contentAnimationDuration = 0.28
     public static let typewriterCharactersPerSecond = 10.0
     public static let typewriterFrameInterval = 1.0 / 30.0
-    public static let organicPrimaryHorizontalJitter = 68.0
-    public static let organicSecondaryHorizontalJitter = 284.0
-    public static let organicTopRowHorizontalJitter = 308.0
-    public static let organicPrimaryVerticalJitter = 26.0
-    public static let organicSecondaryVerticalJitter = 110.0
-    public static let organicTopRowOverlapDrop = 100.0
-    public static let organicTopRowOverlapJitter = 126.0
-    public static let organicPrimaryWidthJitter = 44.0
-    public static let organicConversationWidthJitter = 34.0
-    public static let organicOverflowWidthJitter = 28.0
+    public static let organicPrimaryHorizontalJitter = 18.0
+    public static let organicSecondaryHorizontalJitter = 254.0
+    public static let organicTopRowHorizontalJitter = 286.0
+    public static let organicPrimaryVerticalJitter = 16.0
+    public static let organicSecondaryVerticalJitter = 92.0
+    public static let organicTopRowOverlapDrop = 118.0
+    public static let organicTopRowOverlapJitter = 94.0
+    public static let organicPrimaryWidthJitter = 18.0
+    public static let organicConversationWidthJitter = 24.0
+    public static let organicOverflowWidthJitter = 16.0
     public static let organicPrimaryScaleJitter = 0.045
     public static let organicSecondaryScaleJitter = 0.07
-    public static let organicPrimaryMaximumHorizontalOffset = 74.0
-    public static let organicPrimaryMinimumVerticalOffset = -12.0
-    public static let organicPrimaryMaximumVerticalOffset = 30.0
+    public static let organicPrimaryMaximumHorizontalOffset = 20.0
+    public static let organicPrimaryMinimumVerticalOffset = -8.0
+    public static let organicPrimaryMaximumVerticalOffset = 18.0
     public static let organicSecondaryMaximumHorizontalOffset = 220.0
-    public static let organicSecondaryMinimumVerticalOffset = -132.0
-    public static let organicSecondaryMaximumVerticalOffset = -42.0
-    public static let organicSecondaryMinimumDistanceFromMimo = 58.0
-    public static let organicSecondaryMaximumDistanceFromMimo = 174.0
+    public static let organicSecondaryMinimumVerticalOffset = -204.0
+    public static let organicSecondaryMaximumVerticalOffset = -82.0
+    public static let organicSecondaryMinimumDistanceFromMimo = 92.0
+    public static let organicSecondaryMaximumDistanceFromMimo = 222.0
     public static let organicSecondaryOrbitMinimumAngleDegrees = 22.0
     public static let organicSecondaryOrbitMaximumAngleDegrees = 158.0
-    public static let organicPrimaryRotationJitter = 2.4
-    public static let organicSecondaryRotationJitter = 14.5
-    public static let organicPrimaryFloatingHorizontalMaximum = 5.0
-    public static let organicPrimaryFloatingVerticalMaximum = 4.0
-    public static let organicSecondaryFloatingHorizontalMaximum = 13.0
-    public static let organicSecondaryFloatingVerticalMaximum = 9.0
-    public static let organicFloatingMinimumDuration = 5.8
-    public static let organicFloatingMaximumDuration = 9.8
+    public static let organicPrimaryRotationJitter = 1.4
+    public static let organicSecondaryRotationJitter = 7.0
+    public static let organicPrimaryFloatingHorizontalMaximum = 1.6
+    public static let organicPrimaryFloatingVerticalMaximum = 1.2
+    public static let organicSecondaryFloatingHorizontalMaximum = 3.6
+    public static let organicSecondaryFloatingVerticalMaximum = 2.6
+    public static let organicFloatingMinimumDuration = 8.5
+    public static let organicFloatingMaximumDuration = 13.5
     public static let organicFloatingMaximumDelay = 1.2
     public static let organicPrimaryMinimumFontScale = 0.94
     public static let organicPrimaryMaximumFontScale = 1.12
@@ -206,11 +208,11 @@ public enum PetSpeechBubbleLayout {
     private static func maxTextWidth(role: PetSpeechBubbleRole) -> Double {
         switch role {
         case .status, .focus:
-            return 330
+            return 404
         case .conversation:
-            return 176
+            return 218
         case .overflow:
-            return 164
+            return 184
         }
     }
 
@@ -221,13 +223,13 @@ public enum PetSpeechBubbleLayout {
     ) -> Double? {
         switch role {
         case .status:
-            return 270
+            return 320
         case .focus:
-            return 282
+            return 336
         case .conversation:
-            return 152
+            return 178
         case .overflow:
-            return 136
+            return 154
         }
     }
 
@@ -248,11 +250,11 @@ public enum PetSpeechBubbleLayout {
         case 0:
             return 0
         case 1:
-            return -110
+            return -134
         case 2:
-            return 110
+            return 134
         case 3:
-            return 0
+            return 18
         default:
             return 8
         }
@@ -263,11 +265,11 @@ public enum PetSpeechBubbleLayout {
         case 0:
             return 0
         case 1:
-            return 86
+            return 112
         case 2:
-            return 86
+            return 118
         case 3:
-            return 138
+            return 172
         default:
             return 96
         }
@@ -436,10 +438,10 @@ public enum PetSpeechBubbleLayout {
             (organicSecondaryMaximumDistanceFromMimo - organicSecondaryMinimumDistanceFromMimo)
         let orbitX = cos(angle) * radius
         let orbitY = -sin(angle) * radius
-        let rowHintX = base.horizontalOffset * 0.14
+        let rowHintX = base.horizontalOffset * 0.28
         let rowHintY = base.index >= 3
-            ? (base.verticalOffset + organicTopRowOverlapDrop) * 0.08
-            : base.verticalOffset * 0.06
+            ? (base.verticalOffset + organicTopRowOverlapDrop) * 0.14
+            : base.verticalOffset * 0.18
         let scatterX = variationCentered(seed: seed, salt: "x-\(base.index)") *
             organicHorizontalJitter(for: base.index, isPrimary: false) * 0.2
         let scatterY = variationCentered(seed: seed, salt: "y-\(base.index)") *
@@ -480,11 +482,11 @@ public enum PetSpeechBubbleLayout {
     private static func organicSecondaryVerticalBias(for index: Int) -> Double {
         switch index {
         case 1:
-            return 4
+            return -30
         case 2:
-            return -18
+            return -42
         case 3:
-            return -4
+            return -34
         default:
             return 0
         }

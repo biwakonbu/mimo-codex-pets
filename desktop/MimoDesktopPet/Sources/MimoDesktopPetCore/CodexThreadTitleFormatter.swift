@@ -8,6 +8,7 @@ public enum CodexThreadTitleFormatter {
                 .replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             guard !collapsed.isEmpty,
+                  !isGenericInternalTitle(collapsed),
                   !CodexAmbientTextSafety.isUnsafeForAmbientDisplay(collapsed)
             else { continue }
             guard collapsed.count > limit else { return collapsed }
@@ -15,6 +16,51 @@ public enum CodexThreadTitleFormatter {
             return String(collapsed[..<index]).trimmingCharacters(in: .whitespacesAndNewlines) + "..."
         }
         return fallback
+    }
+
+    public static func isGenericInternalTitle(_ title: String) -> Bool {
+        ["Codex Thread", "Codex Session", "unknown-thread", "Codex"].contains(
+            title.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+
+    public static func title(
+        fromThreadObject threadObject: [String: Any],
+        fallback: String = "名前のないチャット",
+        limit: Int = 34
+    ) -> String {
+        title(
+            from: [
+                threadObject["name"],
+                threadObject["title"],
+                threadObject["preview"],
+                firstUserPrompt(in: threadObject)
+            ],
+            fallback: fallback,
+            limit: limit
+        )
+    }
+
+    private static func firstUserPrompt(in threadObject: [String: Any]) -> String? {
+        guard let turns = threadObject["turns"] as? [[String: Any]] else { return nil }
+
+        for turn in turns {
+            if let input = rawText(from: turn["input"]), !input.isEmpty {
+                return input
+            }
+            guard let items = turn["items"] as? [[String: Any]] else { continue }
+            for item in items {
+                let type = item["type"] as? String
+                let role = item["role"] as? String
+                guard type == "userMessage" || role == "user" else { continue }
+                for key in ["content", "text", "message"] {
+                    if let text = rawText(from: item[key]), !text.isEmpty {
+                        return text
+                    }
+                }
+            }
+        }
+        return nil
     }
 
     private static func rawText(from value: Any?) -> String? {
