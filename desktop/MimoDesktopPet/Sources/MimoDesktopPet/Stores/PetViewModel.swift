@@ -187,13 +187,16 @@ final class PetViewModel: ObservableObject {
     }
 
     func containsInteractiveContent(at point: PetWanderPoint, in bounds: PetDragFrame) -> Bool {
-        if bubbleFramesById.values.contains(where: { frame in
-            point.x >= frame.x && point.x <= frame.x + frame.width &&
-                point.y >= frame.y && point.y <= frame.y + frame.height
-        }) {
-            return true
-        }
-        return PetInteractionHitRegion.containsSprite(point: point, bounds: bounds)
+        interactionTarget(at: point, in: bounds) != .none
+    }
+
+    func interactionTarget(at point: PetWanderPoint, in bounds: PetDragFrame) -> PetInteractionHitTarget {
+        PetInteractionHitRegion.target(
+            point: point,
+            bounds: bounds,
+            bubbleFrames: Array(bubbleFramesById.values),
+            debugOverlay: debugOverlay
+        )
     }
 
     @discardableResult

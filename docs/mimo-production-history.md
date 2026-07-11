@@ -422,6 +422,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   and a chat that just stopped remains for `180s`; old idle history and
   title-only updates are omitted. `CodexConversationVisibilityPolicyTests` and
   the fake app-server E2E lock this selection behavior.
+- Interaction hit testing now separates the character from the message surface:
+  visible Mimo pixels start dragging, rounded report/charm shapes only open a
+  chat on click, and transparent panel space returns no hit so the app below can
+  receive the pointer.
 - Reports paginate at 64 characters in tight 128pt/184pt paper tiers and keep
   the chat name visible. The charm rail is bottom-anchored: each narrated chat
   is inserted below, pushes older charms upward, and never swaps in both

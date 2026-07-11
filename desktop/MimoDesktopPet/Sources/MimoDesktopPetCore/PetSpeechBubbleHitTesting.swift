@@ -9,14 +9,7 @@ public enum PetSpeechBubbleHitTesting {
         let visible = Array(bubbles.prefix(PetSpeechBubbleLayout.productionVisibleLimit))
         return visible.first { bubble in
             guard bubble.threadId != nil, let frame = framesByBubbleId[bubble.id] else { return false }
-            return frame.contains(point)
+            return PetInteractionHitRegion.containsBubble(point: point, in: frame)
         }
-    }
-}
-
-private extension PetDragFrame {
-    func contains(_ point: PetWanderPoint) -> Bool {
-        point.x >= x && point.x <= x + width &&
-            point.y >= y && point.y <= y + height
     }
 }

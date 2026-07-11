@@ -145,11 +145,11 @@ final class PetWindowController: NSObject {
                     in: PetDragFrame(bounds)
                 )
             },
-            isInteractiveAt: { [weak viewModel] point, bounds in
-                viewModel?.containsInteractiveContent(
+            interactionTargetAt: { [weak viewModel] point, bounds in
+                viewModel?.interactionTarget(
                     at: PetWanderPoint(x: Double(point.x), y: Double(point.y)),
                     in: PetDragFrame(bounds)
-                ) ?? false
+                ) ?? .none
             },
             onHoveredBubbleChanged: { [weak viewModel] bubble in
                 viewModel?.setHoveredBubble(bubble)
@@ -707,6 +707,7 @@ private final class PetInteractionView: NSView {
     private var initialWindowFrame: NSRect?
     private var initialPointerPoint: NSPoint?
     private var didMoveDuringDrag = false
+    private var pointerTarget: PetInteractionHitTarget = .none
 
     private let isDebugOverlay: () -> Bool
     private let accessibilityValueProvider: () -> String
@@ -715,7 +716,7 @@ private final class PetInteractionView: NSView {
     private let onDragAnimationChanged: (PetAnimationState) -> Void
     private let onDragEnded: () -> Void
     private let openableBubbleAt: (NSPoint, NSRect) -> PetSpeechBubble?
-    private let isInteractiveAt: (NSPoint, NSRect) -> Bool
+    private let interactionTargetAt: (NSPoint, NSRect) -> PetInteractionHitTarget
     private let onHoveredBubbleChanged: (PetSpeechBubble?) -> Void
     private let onBubbleClicked: (PetSpeechBubble) -> Bool
     private let onClicked: () -> Void
@@ -730,7 +731,7 @@ private final class PetInteractionView: NSView {
         onDragAnimationChanged: @escaping (PetAnimationState) -> Void,
         onDragEnded: @escaping () -> Void,
         openableBubbleAt: @escaping (NSPoint, NSRect) -> PetSpeechBubble?,
-        isInteractiveAt: @escaping (NSPoint, NSRect) -> Bool,
+        interactionTargetAt: @escaping (NSPoint, NSRect) -> PetInteractionHitTarget,
         onHoveredBubbleChanged: @escaping (PetSpeechBubble?) -> Void,
         onBubbleClicked: @escaping (PetSpeechBubble) -> Bool,
         onClicked: @escaping () -> Void
@@ -742,7 +743,7 @@ private final class PetInteractionView: NSView {
         self.onDragAnimationChanged = onDragAnimationChanged
         self.onDragEnded = onDragEnded
         self.openableBubbleAt = openableBubbleAt
-        self.isInteractiveAt = isInteractiveAt
+        self.interactionTargetAt = interactionTargetAt
         self.onHoveredBubbleChanged = onHoveredBubbleChanged
         self.onBubbleClicked = onBubbleClicked
         self.onClicked = onClicked
@@ -783,7 +784,7 @@ private final class PetInteractionView: NSView {
         if isDebugOverlay() {
             return self
         }
-        return isInteractiveAt(point, bounds) ? self : nil
+        return interactionTargetAt(point, bounds) == .none ? nil : self
     }
 
     override func viewDidMoveToWindow() {
@@ -831,9 +832,17 @@ private final class PetInteractionView: NSView {
 
     override func mouseDown(with event: NSEvent) {
         guard let window else { return }
+        let pointerPoint = convert(event.locationInWindow, from: nil)
+        pointerTarget = isDebugOverlay()
+            ? .sprite
+            : interactionTargetAt(pointerPoint, bounds)
+        guard PetInteractionActionPolicy.action(
+            for: pointerTarget,
+            debugOverlay: isDebugOverlay()
+        ) == .dragSprite else { return }
         let mouseLocation = NSEvent.mouseLocation
         initialWindowFrame = window.frame
-        initialPointerPoint = convert(event.locationInWindow, from: nil)
+        initialPointerPoint = pointerPoint
         didMoveDuringDrag = false
         dragActivation.begin(at: PetWanderPoint(x: Double(mouseLocation.x), y: Double(mouseLocation.y)))
         onPointerDown()
@@ -850,6 +859,18 @@ private final class PetInteractionView: NSView {
             NSEvent.removeMonitor(monitor)
         }
         finishDrag(finalFrame: window.frame)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard pointerTarget == .bubble else {
+            pointerTarget = .none
+            super.mouseUp(with: event)
+            return
+        }
+        defer { pointerTarget = .none }
+        let point = convert(event.locationInWindow, from: nil)
+        guard let bubble = openableBubbleAt(point, bounds) else { return }
+        _ = onBubbleClicked(bubble)
     }
 
     private func updateDragAnimation(currentMouseLocation: NSPoint, fallbackFrame: NSRect) {
@@ -875,6 +896,7 @@ private final class PetInteractionView: NSView {
     }
 
     private func finishDrag(finalFrame: NSRect) {
+        pointerTarget = .none
         let frameMoved: Bool
         if let initialWindowFrame {
             frameMoved = hypot(

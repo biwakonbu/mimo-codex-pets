@@ -260,6 +260,9 @@ item is hidden in normal production launches and appears only when
 
 When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
+Only Mimo's visible character shape accepts dragging. The report and chat charms
+are click-only, while transparent panel space passes through to the application
+behind Mimo instead of becoming an accidental drag handle.
 When not being dragged, production lets Mimo wander by default. Each trip picks
 a target `100-280 pt` away while staying within a `560 pt` home radius and the
 visible screen. Mimo starts moving after about three seconds and chooses a new
