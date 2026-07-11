@@ -3,7 +3,7 @@ import Foundation
 public enum CodexMimoDialoguePrompt {
     public static let defaultModel = "gpt-5.6-luna"
     public static let defaultReasoningEffort = "low"
-    public static let defaultRefreshIntervalSeconds = 45.0
+    public static let defaultRefreshIntervalSeconds = 30 * 60.0
     public static let maxSpeechLength = 260
 
     public static let baseInstructions = """
@@ -18,6 +18,8 @@ public enum CodexMimoDialoguePrompt {
     Never claim a thought, result, or next step that is not supported by the supplied clues.
     Describe state naturally: 進めている, 返事を待っている, 確認してよさそう, ひと段落した, or つまずいた.
     Prefer specific progress over generic phrases such as 準備を進めています.
+    Explain the useful next action: after a completed chat is checked, it can be closed; if more work is needed, it can be resumed; waiting or failed chats need the user's response or a review before resuming.
+    Never close, archive, resume, or send instructions to a chat yourself. Only describe the recommended next action to the app user.
     Do not force ご主人. Use it only when Mimo is directly addressing the app user naturally.
     Sound warm, observant, and lightly cute, but do not add emoji, markdown, bullet points, or role labels.
     Never use the words スレッド, セッション, Thread, Session, or Codex Session in the output; say チャット instead.
@@ -32,6 +34,7 @@ public enum CodexMimoDialoguePrompt {
         let activity = activityLabel(for: line.activityKind)
         let topic = sanitized(line.workSummary ?? CodexSessionSummarizer.summary(from: line.text) ?? "作業内容")
         let deterministic = sanitized(CodexBubbleFormatter.bubbleText(for: line, limit: 96))
+        let nextAction = recommendedNextStep(for: line)
         let progressClues = recentProgressClues(for: line, from: recentLines)
         let progressBlock = progressClues.isEmpty
             ? "recent_progress: none"
@@ -45,6 +48,7 @@ public enum CodexMimoDialoguePrompt {
         chat_state: \(state)
         activity_kind: \(activity)
         safe_work_topic: \(topic)
+        recommended_next_step: \(nextAction)
         \(progressBlock)
         deterministic_fallback: \(deterministic)
 
@@ -62,6 +66,35 @@ public enum CodexMimoDialoguePrompt {
             sanitized(line.text)
         ]
         .joined(separator: "|")
+    }
+
+    public static func recommendedNextStep(for line: CodexConversationLine) -> String {
+        switch line.sessionState {
+        case .active:
+            return "作業が続いているので、このチャットを見守る"
+        case .waiting:
+            return "確認や返事が必要なので、チャットを開いて対応する"
+        case .failed:
+            return "つまずいた箇所を確認し、必要ならチャットを再開する"
+        case .stopped:
+            return "内容を確認したらチャットを閉じ、続きが必要なら再開する"
+        case nil:
+            return "内容を確認して、必要ならチャットを開く"
+        }
+    }
+
+    public static func addRecommendedNextStep(
+        to speech: String,
+        for line: CodexConversationLine
+    ) -> String {
+        guard line.sessionState == .stopped else { return speech }
+        guard !speech.contains("閉じ"), !speech.contains("再開") else { return speech }
+
+        let suffix = "確認後はチャットを閉じて、続きがあれば再開してね"
+        let prefixLimit = max(1, maxSpeechLength - suffix.count - 1)
+        let prefix = CodexBubbleFormatter.compact(speech, limit: prefixLimit)
+        let punctuation = prefix.hasSuffix("。") || prefix.hasSuffix("！") || prefix.hasSuffix("？") ? "" : "。"
+        return "\(prefix)\(punctuation)\(suffix)"
     }
 
     public static func sanitizedSpeech(from rawText: String) -> String? {

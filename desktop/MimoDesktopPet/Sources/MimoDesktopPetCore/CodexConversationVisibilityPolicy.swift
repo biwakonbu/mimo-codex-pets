@@ -1,7 +1,7 @@
 import Foundation
 
 public enum CodexConversationVisibilityPolicy {
-    public static let recentlyStoppedWindow: TimeInterval = 180.0
+    public static let recentlyStoppedWindow: TimeInterval = 30 * 60
 
     public static func shouldShow(
         threadStatus: CodexThreadStatus?,

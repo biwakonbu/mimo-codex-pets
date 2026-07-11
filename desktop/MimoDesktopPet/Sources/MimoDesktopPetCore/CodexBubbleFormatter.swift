@@ -407,15 +407,21 @@ public enum CodexBubbleFormatter {
             return "つまずいたところを見つけたよ"
         case .stopped:
             if summary == "レビューできます" {
-                return "確認してよさそうだよ"
+                return stoppedSpeechSummary("確認してよさそうだよ")
             }
             if summary == "作業を進めています" || summary == "更新を確認しました" {
-                return "ここまで進んでいるよ"
+                return stoppedSpeechSummary("ここまで進んでいるよ")
             }
-            return spokenSummary(summary)
+            return stoppedSpeechSummary(spokenSummary(summary))
         case .active, nil:
             return spokenSummary(summary)
         }
+    }
+
+    private static func stoppedSpeechSummary(_ speech: String) -> String {
+        guard !speech.contains("チャットを閉じ") else { return speech }
+        let punctuation = speech.hasSuffix("。") || speech.hasSuffix("！") || speech.hasSuffix("？") ? "" : "。"
+        return "\(speech)\(punctuation)確認後はチャットを閉じて、続きがあれば再開してね"
     }
 
     private static func spokenSummary(_ summary: String) -> String {

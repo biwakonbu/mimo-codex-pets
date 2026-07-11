@@ -131,7 +131,7 @@ final class CodexConversationExtractorTests: XCTestCase {
         XCTAssertEqual(failed?.sessionState, .failed)
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: stopped!),
-            "「stopped」は確認してよさそうだよ"
+            "「stopped」は確認してよさそうだよ。確認後はチャットを閉じて、続きがあれば再開してね"
         )
     }
 

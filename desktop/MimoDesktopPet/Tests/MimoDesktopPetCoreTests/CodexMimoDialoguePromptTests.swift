@@ -5,6 +5,7 @@ final class CodexMimoDialoguePromptTests: XCTestCase {
     func testDialogueDefaultsUseLunaAtLowReasoningEffort() {
         XCTAssertEqual(CodexMimoDialoguePrompt.defaultModel, "gpt-5.6-luna")
         XCTAssertEqual(CodexMimoDialoguePrompt.defaultReasoningEffort, "low")
+        XCTAssertEqual(CodexMimoDialoguePrompt.defaultRefreshIntervalSeconds, 30 * 60.0)
     }
 
     func testPromptUsesOnlySafeChatFields() {
@@ -24,11 +25,67 @@ final class CodexMimoDialoguePromptTests: XCTestCase {
         XCTAssertTrue(prompt.contains("chat_name: Mimo runtime QA"))
         XCTAssertTrue(prompt.contains("chat_state: 作業を進めている"))
         XCTAssertTrue(prompt.contains("safe_work_topic: 吹き出し要約の表示文言"))
+        XCTAssertTrue(prompt.contains("recommended_next_step: 作業が続いているので、このチャットを見守る"))
         XCTAssertFalse(prompt.contains("session_name:"))
         XCTAssertFalse(prompt.contains("session_state:"))
         XCTAssertFalse(prompt.contains("/Users/example"))
         XCTAssertFalse(prompt.contains("Authorization"))
         XCTAssertFalse(prompt.contains("Bearer"))
+    }
+
+    func testRecommendedNextStepExplainsHowToHandleCompletedChat() {
+        let line = CodexConversationLine(
+            threadId: "completed-1",
+            threadTitle: "資料作成",
+            speaker: "thread",
+            text: "確認してよさそう",
+            isAssistant: true,
+            activityKind: .threadStatus,
+            sessionState: .stopped
+        )
+
+        XCTAssertEqual(
+            CodexMimoDialoguePrompt.recommendedNextStep(for: line),
+            "内容を確認したらチャットを閉じ、続きが必要なら再開する"
+        )
+    }
+
+    func testGeneratedStoppedSpeechGetsAConcreteNextAction() {
+        let line = CodexConversationLine(
+            threadId: "completed-1",
+            threadTitle: "資料作成",
+            speaker: "thread",
+            text: "完了",
+            isAssistant: true,
+            activityKind: .threadStatus,
+            sessionState: .stopped
+        )
+
+        XCTAssertEqual(
+            CodexMimoDialoguePrompt.addRecommendedNextStep(
+                to: "「資料作成」はひと段落したよ",
+                for: line
+            ),
+            "「資料作成」はひと段落したよ。確認後はチャットを閉じて、続きがあれば再開してね"
+        )
+    }
+
+    func testGeneratedStoppedSpeechDoesNotRepeatAnExistingNextAction() {
+        let line = CodexConversationLine(
+            threadId: "completed-1",
+            threadTitle: "資料作成",
+            speaker: "thread",
+            text: "完了",
+            isAssistant: true,
+            activityKind: .threadStatus,
+            sessionState: .stopped
+        )
+        let speech = "「資料作成」は確認後に閉じて、必要なら再開してね"
+
+        XCTAssertEqual(
+            CodexMimoDialoguePrompt.addRecommendedNextStep(to: speech, for: line),
+            speech
+        )
     }
 
     func testPromptIncludesConcreteSafeRecentProgressClues() {

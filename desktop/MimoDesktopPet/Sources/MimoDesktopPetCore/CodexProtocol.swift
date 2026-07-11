@@ -1,5 +1,40 @@
 import Foundation
 
+public enum CodexTimestampParser {
+    public static func decodeIfPresent(from decoder: Decoder) -> Date? {
+        guard let container = try? decoder.singleValueContainer() else { return nil }
+        if let string = try? container.decode(String.self) {
+            return date(from: string)
+        }
+        if let number = try? container.decode(Double.self) {
+            return date(from: number)
+        }
+        return nil
+    }
+
+    public static func date(from string: String) -> Date? {
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = fractional.date(from: string) {
+            return date
+        }
+
+        let standard = ISO8601DateFormatter()
+        standard.formatOptions = [.withInternetDateTime]
+        if let date = standard.date(from: string) {
+            return date
+        }
+
+        return Double(string.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap(date(from:))
+    }
+
+    public static func date(from number: Double) -> Date? {
+        guard number.isFinite else { return nil }
+        let seconds = abs(number) >= 100_000_000_000 ? number / 1_000 : number
+        return Date(timeIntervalSince1970: seconds)
+    }
+}
+
 public enum CodexThreadActiveFlag: String, Codable, Equatable, Sendable {
     case waitingOnApproval
     case waitingOnUserInput
@@ -61,16 +96,32 @@ extension CodexTurnStatus {
 public struct CodexTurnSnapshot: Decodable, Equatable, Sendable {
     public let id: String
     public let status: CodexTurnStatus
+    public let startedAt: Date?
+    public let completedAt: Date?
 
     private enum CodingKeys: String, CodingKey {
         case id
         case status
+        case startedAt
+        case completedAt
     }
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decode(String.self, forKey: .id)
         status = try container.decodeIfPresent(CodexTurnStatus.self, forKey: .status) ?? .inProgress
+        startedAt = Self.decodeDate(.startedAt, from: container)
+        completedAt = Self.decodeDate(.completedAt, from: container)
+    }
+
+    private static func decodeDate(
+        _ key: CodingKeys,
+        from container: KeyedDecodingContainer<CodingKeys>
+    ) -> Date? {
+        guard container.contains(key), let decoder = try? container.superDecoder(forKey: key) else {
+            return nil
+        }
+        return CodexTimestampParser.decodeIfPresent(from: decoder)
     }
 }
 
@@ -79,12 +130,22 @@ public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
     public let isEphemeral: Bool
     public let status: CodexThreadStatus
     public let turns: [CodexTurnSnapshot]
+    public let createdAt: Date?
+    public let updatedAt: Date?
+    public let recencyAt: Date?
+
+    public var lastActivityDate: Date? {
+        recencyAt ?? updatedAt ?? turns.last?.completedAt ?? turns.last?.startedAt ?? createdAt
+    }
 
     private enum CodingKeys: String, CodingKey {
         case id
         case ephemeral
         case status
         case turns
+        case createdAt
+        case updatedAt
+        case recencyAt
     }
 
     public init(from decoder: Decoder) throws {
@@ -93,6 +154,19 @@ public struct CodexThreadSnapshot: Decodable, Equatable, Sendable {
         isEphemeral = try container.decodeIfPresent(Bool.self, forKey: .ephemeral) ?? false
         status = try container.decodeIfPresent(CodexThreadStatus.self, forKey: .status) ?? .idle
         turns = try container.decodeIfPresent([CodexTurnSnapshot].self, forKey: .turns) ?? []
+        createdAt = Self.decodeDate(.createdAt, from: container)
+        updatedAt = Self.decodeDate(.updatedAt, from: container)
+        recencyAt = Self.decodeDate(.recencyAt, from: container)
+    }
+
+    private static func decodeDate(
+        _ key: CodingKeys,
+        from container: KeyedDecodingContainer<CodingKeys>
+    ) -> Date? {
+        guard container.contains(key), let decoder = try? container.superDecoder(forKey: key) else {
+            return nil
+        }
+        return CodexTimestampParser.decodeIfPresent(from: decoder)
     }
 }
 

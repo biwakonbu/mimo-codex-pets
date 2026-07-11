@@ -88,7 +88,7 @@ final class CodexAppServerClient {
     private var threadAssistantFinalById: [String: Bool] = [:]
     private var threadDisplayOrder: [String] = []
     private var notificationThreadLastSeenById: [String: DispatchTime] = [:]
-    private var threadLastActivityAtById: [String: DispatchTime] = [:]
+    private var threadLastActivityAtById: [String: Date] = [:]
     private var loadedThreadIds: [String] = []
     private var listedThreadIds: [String] = []
     private var verifiedThreadIds = Set<String>()
@@ -105,6 +105,7 @@ final class CodexAppServerClient {
     private var pendingMimoDialogueTurns: [String: PendingMimoDialogue] = [:]
     private var mimoDialogueAwaitingTurnKey: String?
     private var mimoDialogueLastGeneratedByThread: [String: DispatchTime] = [:]
+    private var mimoDialogueLastOrganizationAt: DispatchTime?
     private var offlineBubbleText: String?
     private var pollTimer: DispatchSourceTimer?
     private var handshakeTimer: DispatchSourceTimer?
@@ -320,6 +321,7 @@ final class CodexAppServerClient {
         if !keepSpeechCache {
             mimoDialogueSpeechByKey.removeAll()
             mimoDialogueLastGeneratedByThread.removeAll()
+            mimoDialogueLastOrganizationAt = nil
         }
     }
 
@@ -670,6 +672,7 @@ final class CodexAppServerClient {
                 conversationByThread[id] = lines
             }
             if let snapshot = decodeThreadSnapshot(from: thread) {
+                rememberSnapshotActivity(snapshot)
                 updateThreadActivity(
                     threadId: snapshot.id,
                     title: title,
@@ -722,6 +725,7 @@ final class CodexAppServerClient {
         if !lines.isEmpty {
             conversationByThread[snapshot.id] = lines
         }
+        rememberSnapshotActivity(snapshot)
         updateThreadActivity(
             threadId: snapshot.id,
             title: title,
@@ -1001,6 +1005,7 @@ final class CodexAppServerClient {
         guard let pending = pendingMimoDialogueTurns.removeValue(forKey: turnId) else { return }
         let speech = status == .completed
             ? CodexMimoDialoguePrompt.sanitizedSpeech(from: pending.text)
+                .map { CodexMimoDialoguePrompt.addRecommendedNextStep(to: $0, for: pending.sourceLine) }
             : nil
         finishMimoDialogue(key: pending.key, speech: speech)
     }
@@ -1046,6 +1051,11 @@ final class CodexAppServerClient {
     private func decodeThreadSnapshot(from object: [String: Any]) -> CodexThreadSnapshot? {
         guard let data = try? JSONSerialization.data(withJSONObject: object) else { return nil }
         return try? decoder.decode(CodexThreadSnapshot.self, from: data)
+    }
+
+    private func rememberSnapshotActivity(_ snapshot: CodexThreadSnapshot) {
+        guard let lastActivityDate = snapshot.lastActivityDate else { return }
+        threadLastActivityAtById[snapshot.id] = lastActivityDate
     }
 
     private func threadIdFromThreadStartResult(_ result: Any?) -> String? {
@@ -1176,7 +1186,7 @@ final class CodexAppServerClient {
         let now = DispatchTime.now()
         notificationThreadLastSeenById[id] = now
         if markActivity {
-            threadLastActivityAtById[id] = now
+            threadLastActivityAtById[id] = Date()
         }
         rememberThreadOrder([id])
         if notificationThreadLastSeenById.count > 6 {
@@ -1296,7 +1306,7 @@ final class CodexAppServerClient {
     private func combinedConversationLines() -> [CodexConversationLine] {
         let visibleThreadIds = threadDisplayOrder.filter { threadId in
             let lastActivityAge = threadLastActivityAtById[threadId].map {
-                secondsBetween($0, DispatchTime.now())
+                max(0, Date().timeIntervalSince($0))
             }
             return CodexConversationVisibilityPolicy.shouldShow(
                 threadStatus: threadStatusesById[threadId],
@@ -1332,11 +1342,20 @@ final class CodexAppServerClient {
     ) {
         guard mimoDialogueEnabled, mimoDialogueBackoffHasElapsed() else { return }
         guard proxyIsRunning, proxyProcess?.isRunning == true, transportInitialized else { return }
+        let now = DispatchTime.now()
+        let lastOrganizationAge = mimoDialogueLastOrganizationAt.map {
+            secondsBetween($0, now)
+        }
+        guard CodexMimoDialogueCadencePolicy.shouldOrganize(
+            lastOrganizationAge: lastOrganizationAge,
+            interval: mimoDialogueRefreshSeconds
+        ) else {
+            return
+        }
         let queuedKeys = Set(mimoDialogueQueue.map(CodexMimoDialoguePrompt.cacheKey(for:)))
         let excludedKeys = Set(mimoDialogueSpeechByKey.keys)
             .union(pendingMimoDialogueKeys)
             .union(queuedKeys)
-        let now = DispatchTime.now()
         let throttledThreadIds = Set(mimoDialogueLastGeneratedByThread.compactMap { threadId, generatedAt in
             secondsBetween(generatedAt, now) < mimoDialogueRefreshSeconds ? threadId : nil
         })
@@ -1356,6 +1375,7 @@ final class CodexAppServerClient {
         guard !isMimoDialogueThread(line.threadId) else { return }
 
         let key = CodexMimoDialoguePrompt.cacheKey(for: line)
+        mimoDialogueLastOrganizationAt = now
         pendingMimoDialogueKeys.insert(key)
         mimoDialogueLineByKey[key] = line
         mimoDialogueQueue.append(line)
@@ -1461,6 +1481,9 @@ final class CodexAppServerClient {
             if mimoDialogueSpeechByKey.count > 40 {
                 mimoDialogueSpeechByKey.removeValue(forKey: mimoDialogueSpeechByKey.keys.first ?? key)
             }
+            mimoDialogueLastOrganizationAt = .now()
+        } else {
+            mimoDialogueBackoffUntil = .now() + .seconds(60)
         }
         pendingMimoDialogueKeys.remove(key)
         mimoDialogueLineByKey.removeValue(forKey: key)

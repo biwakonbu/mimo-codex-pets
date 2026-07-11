@@ -27,6 +27,23 @@ public enum PetInteractionActionPolicy {
     }
 }
 
+public enum PetPointerPassThroughPolicy {
+    public static func ignoresMouseEvents(
+        clickThrough: Bool,
+        debugOverlay: Bool,
+        isDragging: Bool,
+        target: PetInteractionHitTarget
+    ) -> Bool {
+        if clickThrough {
+            return true
+        }
+        if debugOverlay || isDragging {
+            return false
+        }
+        return target == .none
+    }
+}
+
 public enum PetInteractionHitRegion {
     public static func contains(
         point: PetWanderPoint,
@@ -46,7 +63,8 @@ public enum PetInteractionHitRegion {
         point: PetWanderPoint,
         bounds: PetDragFrame,
         bubbleFrames: [PetDragFrame],
-        debugOverlay: Bool
+        debugOverlay: Bool,
+        spriteAlphaMask: PetSpriteAlphaMask? = nil
     ) -> PetInteractionHitTarget {
         guard point.x >= 0, point.y >= 0, point.x <= bounds.width, point.y <= bounds.height else {
             return .none
@@ -54,7 +72,7 @@ public enum PetInteractionHitRegion {
         if debugOverlay {
             return .sprite
         }
-        if containsSprite(point: point, bounds: bounds) {
+        if containsSprite(point: point, bounds: bounds, alphaMask: spriteAlphaMask) {
             return .sprite
         }
         if bubbleFrames.contains(where: { containsBubble(point: point, in: $0) }) {
@@ -81,7 +99,11 @@ public enum PetInteractionHitRegion {
         return outsideX * outsideX + outsideY * outsideY <= radius * radius
     }
 
-    public static func containsSprite(point: PetWanderPoint, bounds: PetDragFrame) -> Bool {
+    public static func containsSprite(
+        point: PetWanderPoint,
+        bounds: PetDragFrame,
+        alphaMask: PetSpriteAlphaMask? = nil
+    ) -> Bool {
         guard point.x >= 0, point.y >= 0, point.x <= bounds.width, point.y <= bounds.height else {
             return false
         }
@@ -93,10 +115,11 @@ public enum PetInteractionHitRegion {
             return false
         }
 
-        // The sprite image is centered inside its cell with transparent margins.
-        // Use a union of the visible character masses so empty panel space does
-        // not become a drag handle while wings, backpack, halo, and feet remain
-        // easy to grab.
+        if let alphaMask {
+            return alphaMask.contains(normalizedX: localX, normalizedY: localY)
+        }
+
+        // Keep the fallback draggable when the spritesheet cannot be loaded.
         return containsEllipse(localX, localY, centerX: 0.50, centerY: 0.06, radiusX: 0.22, radiusY: 0.055) ||
             containsEllipse(localX, localY, centerX: 0.50, centerY: 0.28, radiusX: 0.30, radiusY: 0.25) ||
             containsEllipse(localX, localY, centerX: 0.50, centerY: 0.57, radiusX: 0.34, radiusY: 0.31) ||

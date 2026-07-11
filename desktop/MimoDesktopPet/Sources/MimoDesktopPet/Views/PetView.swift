@@ -45,7 +45,8 @@ private struct ProductionPetView: View {
 
             AnimatedPetSpriteView(
                 animation: viewModel.presentation.animation,
-                frameProvider: frameProvider
+                frameProvider: frameProvider,
+                onFrameChanged: viewModel.updateRenderedSpriteFrame
             )
             .frame(
                 width: CGFloat(PetKataribeStageLayout.spriteFrame.width),
@@ -846,7 +847,8 @@ private struct DebugPetView: View {
 
             AnimatedPetSpriteView(
                 animation: viewModel.presentation.animation,
-                frameProvider: frameProvider
+                frameProvider: frameProvider,
+                onFrameChanged: viewModel.updateRenderedSpriteFrame
             )
             .frame(width: 176, height: 190)
 

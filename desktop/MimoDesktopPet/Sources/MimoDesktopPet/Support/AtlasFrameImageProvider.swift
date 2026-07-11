@@ -13,6 +13,7 @@ final class AtlasFrameImageProvider {
 
     private let atlas: CGImage
     private var cache: [String: NSImage] = [:]
+    private var hitMaskCache: [String: PetSpriteAlphaMask] = [:]
 
     init(spritesheetURL: URL) throws {
         guard let source = CGImageSourceCreateWithURL(spritesheetURL as CFURL, nil) else {
@@ -34,14 +35,7 @@ final class AtlasFrameImageProvider {
         if let cached = cache[key] {
             return cached
         }
-
-        let rect = CGRect(
-            x: normalizedFrame * PetAtlasContract.cellWidth,
-            y: spec.row * PetAtlasContract.cellHeight,
-            width: PetAtlasContract.cellWidth,
-            height: PetAtlasContract.cellHeight
-        )
-        guard let cropped = atlas.cropping(to: rect) else {
+        guard let cropped = croppedFrame(spec: spec, frame: normalizedFrame) else {
             return nil
         }
 
@@ -52,4 +46,32 @@ final class AtlasFrameImageProvider {
         cache[key] = image
         return image
     }
+
+    func hitMask(for state: PetAnimationState, frame: Int) -> PetSpriteAlphaMask? {
+        let spec = PetAtlasContract.spec(for: state)
+        let normalizedFrame = max(0, min(frame, spec.frameCount - 1))
+        let key = "\(state.rawValue)-\(normalizedFrame)"
+        if let cached = hitMaskCache[key] {
+            return cached
+        }
+        guard
+            let cropped = croppedFrame(spec: spec, frame: normalizedFrame),
+            let mask = PetSpriteAlphaMask(cgImage: cropped)
+        else {
+            return nil
+        }
+        hitMaskCache[key] = mask
+        return mask
+    }
+
+    private func croppedFrame(spec: PetAnimationSpec, frame: Int) -> CGImage? {
+        let rect = CGRect(
+            x: frame * PetAtlasContract.cellWidth,
+            y: spec.row * PetAtlasContract.cellHeight,
+            width: PetAtlasContract.cellWidth,
+            height: PetAtlasContract.cellHeight
+        )
+        return atlas.cropping(to: rect)
+    }
+
 }

@@ -153,8 +153,13 @@ in `MIMO_BUBBLE_TEST_MODE=1`. Set `MIMO_CODEX_DIALOGUE_DISABLED=1` to force the
 deterministic formatter, `MIMO_CODEX_DIALOGUE_ENABLED=1` to force Codex-backed
 speech in tests, or `MIMO_CODEX_DIALOGUE_MODEL=gpt-5.6-terra` to override the
 Codex model. The production default is `gpt-5.6-luna` with `effort=low` for the
-short latency-sensitive rewrite turn. `MIMO_CODEX_DIALOGUE_REFRESH_SECONDS=45`
-controls the per-session regeneration cadence.
+short latency-sensitive rewrite turn. Mimo asks that separate ephemeral chat
+for a small conversation-list reorganization at most once every 30 minutes;
+`MIMO_CODEX_DIALOGUE_REFRESH_SECONDS` can override that cadence for diagnostics.
+The generated speech explains the chat name, concrete work, and the next useful
+action. A completed chat is recommended for closing after review, while a chat
+that still needs work is recommended for resuming. Mimo never closes or resumes
+the user's chat automatically.
 Production bubbles use a large primary report card plus smaller nearby context
 notes instead of forcing the full panel width. The primary bubble can grow to
 four text lines, jitters only within Mimo's near speech area, and uses a soft
@@ -260,9 +265,10 @@ item is hidden in normal production launches and appears only when
 
 When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
-Only Mimo's visible character shape accepts dragging. The report and chat charms
-are click-only, while transparent panel space passes through to the application
-behind Mimo instead of becoming an accidental drag handle.
+Only non-transparent pixels in Mimo's currently rendered animation frame accept
+dragging. The report and chat charms are click-only, while transparent sprite
+and panel space make the panel ignore the pointer so the application behind
+Mimo receives the interaction.
 When not being dragged, production lets Mimo wander by default. Each trip picks
 a target `100-280 pt` away while staying within a `560 pt` home radius and the
 visible screen. Mimo starts moving after about three seconds and chooses a new

@@ -62,6 +62,42 @@ final class PetInteractionHitRegionTests: XCTestCase {
         )
     }
 
+    func testSpriteAlphaMaskOverridesFallbackShape() throws {
+        let bounds = productionBounds()
+        let transparentMask = try XCTUnwrap(PetSpriteAlphaMask(
+            width: 1,
+            height: 1,
+            alphaValues: [0]
+        ))
+        let opaqueMask = try XCTUnwrap(PetSpriteAlphaMask(
+            width: 1,
+            height: 1,
+            alphaValues: [255]
+        ))
+        let point = PetWanderPoint(x: 246, y: 140)
+
+        XCTAssertEqual(
+            PetInteractionHitRegion.target(
+                point: point,
+                bounds: bounds,
+                bubbleFrames: [],
+                debugOverlay: false,
+                spriteAlphaMask: transparentMask
+            ),
+            .none
+        )
+        XCTAssertEqual(
+            PetInteractionHitRegion.target(
+                point: point,
+                bounds: bounds,
+                bubbleFrames: [],
+                debugOverlay: false,
+                spriteAlphaMask: opaqueMask
+            ),
+            .sprite
+        )
+    }
+
     func testBubbleCornerIsNotInteractiveOutsideRoundedShape() {
         let bounds = productionBounds()
         let bubbleFrame = PetDragFrame(x: 80, y: 280, width: 360, height: 100)

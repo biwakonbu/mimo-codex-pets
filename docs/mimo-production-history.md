@@ -349,7 +349,15 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   `live_mimo_dialogue_smoke.py` verifies the live generation path without
   writing into user work sessions. The rewrite default is now `gpt-5.6-luna`
   with `effort=low`, while `MIMO_CODEX_DIALOGUE_MODEL` remains an explicit
-  override for diagnostics
+  override for diagnostics. A global cadence gate allows one conversation-list
+  reorganization every 30 minutes, with a short failure backoff; this bounds
+  token use even when app-server notifications arrive continuously
+- initial `thread/list` and `thread/read` hydration restores the public
+  `createdAt`, `updatedAt`, `recencyAt`, and turn timestamps before visibility
+  filtering. Active chats remain visible, while a completed chat stays in the
+  reporting surface only during the recent window so Mimo can tell the user to
+  review it, close it, or resume it when more work is needed. The companion
+  never performs those user-side actions automatically
 - production speech bubbles use a large primary report plus smaller nearby
   context notes instead of forcing the full panel width; primary Mimo speech now
   caps at 398pt, can grow to four lines, and `PetSpeechBubblePaginator` advances
@@ -423,9 +431,11 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   title-only updates are omitted. `CodexConversationVisibilityPolicyTests` and
   the fake app-server E2E lock this selection behavior.
 - Interaction hit testing now separates the character from the message surface:
-  visible Mimo pixels start dragging, rounded report/charm shapes only open a
-  chat on click, and transparent panel space returns no hit so the app below can
-  receive the pointer.
+  the current animation frame's alpha mask is the drag surface, rounded
+  report/charm shapes only open a chat on click, and transparent sprite/panel
+  pixels make the `NSPanel` ignore mouse events so the app below receives the
+  pointer. Window-background dragging is disabled to prevent AppKit from
+  reclaiming transparent clicks.
 - Reports paginate at 64 characters in tight 128pt/184pt paper tiers and keep
   the chat name visible. The charm rail is bottom-anchored: each narrated chat
   is inserted below, pushes older charms upward, and never swaps in both

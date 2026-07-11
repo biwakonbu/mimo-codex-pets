@@ -32,6 +32,9 @@ final class PetViewModel: ObservableObject {
     private var bubbleFramesById: [String: PetDragFrame] = [:]
     private var manualMovementActive = false
     private var ambientMovementActive = false
+    private var renderedSpriteAnimation: PetAnimationState = .idle
+    private var renderedSpriteFrameIndex = 0
+    private var spriteHitMaskProvider: ((PetAnimationState, Int) -> PetSpriteAlphaMask?)?
 
     init(
         debugOverlay: Bool = PetDebugOverlayPolicy.isEnabled(),
@@ -60,6 +63,7 @@ final class PetViewModel: ObservableObject {
         } else {
             presentationLogURL = nil
         }
+        renderedSpriteAnimation = presentation.animation
     }
 
     func apply(snapshot: CodexStateSnapshot) {
@@ -186,6 +190,18 @@ final class PetViewModel: ObservableObject {
         hoveredBubbleId = nextId
     }
 
+    func configureSpriteHitMaskProvider(
+        _ provider: @escaping (PetAnimationState, Int) -> PetSpriteAlphaMask?
+    ) {
+        spriteHitMaskProvider = provider
+    }
+
+    func updateRenderedSpriteFrame(animation: PetAnimationState, frame: Int) {
+        guard animation == presentation.animation else { return }
+        renderedSpriteAnimation = animation
+        renderedSpriteFrameIndex = max(0, frame)
+    }
+
     func containsInteractiveContent(at point: PetWanderPoint, in bounds: PetDragFrame) -> Bool {
         interactionTarget(at: point, in: bounds) != .none
     }
@@ -195,7 +211,8 @@ final class PetViewModel: ObservableObject {
             point: point,
             bounds: bounds,
             bubbleFrames: Array(bubbleFramesById.values),
-            debugOverlay: debugOverlay
+            debugOverlay: debugOverlay,
+            spriteAlphaMask: spriteHitMaskProvider?(renderedSpriteAnimation, renderedSpriteFrameIndex)
         )
     }
 
@@ -217,7 +234,12 @@ final class PetViewModel: ObservableObject {
     }
 
     private func apply(change: PetPresentationCoordinatorChange) {
+        let previousAnimation = presentation.animation
         presentation = coordinator.presentation
+        if presentation.animation != previousAnimation {
+            renderedSpriteAnimation = presentation.animation
+            renderedSpriteFrameIndex = 0
+        }
         visibleBubbles = coordinator.visibleBubbles
         conversationLines = coordinator.conversationLines
         kataribeStage = PetKataribeStagePlanner.presentation(

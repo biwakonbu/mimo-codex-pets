@@ -392,7 +392,7 @@ final class CodexBubbleFormatterTests: XCTestCase {
         )
         XCTAssertEqual(
             CodexBubbleFormatter.bubbleText(for: stopped),
-            "「Mimo runtime QA」は作業内容の説明を確認してよさそうだよ"
+            "「Mimo runtime QA」は作業内容の説明を確認してよさそうだよ。確認後はチャットを閉じて、続きがあれば再開してね"
         )
         XCTAssertEqual(
             CodexBubbleFormatter.contextText(for: stopped),

@@ -27,7 +27,7 @@ final class CodexConversationVisibilityPolicyTests: XCTestCase {
             CodexConversationVisibilityPolicy.shouldShow(
                 threadStatus: .idle,
                 latestTurnStatus: .completed,
-                lastActivityAge: 179
+                lastActivityAge: CodexConversationVisibilityPolicy.recentlyStoppedWindow - 1
             )
         )
     }
@@ -37,7 +37,7 @@ final class CodexConversationVisibilityPolicyTests: XCTestCase {
             CodexConversationVisibilityPolicy.shouldShow(
                 threadStatus: .idle,
                 latestTurnStatus: .completed,
-                lastActivityAge: 181
+                lastActivityAge: CodexConversationVisibilityPolicy.recentlyStoppedWindow + 1
             )
         )
     }

@@ -29,6 +29,7 @@ final class PetWindowController: NSObject {
     private var movementHandler = PetMovementEventHandler()
     private var movementTimer: Timer?
     private var movementTimerIsActiveCadence = false
+    private var pointerPassThroughTimer: Timer?
     private var movementAnimationActive = false
     private var movementAnimationWasManual = false
     private var manualDragActive = false
@@ -91,7 +92,7 @@ final class PetWindowController: NSObject {
         panel.isOpaque = false
         panel.hasShadow = viewModel.debugOverlay
         applyWindowZOrderPolicy()
-        panel.isMovableByWindowBackground = true
+        panel.isMovableByWindowBackground = false
 
         let frameProvider: AtlasFrameImageProvider?
         do {
@@ -100,6 +101,11 @@ final class PetWindowController: NSObject {
         } catch {
             frameProvider = nil
             viewModel.apply(snapshot: .offline)
+        }
+        if let frameProvider {
+            viewModel.configureSpriteHitMaskProvider { state, frame in
+                frameProvider.hitMask(for: state, frame: frame)
+            }
         }
 
         let rootView = PetView(
@@ -151,6 +157,9 @@ final class PetWindowController: NSObject {
                     in: PetDragFrame(bounds)
                 ) ?? .none
             },
+            onPointerLocationChanged: { [weak self] in
+                self?.updatePointerPassThrough()
+            },
             onHoveredBubbleChanged: { [weak viewModel] bubble in
                 viewModel?.setHoveredBubble(bubble)
             },
@@ -177,8 +186,8 @@ final class PetWindowController: NSObject {
 
         viewModel.$clickThrough
             .receive(on: RunLoop.main)
-            .sink { [weak panel] clickThrough in
-                panel?.ignoresMouseEvents = clickThrough
+            .sink { [weak self] _ in
+                self?.updatePointerPassThrough()
             }
             .store(in: &cancellables)
 
@@ -187,6 +196,7 @@ final class PetWindowController: NSObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] debugOverlay in
                 self?.updateWindowAppearance(debugOverlay: debugOverlay)
+                self?.updatePointerPassThrough()
             }
             .store(in: &cancellables)
 
@@ -212,15 +222,18 @@ final class PetWindowController: NSObject {
         if !showcaseMode {
             startMovementTracking()
         }
+        startPointerPassThroughTracking()
     }
 
     deinit {
         movementTimer?.invalidate()
+        pointerPassThroughTimer?.invalidate()
     }
 
     func show() {
         applyWindowZOrderPolicy()
         panel.orderFrontRegardless()
+        updatePointerPassThrough()
     }
 
     func hide() {
@@ -229,6 +242,40 @@ final class PetWindowController: NSObject {
 
     private func startMovementTracking() {
         scheduleMovementTimer(activeCadence: false, force: true)
+    }
+
+    private func startPointerPassThroughTracking() {
+        let timer = Timer(timeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.updatePointerPassThrough()
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        pointerPassThroughTimer = timer
+        updatePointerPassThrough()
+    }
+
+    private func updatePointerPassThrough() {
+        let target: PetInteractionHitTarget
+        if let contentView = panel.contentView {
+            let windowPoint = panel.convertPoint(fromScreen: NSEvent.mouseLocation)
+            let localPoint = contentView.convert(windowPoint, from: nil)
+            target = viewModel.interactionTarget(
+                at: PetWanderPoint(x: Double(localPoint.x), y: Double(localPoint.y)),
+                in: PetDragFrame(contentView.bounds)
+            )
+        } else {
+            target = .none
+        }
+        let shouldIgnore = PetPointerPassThroughPolicy.ignoresMouseEvents(
+            clickThrough: viewModel.clickThrough,
+            debugOverlay: viewModel.debugOverlay,
+            isDragging: manualDragActive,
+            target: target
+        )
+        if panel.ignoresMouseEvents != shouldIgnore {
+            panel.ignoresMouseEvents = shouldIgnore
+        }
     }
 
     private func scheduleMovementTimer(activeCadence: Bool, force: Bool = false) {
@@ -717,6 +764,7 @@ private final class PetInteractionView: NSView {
     private let onDragEnded: () -> Void
     private let openableBubbleAt: (NSPoint, NSRect) -> PetSpeechBubble?
     private let interactionTargetAt: (NSPoint, NSRect) -> PetInteractionHitTarget
+    private let onPointerLocationChanged: () -> Void
     private let onHoveredBubbleChanged: (PetSpeechBubble?) -> Void
     private let onBubbleClicked: (PetSpeechBubble) -> Bool
     private let onClicked: () -> Void
@@ -732,6 +780,7 @@ private final class PetInteractionView: NSView {
         onDragEnded: @escaping () -> Void,
         openableBubbleAt: @escaping (NSPoint, NSRect) -> PetSpeechBubble?,
         interactionTargetAt: @escaping (NSPoint, NSRect) -> PetInteractionHitTarget,
+        onPointerLocationChanged: @escaping () -> Void,
         onHoveredBubbleChanged: @escaping (PetSpeechBubble?) -> Void,
         onBubbleClicked: @escaping (PetSpeechBubble) -> Bool,
         onClicked: @escaping () -> Void
@@ -744,6 +793,7 @@ private final class PetInteractionView: NSView {
         self.onDragEnded = onDragEnded
         self.openableBubbleAt = openableBubbleAt
         self.interactionTargetAt = interactionTargetAt
+        self.onPointerLocationChanged = onPointerLocationChanged
         self.onHoveredBubbleChanged = onHoveredBubbleChanged
         self.onBubbleClicked = onBubbleClicked
         self.onClicked = onClicked
@@ -810,6 +860,7 @@ private final class PetInteractionView: NSView {
 
     override func mouseMoved(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
+        onPointerLocationChanged()
         let bubble = openableBubbleAt(point, bounds)
         onHoveredBubbleChanged(bubble)
         if bubble != nil {
@@ -820,6 +871,7 @@ private final class PetInteractionView: NSView {
     }
 
     override func mouseExited(with event: NSEvent) {
+        onPointerLocationChanged()
         onHoveredBubbleChanged(nil)
         NSCursor.arrow.set()
         guard dragHandler.isDragging else { return }
