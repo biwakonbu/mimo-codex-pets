@@ -12,7 +12,10 @@ public enum PetAutonomousMotionFrameLimiter {
         let distance = hypot(deltaX, deltaY)
         guard distance > 0 else { return desired }
 
-        let safeElapsed = min(max(elapsed, 0), 1.0 / 10.0)
+        // A delayed timer tick must not make the panel catch up in a visible jump.
+        // Keep normal 60 Hz motion unchanged while limiting delayed catch-up to
+        // one 30 Hz frame; later ticks continue from the submitted origin.
+        let safeElapsed = min(max(elapsed, 0), 1.0 / 30.0)
         let maximumTravel = max(0, maximumSpeed) * safeElapsed
         guard maximumTravel > 0 else { return current }
         guard distance > maximumTravel else { return desired }

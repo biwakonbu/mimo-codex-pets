@@ -272,9 +272,9 @@ def require_mimicry_contract() -> None:
 def require_stamina_contract() -> None:
     stamina_terms = [
         "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=0",
-        "90-240 pt",
+        "100-280 pt",
         "34 pt/s",
-        "360 pt",
+        "560 pt",
         "0.36s",
         "stamina",
         "below 50%",
@@ -288,9 +288,9 @@ def require_stamina_contract() -> None:
         [
             "default production enables autonomous window movement",
             "MIMO_AUTONOMOUS_WINDOW_MOVEMENT=0",
-            "90-240 pt",
+            "100-280 pt",
             "34 pt/s",
-            "360 pt",
+            "560 pt",
             "0.36s",
             "keeps the complete stage visible while walking",
             "rest/idle moments",

@@ -41,7 +41,7 @@ import CoreGraphics
 import Foundation
 
 let windowNumber = CGWindowID(Int(CommandLine.arguments[1]) ?? 0)
-let productionHomeRadius = 360.0
+let productionHomeRadius = 560.0
 
 func windowOrigin() -> (Double, Double)? {
     guard
@@ -79,6 +79,7 @@ let deltas = zip(samples.dropFirst(), samples).map { current, previous in
     hypot(current.0 - previous.0, current.1 - previous.1)
 }
 let largestDelta = deltas.max() ?? 0
+let delayedWindowSamples = deltas.filter { $0 > 2.5 }.count
 let movingSamples = deltas.filter { $0 > 0.02 }.count
 
 guard movingSamples >= 3 else {
@@ -95,8 +96,15 @@ guard maxDistanceFromHome <= productionHomeRadius else {
     exit(1)
 }
 
-guard largestDelta <= 2.5 else {
-    fputs("autonomous home-radius movement jumped too far in one sample: \(largestDelta)\n", stderr)
+// CGWindow can coalesce one or two integer-position updates even though the
+// controller submits a smaller bounded step. Reject repeated jumps while
+// allowing that single observation artifact.
+guard largestDelta <= 6, delayedWindowSamples <= 2 else {
+    fputs(
+        "autonomous home-radius movement jumped too far in the observed window: " +
+            "largest=\(largestDelta), delayedSamples=\(delayedWindowSamples)\n",
+        stderr
+    )
     exit(1)
 }
 SWIFT
@@ -118,4 +126,4 @@ PY
 
 kill -0 "$APP_PID" >/dev/null
 
-echo "E2E passed: forced production autonomous movement stays inside Mimo's 360px home radius."
+echo "E2E passed: forced production autonomous movement stays inside Mimo's 560px home radius."

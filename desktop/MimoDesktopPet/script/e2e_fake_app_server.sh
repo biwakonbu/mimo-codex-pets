@@ -53,12 +53,20 @@ while time.monotonic() < deadline:
     closed_markers = {"別チャットの確認", "更新された別チャット"}
     closed_seen = any(closed_markers.intersection(row.get("kataribeCharmTitles", [])) for row in rows)
     closed_removed = closed_seen and not closed_markers.intersection(rows[-1].get("kataribeCharmTitles", []))
+    # The fake later activates this chat, so only inspect the initial connected
+    # window before that notification sequence has had time to run.
+    initial_rows = rows[:12]
+    initial_stopped_hidden = not any(
+        "別チャットの確認" in row.get("kataribeCharmTitles", [])
+        for row in initial_rows
+    )
     started_seen = any("新しい実装チャット" in row.get("kataribeCharmTitles", []) for row in rows)
-    if named_stage and generated_narration and walking_stage and closed_removed and started_seen:
+    if named_stage and generated_narration and walking_stage and closed_removed and initial_stopped_hidden and started_seen:
         sys.exit(0)
     last_state = (
         f"named_stage={named_stage}, generated_narration={generated_narration}, "
-        f"walking_stage={walking_stage}, closed_removed={closed_removed}, started_seen={started_seen}"
+        f"walking_stage={walking_stage}, closed_removed={closed_removed}, "
+        f"initial_stopped_hidden={initial_stopped_hidden}, started_seen={started_seen}"
     )
     time.sleep(0.25)
 

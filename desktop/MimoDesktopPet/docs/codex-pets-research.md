@@ -262,8 +262,10 @@ State behavior:
   synchronously every timer tick. This prevents paused or queued tween updates
   from visually catching up in one scary jump.
 - autonomous movement caps production speed at `34 pt/s`, chooses each trip
-  `90-240 pt` away, keeps targets inside a `360 pt` home radius, and intentionally
-  inserts rest/idle moments between trips. Directional animation begins only
+  `100-280 pt` away, keeps targets inside a `560 pt` home radius, and intentionally
+  inserts rest/idle moments between trips. The first trip starts after about
+  three seconds; later trips are selected every `14-32s` with a high but not
+  absolute start probability. Directional animation begins only
   after `8 pt` of real displacement, then loops at a fixed `0.36s` per frame.
   During Kataribe narration, Mimo keeps the complete stage visible while walking.
   Ordinary narration changes wait for a rest beat instead of stopping the panel.
@@ -551,6 +553,10 @@ Manual or visual checks:
   fake leak scenarios.
 - Six-chat E2E separately verifies one focused report and six readable,
   accessible, clickable chat names with no hidden-count label.
+- The production rail is intentionally selective: active or in-progress chats
+  remain visible, while a stopped chat remains for `180s` only when Mimo
+  observed its activity during the current connection. Initial old idle history
+  and title-only updates do not consume a charm slot.
 - Primary narration selection is not a transcript cursor. Mimo normally favors the
   focused Codex thread, but a failure, confirmation-waiting thread, or
   review-ready thread can take the primary report ahead of a merely active

@@ -32,7 +32,7 @@ final class PetAutonomousMotionFrameLimiterTests: XCTestCase {
             elapsed: 3
         )
 
-        XCTAssertEqual(origin, PetWanderPoint(x: 9, y: 0))
+        XCTAssertEqual(origin, PetWanderPoint(x: 3, y: 0))
     }
 
     func testZeroSpeedHoldsCurrentOriginWhenDesiredIsFarAway() {

@@ -261,9 +261,10 @@ item is hidden in normal production launches and appears only when
 When click-through is off, drag Mimo directly to move it. During a drag, the app
 uses the `running-right` or `running-left` row based on drag direction.
 When not being dragged, production lets Mimo wander by default. Each trip picks
-a target `90-240 pt` away while staying within a `360 pt` home radius and the
-visible screen. A 60Hz time-based tween with gentle speed waves is frame-limited
-to `34 pt/s`, so delayed AppKit updates cannot turn into a sudden jump. The
+a target `100-280 pt` away while staying within a `560 pt` home radius and the
+visible screen. Mimo starts moving after about three seconds and chooses a new
+trip every `14-32s`, with a `96%` chance to begin after a rest. A 60Hz
+time-based tween with gentle speed waves is frame-limited to `34 pt/s`, so delayed AppKit updates cannot turn into a sudden jump. The
 directional row starts only after the panel has actually moved `8 pt` from the
 trip origin; once active, the sprite loops at the fixed `0.36s` per-frame tempo
 without restarting on every movement sample. Set
@@ -320,6 +321,9 @@ so frequent app-server notifications do not make the report flicker. Lifecycle
 notifications are retained briefly until `thread/list` catches up, keeping a
 newly started named chat in the charm rail without turning the companion into a
 dashboard or transcript.
+The rail is selective: it shows chats that are currently active or in progress,
+plus chats Mimo observed stopping within the last `180s`. Old idle history is
+left out, and a title-only update does not make an inactive chat reappear.
 The debug overlay is opt-in only: production startup keeps it disabled unless
 `MIMO_DEBUG_OVERLAY=1` is set or the menu item is toggled manually.
 

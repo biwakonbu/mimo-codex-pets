@@ -88,6 +88,7 @@ final class CodexAppServerClient {
     private var threadAssistantFinalById: [String: Bool] = [:]
     private var threadDisplayOrder: [String] = []
     private var notificationThreadLastSeenById: [String: DispatchTime] = [:]
+    private var threadLastActivityAtById: [String: DispatchTime] = [:]
     private var loadedThreadIds: [String] = []
     private var listedThreadIds: [String] = []
     private var verifiedThreadIds = Set<String>()
@@ -298,6 +299,7 @@ final class CodexAppServerClient {
         threadAssistantFinalById.removeAll()
         threadDisplayOrder.removeAll()
         notificationThreadLastSeenById.removeAll()
+        threadLastActivityAtById.removeAll()
         loadedThreadIds.removeAll()
         listedThreadIds.removeAll()
         verifiedThreadIds.removeAll()
@@ -810,7 +812,7 @@ final class CodexAppServerClient {
                     from: [payload.threadName],
                     fallback: threadTitlesById[payload.threadId] ?? "名前のないチャット"
                 )
-                rememberNotificationThread(payload.threadId)
+                rememberNotificationThread(payload.threadId, markActivity: false)
                 retitleThread(threadId: payload.threadId, title: title)
                 sendThreadRead(threadId: payload.threadId, reason: .notification)
                 emitSnapshot(connectionAvailable: true)
@@ -1170,13 +1172,18 @@ final class CodexAppServerClient {
         }
     }
 
-    private func rememberNotificationThread(_ id: String) {
-        notificationThreadLastSeenById[id] = .now()
+    private func rememberNotificationThread(_ id: String, markActivity: Bool = true) {
+        let now = DispatchTime.now()
+        notificationThreadLastSeenById[id] = now
+        if markActivity {
+            threadLastActivityAtById[id] = now
+        }
         rememberThreadOrder([id])
         if notificationThreadLastSeenById.count > 6 {
             let orderedTrackedIds = threadDisplayOrder.filter { notificationThreadLastSeenById[$0] != nil }
             for staleId in orderedTrackedIds.dropLast(6) {
                 notificationThreadLastSeenById.removeValue(forKey: staleId)
+                threadLastActivityAtById.removeValue(forKey: staleId)
             }
         }
     }
@@ -1205,6 +1212,7 @@ final class CodexAppServerClient {
             threadAssistantFinalById.removeAll()
             threadDisplayOrder.removeAll()
             notificationThreadLastSeenById.removeAll()
+            threadLastActivityAtById.removeAll()
             selectedThreadId = nil
             latestThreadStatus = nil
             latestTurnStatus = nil
@@ -1220,6 +1228,7 @@ final class CodexAppServerClient {
         threadAssistantFinalById = threadAssistantFinalById.filter { ids.contains($0.key) }
         threadDisplayOrder = threadDisplayOrder.filter { ids.contains($0) }
         notificationThreadLastSeenById = notificationThreadLastSeenById.filter { ids.contains($0.key) }
+        threadLastActivityAtById = threadLastActivityAtById.filter { ids.contains($0.key) }
         if let selectedThreadId, !ids.contains(selectedThreadId) {
             self.selectedThreadId = threadDisplayOrder.last ?? ids.first
             latestThreadStatus = nil
@@ -1243,6 +1252,7 @@ final class CodexAppServerClient {
         threadAssistantFinalById.removeValue(forKey: threadId)
         threadDisplayOrder.removeAll { $0 == threadId }
         notificationThreadLastSeenById.removeValue(forKey: threadId)
+        threadLastActivityAtById.removeValue(forKey: threadId)
         if selectedThreadId == threadId {
             selectedThreadId = threadDisplayOrder.last
             latestThreadStatus = nil
@@ -1284,8 +1294,18 @@ final class CodexAppServerClient {
     }
 
     private func combinedConversationLines() -> [CodexConversationLine] {
+        let visibleThreadIds = threadDisplayOrder.filter { threadId in
+            let lastActivityAge = threadLastActivityAtById[threadId].map {
+                secondsBetween($0, DispatchTime.now())
+            }
+            return CodexConversationVisibilityPolicy.shouldShow(
+                threadStatus: threadStatusesById[threadId],
+                latestTurnStatus: threadTurnStatusesById[threadId],
+                lastActivityAge: lastActivityAge
+            )
+        }
         let lines = CodexConversationLineCombiner.combinedConversationLines(
-            threadDisplayOrder: threadDisplayOrder,
+            threadDisplayOrder: visibleThreadIds,
             conversationByThread: conversationByThread,
             threadActivityById: threadActivityById,
             preferredThreadId: selectedThreadId

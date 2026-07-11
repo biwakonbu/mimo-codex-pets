@@ -328,8 +328,8 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
   without restarting Mimo
 - autonomous wandering is enabled by default; `MIMO_AUTONOMOUS_WINDOW_MOVEMENT=0`
   remains the explicit anchored override for users who need a fixed position
-- the test-covered planner chooses visible-screen targets `90-240 pt` away,
-  caps production speed at `34 pt/s` inside a `360 pt` home radius, and uses a
+- the test-covered planner chooses visible-screen targets `100-280 pt` away,
+  caps production speed at `34 pt/s` inside a `560 pt` home radius, and uses a
   60Hz time-based tween that moves smoothly without overshooting
 - autonomous window movement rate-limits the actual frame origins sent to
   AppKit, using the controller's last-submitted origin instead of trusting
@@ -418,6 +418,10 @@ The SwiftPM macOS companion in `desktop/MimoDesktopPet` is intentionally separat
 - Every report and charm opens its exact Codex chat. Safe titles fall back to the
   first user request from `thread/read(includeTurns: true)`, so generic internal
   names do not reach production UI.
+- The charm rail now filters by activity: active/in-progress chats stay visible,
+  and a chat that just stopped remains for `180s`; old idle history and
+  title-only updates are omitted. `CodexConversationVisibilityPolicyTests` and
+  the fake app-server E2E lock this selection behavior.
 - Reports paginate at 64 characters in tight 128pt/184pt paper tiers and keep
   the chat name visible. The charm rail is bottom-anchored: each narrated chat
   is inserted below, pushes older charms upward, and never swaps in both
